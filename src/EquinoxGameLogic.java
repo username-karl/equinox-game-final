@@ -435,7 +435,7 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
                                 enemyImgArray.get(randomImgIndex),
                                 enemyVelocityX
                         );
-                        break;c
+                        break;
                     case 4:
                         enemy = new FastEnemy(
                                 enemyX + c * enemyWidth,
