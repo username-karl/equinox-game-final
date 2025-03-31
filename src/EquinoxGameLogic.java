@@ -65,9 +65,9 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
     int bulletVelocityY = -10; // Bullet movespeed
     // TacticalQ
     ArrayList<TacticalQ> tacticalArray;
-    int tacticalqWidth = tileSize / 2; // Bullet size width
-    int tacticalqHeight = tileSize * 5;
-    int tacticalqVelocityY = -50; // Bullet movespeed
+    int tacticalqWidth = tileSize / 4; // Bullet size width
+    int tacticalqHeight = tileSize * 9;
+    int tacticalqVelocityY = -100; // Bullet movespeed
     long lastTacticalQUseTime; // Last tactical use time
     long tacticalQCooldown = 3000; // Tactical cooldown in ms
     //TacticalE
@@ -120,6 +120,7 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
 
 
         minibossImgvar1 = new ImageIcon(getClass().getResource("./img/minibossvar1.png")).getImage();
+
         specialEnemyImgArray = new ArrayList<Image>();
         specialEnemyImgArray.add(minibossImgvar1);
 
@@ -170,6 +171,7 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
             if (enemy.isAlive()) {
                 if(enemy instanceof Miniboss){
                     g.drawImage(enemy.img, enemy.getX(), enemy.getY(), enemy.getWidth(), enemy.getHeight(), null);
+                    drawBossHealthBar(g, (Miniboss) enemy);
                 }else{
                     g.drawImage(enemy.img, enemy.getX(), enemy.getY(), enemy.getWidth(), enemy.getHeight(), null);
                 }
@@ -243,6 +245,30 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
         //Draw Stage and Wave String
         g.drawString("World: " + gameState.currentStage.getStageNumber() + " Wave: " + gameState.currentStage.getCurrentWave(), 10, 60);
 
+    }
+    private void drawBossHealthBar(Graphics g, Miniboss miniboss) {
+        if (miniboss.isAlive()) {
+            int healthBarWidth = boardWidth / 2; // Half the width of the board
+            int healthBarHeight = 20;
+            int healthBarX = boardWidth / 4; // Center the health bar
+            int healthBarY = 100; // Position it below the top
+
+            // Calculate the filled portion of the health bar
+            double healthPercentage = (double) miniboss.getHitpoints() / 100; // Assuming max health is 100
+            int filledWidth = (int) (healthBarWidth * healthPercentage);
+
+            // Draw the background of the health bar
+            g.setColor(Color.GRAY);
+            g.fillRect(healthBarX, healthBarY, healthBarWidth, healthBarHeight);
+
+            // Draw the filled portion of the health bar
+            g.setColor(Color.RED);
+            g.fillRect(healthBarX, healthBarY, filledWidth, healthBarHeight);
+
+            // Draw the border of the health bar
+            g.setColor(Color.BLACK);
+            g.drawRect(healthBarX, healthBarY, healthBarWidth, healthBarHeight);
+        }
     }
 
     // MOVE
@@ -376,7 +402,9 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
             enemyBulletArray.remove(0);// Removes the first element of the array
         }
 
-        // Next wave of enemies
+
+        //STAGE & WAVE LOGIC
+            // Next wave of enemies
         if (gameState.enemyCount == 0) {
             if (gameState.currentStage.isMinibossSpawned()) {
                 // Move to the next stage
@@ -391,6 +419,7 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
             } else {
                 // Spawn the miniboss
                 gameState.currentStage.setMinibossSpawned(true);
+                createEnemies();
                 createMiniboss();
             }
         }
