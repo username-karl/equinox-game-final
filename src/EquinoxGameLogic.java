@@ -215,33 +215,33 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
 
 
         //DRAW STATS
-            // Draw Score
-            g.setColor(Color.LIGHT_GRAY);
-            g.setFont(new Font("Arial", Font.PLAIN, 24));
-            if (gameState.gameOver) {
-                g.drawString("Game Over: " + String.valueOf(gameState.score), 10, 35);
-            } else {
-                g.drawString(String.valueOf(gameState.score), 10, 35);
-            }
+        // Draw Score
+        g.setColor(Color.LIGHT_GRAY);
+        g.setFont(new Font("Arial", Font.PLAIN, 24));
+        if (gameState.gameOver) {
+            g.drawString("Game Over: " + String.valueOf(gameState.score), 10, 35);
+        } else {
+            g.drawString(String.valueOf(gameState.score), 10, 35);
+        }
 
-            // Draw TacticalQ cooldown
-            g.setColor(Color.YELLOW);
-            g.setFont(new Font("Arial", Font.PLAIN, 18));
-            if (remainingCooldown > 0) {
-                g.drawString("Tactical Q: " + String.format("%.1f", (double) remainingCooldown / 1000) + "s", 10,
-                        tileSize * 24);
-            } else {
-                g.drawString("Tactical Q: Ready", 10, tileSize * 24);
-            }
-            // Draw TacticalE cooldown
-            if (remainingCooldownE > 0) {
-                g.drawString("Tactical E: " + String.format("%.1f", (double) remainingCooldownE / 1000) + "s", 10 + tileSize * 5,
-                        tileSize * 24);
-            } else {
-                g.drawString("Tactical E: Ready", 10 + tileSize * 5, tileSize * 24);
-            }
-            //Draw Stage and Wave String
-            g.drawString("World: " + gameState.currentStage.getStageNumber() + " Wave: " + gameState.currentStage.getCurrentWave(), 10, 60);
+        // Draw TacticalQ cooldown
+        g.setColor(Color.YELLOW);
+        g.setFont(new Font("Arial", Font.PLAIN, 18));
+        if (remainingCooldown > 0) {
+            g.drawString("Tactical Q: " + String.format("%.1f", (double) remainingCooldown / 1000) + "s", 10,
+                    tileSize * 24);
+        } else {
+            g.drawString("Tactical Q: Ready", 10, tileSize * 24);
+        }
+        // Draw TacticalE cooldown
+        if (remainingCooldownE > 0) {
+            g.drawString("Tactical E: " + String.format("%.1f", (double) remainingCooldownE / 1000) + "s", 10 + tileSize * 5,
+                    tileSize * 24);
+        } else {
+            g.drawString("Tactical E: Ready", 10 + tileSize * 5, tileSize * 24);
+        }
+        //Draw Stage and Wave String
+        g.drawString("World: " + gameState.currentStage.getStageNumber() + " Wave: " + gameState.currentStage.getCurrentWave(), 10, 60);
 
     }
 
@@ -257,6 +257,10 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
                 }
                 if(enemy instanceof ShootingEnemy){
                     ((ShootingEnemy) enemy).shoot(enemyBulletArray, enemyBulletImg, enemyBulletWidth, enemyBulletHeight);
+                }
+                if(enemy instanceof Miniboss){
+                    ((Miniboss) enemy).moveY();
+                    ((Miniboss) enemy).shoot(enemyBulletArray, enemyBulletImg, enemyBulletWidth, enemyBulletHeight);
                 }
                 // Lose condition
                 if (enemy.getY() >= ship.getY()) {

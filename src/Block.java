@@ -154,6 +154,9 @@ class ShootingEnemy extends Enemy{
 class Miniboss extends Enemy{
     Image minibossImg;
     private int hitpoints = 20;
+    private int shootCooldown = 100; // Adjust as needed
+    private int currentCooldown = 0;
+    private int minibossVelocityY = 1;
     public Miniboss(int x, int y, int width, int height, Image img, int enemyVelocityX, Image minibossImg) {
         super(x, y, width, height, img, enemyVelocityX);
         this.minibossImg=minibossImg;
@@ -165,6 +168,21 @@ class Miniboss extends Enemy{
 
     public void setHitpoints(int hitpoints) {
         this.hitpoints = hitpoints;
+    }
+    public void moveY(){
+        setY(getY() + minibossVelocityY);
+        if(getY() + getHeight() >= 300 || getY() <= 0){
+            minibossVelocityY *= -1;
+        }
+    }
+    public void shoot(ArrayList<EnemyBullet> enemyBulletArray, Image enemyBulletImg, int bulletWidth, int bulletHeight) {
+        if (currentCooldown <= 0) {
+            EnemyBullet bullet = new EnemyBullet(getX() + getWidth() / 2, getY() + getHeight(), bulletWidth, bulletHeight, enemyBulletImg);
+            enemyBulletArray.add(bullet);
+            currentCooldown = shootCooldown;
+        } else {
+            currentCooldown--;
+        }
     }
 }
 
