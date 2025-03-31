@@ -105,3 +105,11 @@ class Enemy extends Block{
         super(x, y, width, height, img);
     }
 }
+
+class Bullet extends Block{
+    public Bullet(int x, int y, int width, int height, Image img) {
+        super(x, y, width, height, img);
+
+    }
+
+}
