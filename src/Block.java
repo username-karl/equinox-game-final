@@ -153,6 +153,7 @@ class ShootingEnemy extends Enemy{
 }
 class Miniboss extends Enemy{
     Image minibossImg;
+    //Default miniboss values
     private int hitpoints = 20;
     private int shootCooldown = 100; // Adjust as needed
     private int currentCooldown = 0;
@@ -160,6 +161,17 @@ class Miniboss extends Enemy{
     public Miniboss(int x, int y, int width, int height, Image img, int enemyVelocityX, Image minibossImg) {
         super(x, y, width, height, img, enemyVelocityX);
         this.minibossImg=minibossImg;
+        this.hitpoints=hitpoints;
+        this.shootCooldown=shootCooldown;
+        this.minibossVelocityY=minibossVelocityY;
+        setMiniBoss(true);
+    }
+    public Miniboss(int x, int y, int width, int height, Image img, int enemyVelocityX, Image minibossImg,int hitpoints,int shootCooldown, int minibossVelocityY) {
+        super(x, y, width, height, img, enemyVelocityX);
+        this.minibossImg=minibossImg;
+        this.hitpoints=hitpoints;
+        this.shootCooldown=shootCooldown;
+        this.minibossVelocityY=minibossVelocityY;
         setMiniBoss(true);
     }
     public int getHitpoints() {

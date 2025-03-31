@@ -294,11 +294,12 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
                         if(((Miniboss) enemy).getHitpoints() <= 0){
                             gameState.score += 10000;
                             enemy.setAlive(false);
+                            gameState.enemyCount--;
                         }
                     }else{
                         enemy.setAlive(false);
+                        gameState.enemyCount--;
                     }
-                    gameState.enemyCount--;
                     gameState.score += 100;
                 }
             }
@@ -313,8 +314,20 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
             for (int j = 0; j < enemyArray.size(); j++) {
                 Enemy enemy = enemyArray.get(j);
                 if (!bullet.isUsed() && enemy.isAlive() && detectCollision(bullet, enemy)) {
-                    enemy.setAlive(false);
-                    gameState.enemyCount--;
+//                    enemy.setAlive(false);
+//                    gameState.enemyCount--;
+//                    gameState.score += 100;
+                    if(enemy instanceof Miniboss){
+                        ((Miniboss) enemy).setHitpoints(((Miniboss) enemy).getHitpoints() - 1);
+                        if(((Miniboss) enemy).getHitpoints() <= 0){
+                            gameState.score += 10000;
+                            enemy.setAlive(false);
+                            gameState.enemyCount--;
+                        }
+                    }else{
+                        enemy.setAlive(false);
+                        gameState.enemyCount--;
+                    }
                     gameState.score += 100;
                 }
             }
@@ -324,14 +337,26 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
             TacticalE tacticale = tacticalEArray.get(i);
             tacticale.setY(tacticale.getY() + tacticaleVelocityY);
 
-            // TacticalE collision check (first row only)
+            // TacticalE collision check
             for (int j = 0; j < enemyArray.size(); j++) {
                 Enemy enemy = enemyArray.get(j);
                 // Check if the enemy is in the first row and if it collides with TacticalE
                 if (!tacticale.isUsed() && enemy.isAlive() && detectCollision(tacticale, enemy)) {
                     tacticale.setUsed(true);
-                    enemy.setAlive(false);
-                    gameState.enemyCount--;
+//                    enemy.setAlive(false);
+//                    gameState.enemyCount--;
+//                    gameState.score += 100;
+                    if(enemy instanceof Miniboss){
+                        ((Miniboss) enemy).setHitpoints(((Miniboss) enemy).getHitpoints() - 1);
+                        if(((Miniboss) enemy).getHitpoints() <= 0){
+                            gameState.score += 10000;
+                            enemy.setAlive(false);
+                            gameState.enemyCount--;
+                        }
+                    }else{
+                        enemy.setAlive(false);
+                        gameState.enemyCount--;
+                    }
                     gameState.score += 100;
                 }
             }
@@ -488,7 +513,16 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
     }
     public void createMiniboss(){
         int minibossWorld1 = 0;
-        Miniboss miniboss = new Miniboss(boardWidth/2 - tileSize * 2, tileSize, tileSize*4, tileSize*4, specialEnemyImgArray.get(minibossWorld1), enemyVelocityX, specialEnemyImgArray.get(minibossWorld1));
+        Miniboss miniboss = new Miniboss(boardWidth/2 - tileSize * 2,
+                tileSize,
+                tileSize*4,
+                tileSize*4,
+                specialEnemyImgArray.get(minibossWorld1),
+                enemyVelocityX,
+                specialEnemyImgArray.get(minibossWorld1),
+                100,
+                100,
+                2);
         enemyArray.add(miniboss);
         gameState.enemyCount = enemyArray.size();
     }
