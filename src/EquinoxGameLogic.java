@@ -435,6 +435,36 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
                                 enemyImgArray.get(randomImgIndex),
                                 enemyVelocityX
                         );
+                        break;c
+                    case 4:
+                        enemy = new FastEnemy(
+                                enemyX + c * enemyWidth,
+                                enemyY + r * enemyHeight,
+                                enemyWidth,
+                                enemyHeight,
+                                enemyImgArray.get(randomImgIndex),
+                                enemyVelocityX
+                        );
+                        break;
+                    case 5:
+                        enemy = new FastEnemy(
+                                enemyX + c * enemyWidth,
+                                enemyY + r * enemyHeight,
+                                enemyWidth,
+                                enemyHeight,
+                                enemyImgArray.get(randomImgIndex),
+                                enemyVelocityX
+                        );
+                        break;
+                    case 6:
+                        enemy = new FastEnemy(
+                                enemyX + c * enemyWidth,
+                                enemyY + r * enemyHeight,
+                                enemyWidth,
+                                enemyHeight,
+                                enemyImgArray.get(randomImgIndex),
+                                enemyVelocityX
+                        );
                         break;
                     default:
                         enemy = new Enemy(
@@ -454,7 +484,7 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
     }
     public void createMiniboss(){
         int minibossWorld1 = 0;
-        Miniboss miniboss = new Miniboss(boardWidth/2 - tileSize * 2, tileSize, tileSize*4, tileSize*4, specialEnemyImgArray.get(minibossWorld1), enemyVelocityX);
+        Miniboss miniboss = new Miniboss(boardWidth/2 - tileSize * 2, tileSize, tileSize*4, tileSize*4, specialEnemyImgArray.get(minibossWorld1), enemyVelocityX, specialEnemyImgArray.get(minibossWorld1));
         enemyArray.add(miniboss);
         gameState.enemyCount = enemyArray.size();
     }
