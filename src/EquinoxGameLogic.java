@@ -28,8 +28,9 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
     Image world1BG;
     Image laserBlue;
     Image enemyBulletImg;
+    Image minibossImgvar1;
     ArrayList<Image> enemyImgArray;
-
+    ArrayList<Image> specialEnemyImgArray;
     // Game Settings
     int difficulty = 2;
     long remainingCooldown;
@@ -54,8 +55,8 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
     int enemyX = tileSize;
     int enemyY = tileSize;
     int enemyVelocityX = 1;
-    int enemyRows = 2;
-    int enemyColumns = 3;
+    int enemyRows = 3;
+    int enemyColumns = 7;
 
     // Bullets
     ArrayList<Bullet> bulletArray;
@@ -99,6 +100,7 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
         addKeyListener(this);
         //GameState init
         gameState = new GameState();
+        gameState.currentStage = new Stage(1,4);
 
 
 
@@ -109,17 +111,24 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
         enemyImgVar1 = new ImageIcon(getClass().getResource("./img/enemyvar1.gif")).getImage();
         enemyImgVar2 = new ImageIcon(getClass().getResource("./img/monstertestvar2.png")).getImage();
         enemyImgVar3 = new ImageIcon(getClass().getResource("./img/monstertestvar3.png")).getImage();
-        enemyBulletImg = new ImageIcon(getClass().getResource("./img/laserRed.png")).getImage();
+
 
         enemyImgArray = new ArrayList<Image>();
         enemyImgArray.add(enemyImgVar1);
         enemyImgArray.add(enemyImgVar2);
         enemyImgArray.add(enemyImgVar3);
+
+
+        minibossImgvar1 = new ImageIcon(getClass().getResource("./img/minibossvar1.png")).getImage();
+        specialEnemyImgArray = new ArrayList<Image>();
+        specialEnemyImgArray.add(minibossImgvar1);
+
+
         // //Maps
         world1BG = new ImageIcon(getClass().getResource("./img/world1BG.png")).getImage();
         // Misc
         laserBlue = new ImageIcon(getClass().getResource("./img/laserBlue.png")).getImage();
-
+        enemyBulletImg = new ImageIcon(getClass().getResource("./img/laserRed.png")).getImage();
         // Ship
         ship = new ShipUser(shipX, shipY, shipWidth, shipHeight, shipImg);
 
@@ -159,9 +168,14 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
         for (int i = 0; i < enemyArray.size(); i++) {
             Enemy enemy = enemyArray.get(i);
             if (enemy.isAlive()) {
-                g.drawImage(enemy.img, enemy.getX(), enemy.getY(), enemy.getWidth(), enemy.getHeight(), null);
+                if(enemy instanceof Miniboss){
+                    g.drawImage(enemy.img, enemy.getX(), enemy.getY(), enemy.getWidth(), enemy.getHeight(), null);
+                }else{
+                    g.drawImage(enemy.img, enemy.getX(), enemy.getY(), enemy.getWidth(), enemy.getHeight(), null);
+                }
             }
         }
+
 
         // Draw Bullets
         g.setColor(Color.white);
@@ -197,31 +211,37 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
             g.drawImage(enemyBulletImg, bullet.getX(), bullet.getY(), bullet.getWidth(), bullet.getHeight(), null);
         }
 
-        // Draw Score
-        g.setColor(Color.LIGHT_GRAY);
-        g.setFont(new Font("Arial", Font.PLAIN, 24));
-        if (gameState.gameOver) {
-            g.drawString("Game Over: " + String.valueOf(gameState.score), 10, 35);
-        } else {
-            g.drawString(String.valueOf(gameState.score), 10, 35);
-        }
 
-        // Draw TacticalQ cooldown
-        g.setColor(Color.YELLOW);
-        g.setFont(new Font("Arial", Font.PLAIN, 18));
-        if (remainingCooldown > 0) {
-            g.drawString("Tactical Q: " + String.format("%.1f", (double) remainingCooldown / 1000) + "s", 10,
-                    tileSize * 24);
-        } else {
-            g.drawString("Tactical Q: Ready", 10, tileSize * 24);
-        }
-        // Draw TacticalE cooldown
-        if (remainingCooldownE > 0) {
-            g.drawString("Tactical E: " + String.format("%.1f", (double) remainingCooldownE / 1000) + "s", 10 + tileSize * 5,
-                    tileSize * 24);
-        } else {
-            g.drawString("Tactical E: Ready", 10 + tileSize * 5, tileSize * 24);
-        }
+
+
+        //DRAW STATS
+            // Draw Score
+            g.setColor(Color.LIGHT_GRAY);
+            g.setFont(new Font("Arial", Font.PLAIN, 24));
+            if (gameState.gameOver) {
+                g.drawString("Game Over: " + String.valueOf(gameState.score), 10, 35);
+            } else {
+                g.drawString(String.valueOf(gameState.score), 10, 35);
+            }
+
+            // Draw TacticalQ cooldown
+            g.setColor(Color.YELLOW);
+            g.setFont(new Font("Arial", Font.PLAIN, 18));
+            if (remainingCooldown > 0) {
+                g.drawString("Tactical Q: " + String.format("%.1f", (double) remainingCooldown / 1000) + "s", 10,
+                        tileSize * 24);
+            } else {
+                g.drawString("Tactical Q: Ready", 10, tileSize * 24);
+            }
+            // Draw TacticalE cooldown
+            if (remainingCooldownE > 0) {
+                g.drawString("Tactical E: " + String.format("%.1f", (double) remainingCooldownE / 1000) + "s", 10 + tileSize * 5,
+                        tileSize * 24);
+            } else {
+                g.drawString("Tactical E: Ready", 10 + tileSize * 5, tileSize * 24);
+            }
+            //Draw Stage and Wave String
+            g.drawString("World: " + gameState.currentStage.getStageNumber() + " Wave: " + gameState.currentStage.getCurrentWave(), 10, 60);
 
     }
 
@@ -264,12 +284,22 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
                 Enemy enemy = enemyArray.get(j);
                 if (!bullet.isUsed() && enemy.isAlive() && detectCollision(bullet, enemy)) {
                     bullet.setUsed(true);
-                    enemy.setAlive(false);
+
+                    if(enemy instanceof Miniboss){
+                        ((Miniboss) enemy).setHitpoints(((Miniboss) enemy).getHitpoints() - 1);
+                        if(((Miniboss) enemy).getHitpoints() <= 0){
+                            gameState.score += 10000;
+                            enemy.setAlive(false);
+                        }
+                    }else{
+                        enemy.setAlive(false);
+                    }
                     gameState.enemyCount--;
                     gameState.score += 100;
                 }
             }
         }
+
         // TacticalQ Move
         for (int i = 0; i < tacticalArray.size(); i++) {
             Bullet bullet = tacticalArray.get(i);
@@ -319,42 +349,20 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
 
         // Next wave of enemies
         if (gameState.enemyCount == 0) {
-
-            // Difficulty Same wave1 but differing next waves by difficulty
-            if (difficulty == 1) {
-                // Easy Wave clear points
-                gameState.score += enemyRows * enemyColumns * 100;
-                // Increase the number of enemies in columns and rows by 1
-                enemyColumns = Math.min(enemyColumns + 1, columns / 2 - 2); // cap column at 16/2 -2 =6
-                enemyRows = Math.min(enemyRows + 1, rows - 6); // Cap row at 16-6 = 10
-                enemyArray.clear();
-                bulletArray.clear();
-                // enemyVelocityX=1; // Removed this line
-                createEnemies();
-            } else if (difficulty == 2) {
-                // Enemy Velocity faster
-                // enemyVelocityX=2;
-                // Wave clear points
-                gameState.score += enemyRows * enemyColumns * 150;
-                // Increase the number of enemies in columns and rows by 2
-                enemyColumns = Math.min(enemyColumns + 2, columns / 2 - 2); // cap column at 16/2 -2 =6
-                enemyRows = Math.min(enemyRows + 2, rows - 6); // Cap row at 16-6 = 10
-                enemyArray.clear();
-                bulletArray.clear();
-                // enemyVelocityX=difficulty; // Removed this line
-                createEnemies();
-            } else if (difficulty == 3) {
-                // Enemy Velocity faster
-                // enemyVelocityX=3;
-                // Wave clear points
-                gameState.score += enemyRows * enemyColumns * 300;
-                // Increase the number of enemies in columns and rows by 2
-                enemyColumns = Math.min(enemyColumns + 3, columns / 2 - 2); // cap column at 16/2 -2 =6
-                enemyRows = Math.min(enemyRows + 3, rows - 6); // Cap row at 16-6 = 10
-                enemyArray.clear();
-                bulletArray.clear();
-                // enemyVelocityX=difficulty; // Removed this line
-                createEnemies();
+            if (gameState.currentStage.isMinibossSpawned()) {
+                // Move to the next stage
+                gameState.currentStage.setStageNumber(gameState.currentStage.getStageNumber() + 1);
+                gameState.currentStage.setCurrentWave(1);
+                gameState.currentStage.setMinibossSpawned(false);
+                reset();
+            } else if (gameState.currentStage.getCurrentWave() < gameState.currentStage.getTotalWaves()) {
+                // Move to the next wave
+                gameState.currentStage.setCurrentWave(gameState.currentStage.getCurrentWave() + 1);
+                reset();
+            } else {
+                // Spawn the miniboss
+                gameState.currentStage.setMinibossSpawned(true);
+                createMiniboss();
             }
         }
 
@@ -443,6 +451,18 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
             }
         }
         gameState.enemyCount = enemyArray.size();
+    }
+    public void createMiniboss(){
+        int minibossWorld1 = 0;
+        Miniboss miniboss = new Miniboss(boardWidth/2 - tileSize * 2, tileSize, tileSize*4, tileSize*4, specialEnemyImgArray.get(minibossWorld1), enemyVelocityX);
+        enemyArray.add(miniboss);
+        gameState.enemyCount = enemyArray.size();
+    }
+    public void reset(){
+        enemyArray.clear();
+        bulletArray.clear();
+        enemyBulletArray.clear();
+        createEnemies();
     }
 
     public boolean detectCollision(Block a, Block b) {

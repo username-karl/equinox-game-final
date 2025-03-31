@@ -151,6 +151,22 @@ class ShootingEnemy extends Enemy{
         }
     }
 }
+class Miniboss extends Enemy{
+    Image minibossImg;
+    private int hitpoints = 20;
+    public Miniboss(int x, int y, int width, int height, Image img, int enemyVelocityX, Image minibossImg) {
+        super(x, y, width, height, img, enemyVelocityX);
+        this.minibossImg=minibossImg;
+        setMiniBoss(true);
+    }
+    public int getHitpoints() {
+        return hitpoints;
+    }
+
+    public void setHitpoints(int hitpoints) {
+        this.hitpoints = hitpoints;
+    }
+}
 
 class Bullet extends Block{
     private boolean used = false;
