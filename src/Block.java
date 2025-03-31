@@ -113,3 +113,21 @@ class Bullet extends Block{
     }
 
 }
+
+class TacticalQ extends Bullet{
+    public TacticalQ(int x, int y, int width, int height, Image img) {
+        super(x, y, width, height, img);
+    }
+}
+
+class TacticalE extends Bullet{
+    public TacticalE(int x, int y, int width, int height, Image img) {
+        super(x, y, width, height, img);
+    }
+}
+
+class SpecialMove extends Bullet{
+    public SpecialMove(int x, int y, int width, int height, Image img) {
+        super(x, y, width, height, img);
+    }
+}

@@ -4,8 +4,8 @@ public class EquinoxGame {
 
         //JFRAME VARIABLES
         int tileSize =32;
-        int rows=16;
-        int columns =16;
+        int rows=24;
+        int columns =24;
         int boardWidth = tileSize*columns;
         int boardHeight = tileSize*rows;
 

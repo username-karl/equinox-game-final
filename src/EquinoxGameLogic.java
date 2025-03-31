@@ -6,14 +6,15 @@ import java.awt.event.KeyListener;
 import java.util.ArrayList;
 import java.util.Random;
 import javax.swing.*;
+
 public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListener {
 
 
     //INIT
     //BOARD
     int tileSize =32;
-    int rows =16;
-    int columns =16;
+    int rows =24;
+    int columns =24;
     int boardWidth = tileSize*columns;
     int boardHeight = tileSize*rows;
 
@@ -25,6 +26,10 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
     Image world1BG;
     Image laserBlue;
     ArrayList<Image> enemyImgArray;
+
+    //Game Settings
+    int difficulty=2;
+//    long remainingCooldown;
 
     //Ship
     int shipWidth = tileSize*2; //64px
@@ -50,8 +55,13 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
     int bulletWidth = tileSize/8;   //Bullet size width
     int bulletHeight = tileSize/2;
     int bulletVelocityY = -10; //Bullet movespeed
-
-
+    //TacticalQ
+    ArrayList<TacticalQ> tacticalArray;
+    int tacticalqWidth = tileSize/2;   //Bullet size width
+    int tacticalqHeight = tileSize*5;
+    int tacticalqVelocityY = -50; //Bullet movespeed
+    long lastTacticalQUseTime;  //Last tactical use time
+    long tacticalQCooldown=3000; //Tactical cooldown in ms
 
     //Timer
     Timer gameLoop;
@@ -71,7 +81,7 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
          //Image loading
             //Creatures
          shipImg = new ImageIcon(getClass().getResource("./img/protagtest.png")).getImage();
-         enemyImgVar1 = new ImageIcon(getClass().getResource("./img/monstertestvar1.png")).getImage();
+         enemyImgVar1 = new ImageIcon(getClass().getResource("./img/enemyvar1.gif")).getImage();
          enemyImgVar2 = new ImageIcon(getClass().getResource("./img/monstertestvar2.png")).getImage();
          enemyImgVar3 = new ImageIcon(getClass().getResource("./img/monstertestvar3.png")).getImage();
 
@@ -96,7 +106,8 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
 
          //Bullets
          bulletArray= new ArrayList<Bullet>();
-
+         //Ship skills
+         tacticalArray = new ArrayList<TacticalQ>();
 
          //Game timer
          gameLoop = new Timer(1000/60,this);
@@ -119,7 +130,7 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
          //Draw Ship
          g.drawImage(ship.img, ship.getX(), ship.getY(), ship.getWidth(), ship.getHeight(),null);
 
-         //Aliens
+         //Draw Enemies
         for(int i=0;i<enemyArray.size();i++){
             Enemy enemy=enemyArray.get(i);
             if(enemy.isAlive()){
@@ -127,6 +138,7 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
             }
         }
 
+        //Draw Bullets
         g.setColor(Color.white);
         for(int i=0;i<bulletArray.size();i++){
             Block bullet = bulletArray.get(i);
@@ -134,6 +146,15 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
                 g.drawImage(laserBlue,bullet.getX(),bullet.getY(),bullet.getWidth(),bullet.getHeight(),null);
 //                g.drawRect(bullet.getX(),bullet.getY(),bullet.getWidth(),bullet.getHeight());
 //                g.fillRect(bullet.getX(),bullet.getY(),bullet.getWidth(),bullet.getHeight());
+            }
+        }
+        //Draw Tactical
+        for(int i=0;i<tacticalArray.size();i++){
+            Block bullet = tacticalArray.get(i);
+            if(!bullet.isUsed()){
+//                g.drawImage(laserBlue,bullet.getX(),bullet.getY(),bullet.getWidth(),bullet.getHeight(),null);
+//                g.drawRect(bullet.getX(),bullet.getY(),bullet.getWidth(),bullet.getHeight());
+                g.fillRect(bullet.getX(),bullet.getY(),bullet.getWidth(),bullet.getHeight());
             }
         }
 
@@ -170,7 +191,7 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
             }
         }
 
-        //Bullets
+        //Bullets Move
         for(int i=0; i <bulletArray.size();i++){
             Bullet bullet = bulletArray.get(i);
             bullet.setY(bullet.getY()+bulletVelocityY);
@@ -186,25 +207,75 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
                 }
             }
         }
+        //Tactical Move
+        for(int i=0; i <tacticalArray.size();i++){
+            Bullet bullet = tacticalArray.get(i);
+            bullet.setY(bullet.getY()+tacticalqVelocityY);
 
-        //Optimizations
+            //Bullet collision check
+            for(int j=0;j<enemyArray.size();j++){
+                Enemy enemy = enemyArray.get(j);
+                if(!bullet.isUsed()&&enemy.isAlive()&&detectCollision(bullet,enemy)){
+                    enemy.setAlive(false);
+                    enemyCount--;
+                    score+=100;
+                }
+            }
+        }
+
+
+
+        //Optimizations (Optimized bullets off-screen clear)
         while(bulletArray.size()>0&&(bulletArray.get(0).isUsed() || bulletArray.get(0).getY()<0)){
             bulletArray.remove(0);//Removes the first element of the array
         }
+        while(tacticalArray.size()>0&&(tacticalArray.get(0).isUsed() || tacticalArray.get(0).getY()<0)){
+            tacticalArray.remove(0);//Removes the first element of the array
+        }
+
+
+
 
         //Next wave of enemies
         if(enemyCount==0){
-            //Wave clear points
-            score+=enemyRows*enemyColumns*100;
-
-            //Increase the number of aliens in columns and rows by 1
-            enemyColumns=Math.min(enemyColumns+1,columns/2-2);  //cap column at 16/2 -2 =6
-            enemyRows=Math.min(enemyRows+1, rows-6); //Cap row at 16-6 = 10
-            enemyArray.clear();
-            bulletArray.clear();
-            createEnemies();
 
 
+            //Difficulty Same wave1 but differing next waves by difficulty
+            if(difficulty==1){
+                //Easy Wave clear points
+                score+=enemyRows*enemyColumns*100;
+                //Increase the number of enemies in columns and rows by 1
+                enemyColumns=Math.min(enemyColumns+1,columns/2-2);  //cap column at 16/2 -2 =6
+                enemyRows=Math.min(enemyRows+1, rows-6); //Cap row at 16-6 = 10
+                enemyArray.clear();
+                bulletArray.clear();
+                enemyVelocityX=1;
+                createEnemies();
+            }else if(difficulty==2){
+                //Enemy Velocity faster
+                enemyVelocityX=2;
+                //Wave clear points
+                score+=enemyRows*enemyColumns*150;
+                //Increase the number of enemies in columns and rows by 2
+                enemyColumns=Math.min(enemyColumns+2,columns/2-2);  //cap column at 16/2 -2 =6
+                enemyRows=Math.min(enemyRows+2, rows-6); //Cap row at 16-6 = 10
+                enemyArray.clear();
+                bulletArray.clear();
+                enemyVelocityX=difficulty;
+                createEnemies();
+            }else if(difficulty==3){
+                //Enemy Velocity faster
+                enemyVelocityX=3;
+                //Wave clear points
+                score+=enemyRows*enemyColumns*300;
+                //Increase the number of enemies in columns and rows by 2
+                enemyColumns=Math.min(enemyColumns+3,columns/2-2);  //cap column at 16/2 -2 =6
+                enemyRows=Math.min(enemyRows+3, rows-6); //Cap row at 16-6 = 10
+                enemyArray.clear();
+                bulletArray.clear();
+                enemyVelocityX=difficulty;
+                createEnemies();
+            }
         }
     }
 
@@ -265,6 +336,22 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
          }else if(e.getKeyCode()==KeyEvent.VK_SPACE){
              Bullet bullet = new Bullet(ship.getX()+ship.getWidth()*15/32,ship.getY(),bulletWidth,bulletHeight,laserBlue);
              bulletArray.add(bullet);
+         }else if(e.getKeyCode()==KeyEvent.VK_Q){
+             //TacticalQ
+             long currentTime = System.currentTimeMillis();
+
+             if (currentTime - lastTacticalQUseTime >= tacticalQCooldown) {
+                 // Cooldown is over, allow the ability
+                 TacticalQ tacticalq = new TacticalQ(ship.getX() + ship.getWidth() * 15 / 32, ship.getY(),
+                         tacticalqWidth, tacticalqHeight, null);
+                 tacticalArray.add(tacticalq);
+                 lastTacticalQUseTime = currentTime; // Update the last use time
+             } else {
+                 // Ability is on cooldown
+                 System.out.println("Tactical Q on cooldown!");
+             }
          }
+
+
     }
 }
