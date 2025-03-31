@@ -1,4 +1,5 @@
 import java.awt.*;
+import java.util.ArrayList;
 
 public class Block {
 
@@ -7,8 +8,6 @@ public class Block {
     private int width;
     private int height;
     public Image img;
-    private boolean alive =true;   //Used for aliens
-    private boolean used =false; //Used for bullets
     //Setters & Getters
 
     public int getX() {
@@ -27,20 +26,11 @@ public class Block {
         return height;
     }
 
-    public boolean isAlive() {
-        return alive;
-    }
-
-    public void setAlive(boolean alive) {
-        this.alive = alive;
-    }
-
     public void setUsed(boolean used) {
-        this.used = used;
     }
 
     public boolean isUsed() {
-        return used;
+        return false;
     }
 
     public void setX(int x) {
@@ -85,8 +75,11 @@ class ShipUser extends Block {
 
 class Enemy extends Block{
 
+    protected int enemyVelocityX;
+    private boolean alive =true;
     private boolean isMiniBoss;
     private boolean isBoss;
+    private boolean moveDown = false;
     //SETTERS AND GETTERS
     public boolean isBoss() {
         return isBoss;
@@ -100,21 +93,88 @@ class Enemy extends Block{
     public void setMiniBoss(boolean miniBoss) {
         isMiniBoss = miniBoss;
     }
-
-    public Enemy(int x, int y, int width, int height, Image img) {
-        super(x, y, width, height, img);
+    public boolean isAlive() {
+        return alive;
     }
 
+    public void setAlive(boolean alive) {
+        this.alive = alive;
+    }
+    public boolean isMoveDown() {
+        return moveDown;
+    }
 
+    public void setMoveDown(boolean moveDown) {
+        this.moveDown = moveDown;
+    }
 
+    public Enemy(int x, int y, int width, int height, Image img, int enemyVelocityX) {
+        super(x, y, width, height, img);
+        this.enemyVelocityX = enemyVelocityX;
+    }
+
+    public void move(int boardWidth, int enemyWidth, int enemyHeight) {
+        setX(getX() + enemyVelocityX);
+
+        if (getX() + enemyWidth >= boardWidth || getX() <= 0) {
+            enemyVelocityX *= -1;
+            setX(getX() + enemyVelocityX * 2);
+            setMoveDown(true);
+        }
+    }
+    public void moveDown(int enemyHeight){
+        if(isMoveDown()){
+            setY(getY() + enemyHeight);
+            setMoveDown(false);
+        }
+    }
+}
+class FastEnemy extends Enemy{
+    public FastEnemy(int x, int y, int width, int height, Image img, int enemyVelocityX) {
+        super(x, y, width, height, img, enemyVelocityX);
+        this.enemyVelocityX = enemyVelocityX * 2; // Double the speed
+    }
+}
+class ShootingEnemy extends Enemy{
+    private int shootCooldown = 100; // Adjust as needed
+    private int currentCooldown = 0;
+    public ShootingEnemy(int x, int y, int width, int height, Image img, int enemyVelocityX) {
+        super(x, y, width, height, img, enemyVelocityX);
+    }
+    public void shoot(ArrayList<EnemyBullet> enemyBulletArray, Image enemyBulletImg, int bulletWidth, int bulletHeight) {
+        if (currentCooldown <= 0) {
+            EnemyBullet bullet = new EnemyBullet(getX() + getWidth() / 2, getY() + getHeight(), bulletWidth, bulletHeight, enemyBulletImg);
+            enemyBulletArray.add(bullet);
+            currentCooldown = shootCooldown;
+        } else {
+            currentCooldown--;
+        }
+    }
 }
 
 class Bullet extends Block{
+    private boolean used = false;
     public Bullet(int x, int y, int width, int height, Image img) {
         super(x, y, width, height, img);
 
     }
+    public void setUsed(boolean used) {
+        this.used = used;
+    }
 
+    public boolean isUsed() {
+        return used;
+    }
+
+}
+class EnemyBullet extends Bullet{
+    private int bulletVelocityY = 10;
+    public EnemyBullet(int x, int y, int width, int height, Image img) {
+        super(x, y, width, height, img);
+    }
+    public void move(){
+        setY(getY() + bulletVelocityY);
+    }
 }
 
 class TacticalQ extends Bullet{

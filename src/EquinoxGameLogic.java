@@ -7,10 +7,6 @@ import java.util.ArrayList;
 import java.util.Random;
 import javax.swing.*;
 
-
-
-
-
 public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListener {
 
     // INIT
@@ -31,6 +27,7 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
     Image enemyImgVar3;
     Image world1BG;
     Image laserBlue;
+    Image enemyBulletImg;
     ArrayList<Image> enemyImgArray;
 
     // Game Settings
@@ -79,6 +76,10 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
     int tacticaleVelocityY = -10;
     long lastTacticalEUseTime;
     long tacticalECooldown = 9000;
+    //Enemy Bullets
+    ArrayList<EnemyBullet> enemyBulletArray;
+    int enemyBulletWidth = tileSize / 8;
+    int enemyBulletHeight = tileSize / 2;
 
     // Timer
     Timer gameLoop;
@@ -108,6 +109,7 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
         enemyImgVar1 = new ImageIcon(getClass().getResource("./img/enemyvar1.gif")).getImage();
         enemyImgVar2 = new ImageIcon(getClass().getResource("./img/monstertestvar2.png")).getImage();
         enemyImgVar3 = new ImageIcon(getClass().getResource("./img/monstertestvar3.png")).getImage();
+        enemyBulletImg = new ImageIcon(getClass().getResource("./img/laserRed.png")).getImage();
 
         enemyImgArray = new ArrayList<Image>();
         enemyImgArray.add(enemyImgVar1);
@@ -123,6 +125,7 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
 
         // Enemy Array Group
         enemyArray = new ArrayList<Enemy>();
+        enemyBulletArray = new ArrayList<EnemyBullet>();
 
         // Bullets
         bulletArray = new ArrayList<Bullet>();
@@ -188,6 +191,11 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
                 g.fillRect(bullet.getX(), bullet.getY(), bullet.getWidth(), bullet.getHeight());
             }
         }
+        //Draw Enemy Bullets
+        for (int i = 0; i < enemyBulletArray.size(); i++) {
+            EnemyBullet bullet = enemyBulletArray.get(i);
+            g.drawImage(enemyBulletImg, bullet.getX(), bullet.getY(), bullet.getWidth(), bullet.getHeight(), null);
+        }
 
         // Draw Score
         g.setColor(Color.LIGHT_GRAY);
@@ -221,23 +229,28 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
     public void moveGame() {
         // ENEMIES
         for (int i = 0; i < enemyArray.size(); i++) {
-            Block enemy = enemyArray.get(i);
+            Enemy enemy = enemyArray.get(i);
             if (enemy.isAlive()) {
-                enemy.setX(enemy.getX() + enemyVelocityX);
-
-                if (enemy.getX() + enemyWidth >= boardWidth || enemy.getX() <= 0) {
-                    enemyVelocityX *= -1;
-                    enemy.setX(enemy.getX() + enemyVelocityX * 2);
-
-                    // Move Enemies down by one row
-                    for (int j = 0; j < enemyArray.size(); j++) {
-                        enemyArray.get(j).setY(enemyArray.get(j).getY() + enemyHeight);
-                    }
+                enemy.move(boardWidth, enemyWidth, enemyHeight);
+                if(enemy.isMoveDown()){
+                    enemy.moveDown(enemyHeight);
+                }
+                if(enemy instanceof ShootingEnemy){
+                    ((ShootingEnemy) enemy).shoot(enemyBulletArray, enemyBulletImg, enemyBulletWidth, enemyBulletHeight);
                 }
                 // Lose condition
                 if (enemy.getY() >= ship.getY()) {
                     gameState.gameOver = true;
                 }
+            }
+        }
+        //Enemy Bullets
+        for (int i = 0; i < enemyBulletArray.size(); i++) {
+            EnemyBullet bullet = enemyBulletArray.get(i);
+            bullet.move();
+            // Bullet collision check
+            if(detectCollision(bullet, ship)){
+                gameState.gameOver = true;
             }
         }
 
@@ -299,6 +312,9 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
         }
         while (tacticalEArray.size() > 0 && (tacticalEArray.get(0).isUsed() || tacticalEArray.get(0).getY() < 0)) {
             tacticalEArray.remove(0);// Removes the first element of the array
+        }
+        while (enemyBulletArray.size() > 0 && (enemyBulletArray.get(0).isUsed() || enemyBulletArray.get(0).getY() > boardHeight)) {
+            enemyBulletArray.remove(0);// Removes the first element of the array
         }
 
         // Next wave of enemies
@@ -379,13 +395,50 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
         for (int r = 0; r < enemyRows; r++) {
             for (int c = 0; c < enemyColumns; c++) {
                 int randomImgIndex = random.nextInt(enemyImgArray.size());
-                Enemy enemy = new Enemy(
-                        enemyX + c * enemyWidth,
-                        enemyY + r * enemyHeight,
-                        enemyWidth,
-                        enemyHeight,
-                        enemyImgArray.get(randomImgIndex)
-                );
+                int enemyType = random.nextInt(6); // Now 0-5 (6 possibilities)
+                Enemy enemy;
+                switch (enemyType) {
+                    case 1:
+                        enemy = new FastEnemy(
+                                enemyX + c * enemyWidth,
+                                enemyY + r * enemyHeight,
+                                enemyWidth,
+                                enemyHeight,
+                                enemyImgArray.get(randomImgIndex),
+                                enemyVelocityX
+                        );
+                        break;
+                    case 2:
+                        enemy = new FastEnemy(
+                                enemyX + c * enemyWidth,
+                                enemyY + r * enemyHeight,
+                                enemyWidth,
+                                enemyHeight,
+                                enemyImgArray.get(randomImgIndex),
+                                enemyVelocityX
+                        );
+                        break;
+                    case 3:
+                        enemy = new ShootingEnemy(
+                                enemyX + c * enemyWidth,
+                                enemyY + r * enemyHeight,
+                                enemyWidth,
+                                enemyHeight,
+                                enemyImgArray.get(randomImgIndex),
+                                enemyVelocityX
+                        );
+                        break;
+                    default:
+                        enemy = new Enemy(
+                                enemyX + c * enemyWidth,
+                                enemyY + r * enemyHeight,
+                                enemyWidth,
+                                enemyHeight,
+                                enemyImgArray.get(randomImgIndex),
+                                enemyVelocityX
+                        );
+                        break;
+                }
                 enemyArray.add(enemy);
             }
         }
