@@ -7,9 +7,16 @@ import java.util.ArrayList;
 import java.util.Random;
 import javax.swing.*;
 
+
+
+
+
 public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListener {
 
     // INIT
+    private GameState gameState;
+
+
     // BOARD
     int tileSize = 32;
     int rows = 24;
@@ -52,7 +59,7 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
     int enemyVelocityX = 1;
     int enemyRows = 2;
     int enemyColumns = 3;
-    int enemyCount = 0; // enemies to defeat
+
     // Bullets
     ArrayList<Bullet> bulletArray;
     int bulletWidth = tileSize / 8; // Bullet size width
@@ -75,21 +82,25 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
 
     // Timer
     Timer gameLoop;
-    // Scoring
-    int score;
-    // Lose
-    boolean gameOver = false;
+
+
 
     // Movement flags
     boolean moveLeft = false;
     boolean moveRight = false;
 
     EquinoxGameLogic() {
+        //SetFrame
         setPreferredSize(new Dimension(boardWidth, boardHeight));
         setBackground(Color.DARK_GRAY);
 
         setFocusable(true);
         addKeyListener(this);
+        //GameState init
+        gameState = new GameState();
+
+
+
 
         // Image loading
         // Creatures
@@ -181,10 +192,10 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
         // Draw Score
         g.setColor(Color.LIGHT_GRAY);
         g.setFont(new Font("Arial", Font.PLAIN, 24));
-        if (gameOver) {
-            g.drawString("Game Over: " + String.valueOf(score), 10, 35);
+        if (gameState.gameOver) {
+            g.drawString("Game Over: " + String.valueOf(gameState.score), 10, 35);
         } else {
-            g.drawString(String.valueOf(score), 10, 35);
+            g.drawString(String.valueOf(gameState.score), 10, 35);
         }
 
         // Draw TacticalQ cooldown
@@ -225,7 +236,7 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
                 }
                 // Lose condition
                 if (enemy.getY() >= ship.getY()) {
-                    gameOver = true;
+                    gameState.gameOver = true;
                 }
             }
         }
@@ -241,8 +252,8 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
                 if (!bullet.isUsed() && enemy.isAlive() && detectCollision(bullet, enemy)) {
                     bullet.setUsed(true);
                     enemy.setAlive(false);
-                    enemyCount--;
-                    score += 100;
+                    gameState.enemyCount--;
+                    gameState.score += 100;
                 }
             }
         }
@@ -256,8 +267,8 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
                 Enemy enemy = enemyArray.get(j);
                 if (!bullet.isUsed() && enemy.isAlive() && detectCollision(bullet, enemy)) {
                     enemy.setAlive(false);
-                    enemyCount--;
-                    score += 100;
+                    gameState.enemyCount--;
+                    gameState.score += 100;
                 }
             }
         }
@@ -273,8 +284,8 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
                 if (!tacticale.isUsed() && enemy.isAlive() && detectCollision(tacticale, enemy)) {
                     tacticale.setUsed(true);
                     enemy.setAlive(false);
-                    enemyCount--;
-                    score += 100;
+                    gameState.enemyCount--;
+                    gameState.score += 100;
                 }
             }
         }
@@ -291,12 +302,12 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
         }
 
         // Next wave of enemies
-        if (enemyCount == 0) {
+        if (gameState.enemyCount == 0) {
 
             // Difficulty Same wave1 but differing next waves by difficulty
             if (difficulty == 1) {
                 // Easy Wave clear points
-                score += enemyRows * enemyColumns * 100;
+                gameState.score += enemyRows * enemyColumns * 100;
                 // Increase the number of enemies in columns and rows by 1
                 enemyColumns = Math.min(enemyColumns + 1, columns / 2 - 2); // cap column at 16/2 -2 =6
                 enemyRows = Math.min(enemyRows + 1, rows - 6); // Cap row at 16-6 = 10
@@ -308,7 +319,7 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
                 // Enemy Velocity faster
                 // enemyVelocityX=2;
                 // Wave clear points
-                score += enemyRows * enemyColumns * 150;
+                gameState.score += enemyRows * enemyColumns * 150;
                 // Increase the number of enemies in columns and rows by 2
                 enemyColumns = Math.min(enemyColumns + 2, columns / 2 - 2); // cap column at 16/2 -2 =6
                 enemyRows = Math.min(enemyRows + 2, rows - 6); // Cap row at 16-6 = 10
@@ -320,7 +331,7 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
                 // Enemy Velocity faster
                 // enemyVelocityX=3;
                 // Wave clear points
-                score += enemyRows * enemyColumns * 300;
+                gameState.score += enemyRows * enemyColumns * 300;
                 // Increase the number of enemies in columns and rows by 2
                 enemyColumns = Math.min(enemyColumns + 3, columns / 2 - 2); // cap column at 16/2 -2 =6
                 enemyRows = Math.min(enemyRows + 3, rows - 6); // Cap row at 16-6 = 10
@@ -378,7 +389,7 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
                 enemyArray.add(enemy);
             }
         }
-        enemyCount = enemyArray.size();
+        gameState.enemyCount = enemyArray.size();
     }
 
     public boolean detectCollision(Block a, Block b) {
@@ -394,7 +405,7 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
 
         moveGame();
         repaint();
-        if (gameOver) {
+        if (gameState.gameOver) {
             gameLoop.stop();
         }
     }
