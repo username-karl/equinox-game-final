@@ -88,12 +88,17 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
     // Timer
     Timer gameLoop;
 
-
-
     // Movement flags
     boolean moveLeft = false;
     boolean moveRight = false;
 
+    //STAGE DOMAIN
+    private StageManager stageManager;
+    private boolean gameLoopRunning = false;
+
+    
+    //MAIN EQUINOX GAME CONSTRUCTOR
+    //ALL THE LOGIC HERE IS CONTAINED
     EquinoxGameLogic() {
         //SetFrame
         setPreferredSize(new Dimension(boardWidth, boardHeight));
@@ -104,6 +109,9 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
         //GameState init
         gameState = new GameState();
         gameState.currentStage = new Stage(1,7);
+
+
+        
 
 
         // Image loading
@@ -149,6 +157,14 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
         gameLoop = new Timer(1000 / 60, this);
         createEnemies();
         gameLoop.start();
+    }
+    //Stage Manager
+    public void setStageManager(StageManager stageManager) {
+        this.stageManager = stageManager;
+    }
+    //GAMESTATE GETTER FOR CUTSCENES
+    public GameState getGameState() {
+        return gameState;
     }
 
     // Draw assets
@@ -315,17 +331,29 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
     }
     // MAIN MOVE GAME FUNCTION
     public void moveGame() {
-        moveEnemies();
-        moveEnemyBullets();
-        movePlayerBullets();
-        moveTacticalAbilities();
-        checkBulletCollisions();
-        checkTacticalCollisions();
-        checkEnemyBulletCollisions();
-        clearOffScreenBullets();
-        handleStageAndWaveLogic();
-        updateCooldowns();
-        moveShip();
+        if (gameLoopRunning) {
+            moveEnemies();
+            moveEnemyBullets();
+            movePlayerBullets();
+            moveTacticalAbilities();
+            checkBulletCollisions();
+            checkTacticalCollisions();
+            checkEnemyBulletCollisions();
+            clearOffScreenBullets();
+            handleStageAndWaveLogic();
+            updateCooldowns();
+            moveShip();
+        }
+    }
+    
+    //GAME LOOP HANDLING
+    public void startGameLoop(){
+        gameLoopRunning = true;
+        gameLoop.start();
+    }
+    public void stopGameLoop(){
+        gameLoopRunning = false;
+        gameLoop.stop();
     }
     // MOVE ENEMIES for MOVE GAME FUNCTION
     private void moveEnemies() {
@@ -466,29 +494,35 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
         enemyBulletArray.removeIf(enemyBullet -> enemyBullet.isUsed() || enemyBullet.getY() > boardHeight);
     }
     //STAGE WAVE LOGIC for MOVE GAME FUNCTION
+    //STAGE WAVE LOGIC for MOVE GAME FUNCTION
     private void handleStageAndWaveLogic() {
         // Next wave of enemies
         if (gameState.enemyCount == 0) {
+            stopGameLoop();
             if (gameState.currentStage.getCurrentWave() == gameState.currentStage.getTotalWaves()) {
                 // Move to the next stage
                 gameState.currentStage.setStageNumber(gameState.currentStage.getStageNumber() + 1);
                 gameState.currentStage.setCurrentWave(1);
                 gameState.currentStage.setSpecialEnemySpawned(false);
                 reset();
+                stageManager.startCutscene();
             } else if (gameState.currentStage.getCurrentWave() == gameState.currentStage.getTotalWaves() - 1) {
                 // Spawn the mainboss
                 gameState.currentStage.setSpecialEnemySpawned(true);
                 createMainboss();
                 gameState.currentStage.setCurrentWave(gameState.currentStage.getCurrentWave() + 1);
+                startGameLoop();
             } else if (gameState.currentStage.getCurrentWave() == gameState.currentStage.getTotalWaves() - 2) {
                 // Spawn the miniboss
                 gameState.currentStage.setSpecialEnemySpawned(true);
                 createMiniboss();
                 gameState.currentStage.setCurrentWave(gameState.currentStage.getCurrentWave() + 1);
+                startGameLoop();
             } else {
                 // Move to the next wave
                 gameState.currentStage.setCurrentWave(gameState.currentStage.getCurrentWave() + 1);
                 reset();
+                startGameLoop(); // Add this line to restart the game loop
             }
         }
     }
