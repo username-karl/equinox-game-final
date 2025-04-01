@@ -9,10 +9,13 @@ public class GameState {
     public int score;
 
     //Monies
-    public int money;
+    public int money=500;
 
     public int getMoney() {
         return money;
+    }
+    public void setMoney(int money) {
+        this.money = money;
     }
 
     //Enemies

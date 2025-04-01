@@ -23,7 +23,7 @@ public class StageManager {
         // Create panels
         cutscenePanel = new CutscenePanel(this, null); // Pass null if no bg
         //Create shop panel
-        shopPanel = new ShopPanel(this, shopBackground);
+        shopPanel = new ShopPanel(this, shopBackground,gameLogic.getGameState());
         // New: Load cutscene data
         loadCutsceneData();
 
@@ -83,12 +83,14 @@ public class StageManager {
     }
 
     public void showShop() {
+        
         frame.remove(cutscenePanel);
         frame.add(shopPanel);
         frame.pack(); // Pack after adding shopPanel
         frame.revalidate();
         frame.repaint();
         shopPanel.showShop();
+        
     }
 
     public void startGameLoop() {

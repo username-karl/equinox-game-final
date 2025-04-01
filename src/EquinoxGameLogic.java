@@ -158,6 +158,7 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
         createEnemies();
         gameLoop.start();
     }
+    
     //Stage Manager
     public void setStageManager(StageManager stageManager) {
         this.stageManager = stageManager;
@@ -186,11 +187,11 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
         drawEnemyBullets(g);
         drawGameStats(g);
     }
-    //DRAW PLAYER SHIP
+    //DRAW PLAYER SHIP FOR DRAW()
     private void drawShip(Graphics g) {
         g.drawImage(ship.img, ship.getX(), ship.getY(), ship.getWidth(), ship.getHeight(), null);
     }
-    //DRAW ENEMY ARRAY
+    //DRAW ENEMY ARRAY FOR DRAW()
     private void drawEnemies(Graphics g) {
         for (Enemy enemy : enemyArray) {
             if (enemy.isAlive()) {
@@ -206,7 +207,7 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
             }
         }
     }
-    //DRAW PLAYER BULLET
+    //DRAW PLAYER BULLET FOR DRAW()
     private void drawPlayerBullets(Graphics g) {
         g.setColor(Color.white);
         for (Bullet bullet : bulletArray) {
@@ -215,7 +216,7 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
             }
         }
     }
-    //DRAW TACTICALS
+    //DRAW TACTICALS FOR DRAW()
     private void drawTacticalAbilities(Graphics g) {
         //TACTICAL Q
         g.setColor(Color.white);
@@ -231,13 +232,13 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
             }
         }
     }
-    //DRAW ENEMY BULLETS
+    //DRAW ENEMY BULLETS FOR DRAW()
     private void drawEnemyBullets(Graphics g) {
         for (EnemyBullet bullet : enemyBulletArray) {
             g.drawImage(enemyBulletImg, bullet.getX(), bullet.getY(), bullet.getWidth(), bullet.getHeight(), null);
         }
     }
-
+    //DRAW GAME STATS FOR DRAW()
     private void drawGameStats(Graphics g) {
         // Draw Score
         g.setColor(Color.LIGHT_GRAY);
@@ -274,7 +275,7 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
         // Draw Stage and Wave String
         g.drawString("World: " + gameState.currentStage.getStageNumber() + " Wave: " + gameState.currentStage.getCurrentWave(), 10, 85);
     }
-
+    //DRAW BOSS HEALTH BARS FOR DRAW()
     private void drawBossHealthBar(Graphics g, Miniboss miniboss) {
         if (miniboss.isAlive()) {
             int healthBarWidth = boardWidth / 2; // Half the width of the board
@@ -355,6 +356,7 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
         gameLoopRunning = false;
         gameLoop.stop();
     }
+    
     // MOVE ENEMIES for MOVE GAME FUNCTION
     private void moveEnemies() {
         for (Enemy enemy : enemyArray) {
@@ -401,7 +403,7 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
             bullet.move();
         }
     }
-
+    //MOVE PLAYER BULLETS for MOVE GAME FUNCTION
     private void movePlayerBullets() {
         for (Bullet bullet : bulletArray) {
             bullet.setY(bullet.getY() + bulletVelocityY);
@@ -494,7 +496,6 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
         enemyBulletArray.removeIf(enemyBullet -> enemyBullet.isUsed() || enemyBullet.getY() > boardHeight);
     }
     //STAGE WAVE LOGIC for MOVE GAME FUNCTION
-    //STAGE WAVE LOGIC for MOVE GAME FUNCTION
     private void handleStageAndWaveLogic() {
         // Next wave of enemies
         if (gameState.enemyCount == 0) {
@@ -526,7 +527,6 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
             }
         }
     }
-
     // Cooldowns for MOVE GAME FUNCTION
     private void updateCooldowns() {
         long currentTime = System.currentTimeMillis();
@@ -561,7 +561,16 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
             ship.setX(newShipX);
         }
     }
-
+    //RESET for MOVE GAME FUNCTION
+    public void reset(){
+        enemyArray.clear();
+        bulletArray.clear();
+        enemyBulletArray.clear();
+        tacticalArray.clear();
+        tacticalEArray.clear();
+        createEnemies();
+    }
+    //CREATING ENEMY INSTANCES
     // Create enemies
     public void createEnemies() {
         Random random = new Random();
@@ -576,83 +585,32 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
                 int randomImgIndex = random.nextInt(enemyImgArray.size());
                 int enemyType = random.nextInt(6); // Now 0-5 (6 possibilities)
                 Enemy enemy;
-                switch (enemyType) {
-                    case 0:
-                        enemy = new FastEnemy(
-                                enemyX + c * enemyWidth,
-                                enemyY + r * enemyHeight,
-                                enemyWidth,
-                                enemyHeight,
-                                enemyImgArray.get(randomImgIndex),
-                                enemyVelocityX
-                        );
-                        break;
-                    case 1:
-                        enemy = new FastEnemy(
-                                enemyX + c * enemyWidth,
-                                enemyY + r * enemyHeight,
-                                enemyWidth,
-                                enemyHeight,
-                                enemyImgArray.get(randomImgIndex),
-                                enemyVelocityX
-                        );
-                        break;
-                    case 2:
-                        enemy = new FastEnemy(
-                                enemyX + c * enemyWidth,
-                                enemyY + r * enemyHeight,
-                                enemyWidth,
-                                enemyHeight,
-                                enemyImgArray.get(randomImgIndex),
-                                enemyVelocityX
-                        );
-                        break;
-                    case 3:
-                        enemy = new ShootingEnemy(
-                                enemyX + c * enemyWidth,
-                                enemyY + r * enemyHeight,
-                                enemyWidth,
-                                enemyHeight,
-                                enemyImgArray.get(randomImgIndex),
-                                enemyVelocityX
-                        );
-                        break;
-                    case 4:
-                        enemy = new FastEnemy(
-                                enemyX + c * enemyWidth,
-                                enemyY + r * enemyHeight,
-                                enemyWidth,
-                                enemyHeight,
-                                enemyImgArray.get(randomImgIndex),
-                                enemyVelocityX
-                        );
-                        break;
-                    case 5:
-                        enemy = new FastEnemy(
-                                enemyX + c * enemyWidth,
-                                enemyY + r * enemyHeight,
-                                enemyWidth,
-                                enemyHeight,
-                                enemyImgArray.get(randomImgIndex),
-                                enemyVelocityX
-                        );
-                        break;
-                    default:
-                        enemy = new Enemy(
-                                enemyX + c * enemyWidth,
-                                enemyY + r * enemyHeight,
-                                enemyWidth,
-                                enemyHeight,
-                                enemyImgArray.get(randomImgIndex),
-                                enemyVelocityX
-                        );
-                        break;
+                if (enemyType == 3) { // 16.66% Chance to spawn Shooting Enemy
+                    enemy = new ShootingEnemy(
+                            enemyX + c * enemyWidth,
+                            enemyY + r * enemyHeight,
+                            enemyWidth,
+                            enemyHeight,
+                            enemyImgArray.get(randomImgIndex),
+                            enemyVelocityX
+                    );
+                } else { 
+                    enemy = new FastEnemy(
+                            enemyX + c * enemyWidth,
+                            enemyY + r * enemyHeight,
+                            enemyWidth,
+                            enemyHeight,
+                            enemyImgArray.get(randomImgIndex),
+                            enemyVelocityX
+                    );
+                    
                 }
                 enemyArray.add(enemy);
             }
         }
         gameState.enemyCount = enemyArray.size();
     }
+    //SPECIAL ENEMIES
     public void createMiniboss(){
         int minibossWorld1 = 0;
         Miniboss miniboss = new Miniboss(boardWidth/2 - tileSize * 2,
@@ -687,17 +645,7 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
         enemyArray.add(mainboss);
         gameState.enemyCount++; // Increment
     }
-
-    //RESET for MOVE GAME FUNCTION
-    public void reset(){
-        enemyArray.clear();
-        bulletArray.clear();
-        enemyBulletArray.clear();
-        tacticalArray.clear();
-        tacticalEArray.clear();
-        createEnemies();
-    }
-
+    //COLLISION LOGIC
     public boolean detectCollision(Block a, Block b) {
         return a.getX() < b.getX() + b.getWidth() && // entity a's top left corner doesn't reach b's top right corner
                 a.getX() + a.getWidth() > b.getX() && // entity a's top right corner passes b's top left corner
@@ -705,7 +653,7 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
                 a.getY() + a.getHeight() > b.getY(); // entity a's bottom left corner passes b's top let corner
     }
 
-    //IMPLEMENTATION OF ACTION LISTENER
+    //Interfaced from Action Listener
     @Override
     public void actionPerformed(ActionEvent e) {
 
@@ -715,36 +663,39 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
             gameLoop.stop();
         }
     }
-    //IMPLEMENTATIONS OF KEY LISTENER INTERFACE
+    //Interfaced from Key Listener to listen for keyboard
     @Override
     public void keyTyped(KeyEvent e) {
     }
 
     @Override
     public void keyPressed(KeyEvent e) {
-        // Ship movement
+        // Ship movement flag raise
         if (e.getKeyCode() == KeyEvent.VK_A) {
             moveLeft = true;
         } else if (e.getKeyCode() == KeyEvent.VK_D) {
             moveRight = true;
         }
     }
-
+    //KEY TAP LOGIC
     @Override
     public void keyReleased(KeyEvent e) {
-        // Ship movement
+        //KEY PRESS LOGIC
+        // Ship movement flag released
         if (e.getKeyCode() == KeyEvent.VK_A) {
             moveLeft = false;
         } else if (e.getKeyCode() == KeyEvent.VK_D) {
             moveRight = false;
         } 
-        //Ship Shooting
+        //Ship Basic Attack Trigger
         else if (e.getKeyCode() == KeyEvent.VK_SPACE) {
             Bullet bullet = new Bullet(ship.getX() + ship.getWidth() * 15 / 32, ship.getY(), bulletWidth, bulletHeight,
                     laserBlue);
             bulletArray.add(bullet);
-        } else if (e.getKeyCode() == KeyEvent.VK_Q) {
-            // TacticalQ
+        } 
+        // TacticalQ Trigger
+        else if (e.getKeyCode() == KeyEvent.VK_Q) {
+            
             long currentTime = System.currentTimeMillis();
 
             if (currentTime - lastTacticalQUseTime >= tacticalQCooldown) {
@@ -757,22 +708,27 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
                 // Ability is on cooldown
                 System.out.println("Tactical Q on cooldown!");
             }
-        } else if (e.getKeyCode() == KeyEvent.VK_E) {
-            // TacticalE
+        } 
+        // TacticalE Trigger
+        else if (e.getKeyCode() == KeyEvent.VK_E) {
+            
             long currentTime = System.currentTimeMillis();
 
             if (currentTime - lastTacticalEUseTime >= tacticalECooldown) {
                 // Cooldown is over, allow the ability
                 int numBullets = boardWidth / tileSize; // Number of bullets based on board width
                 int startX = 0; // Start at the left edge of the screen
-
                 for (int i = 0; i < numBullets; i++) {
                     TacticalE tacticale = new TacticalE(startX + i * tileSize, ship.getY(),
                             tacticaleWidth, tacticaleHeight, null);
                     tacticalEArray.add(tacticale);
                 }
                 lastTacticalEUseTime = currentTime; // Update the last use time
-            } else {
+            } 
+        // SPECIAL Trigger
+        
+        
+            else {
                 // Ability is on cooldown
                 System.out.println("Tactical E on cooldown!");
             }

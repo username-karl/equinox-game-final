@@ -10,78 +10,90 @@ public class ShopPanel extends JPanel {
     private StageManager stageManager;
     private List<JButton> characterButtons;
     private Image background;
-    private JLabel titleLabel; // New: Shop title label
+    private JLabel lbltitle;    //Title Label
+    private JLabel lblmoney; // Money Label
+    private GameState gameState;
+    private JPanel moneyPanel; // Panel to hold the money label
 
-    public ShopPanel(StageManager stageManager, Image background) {
+    public ShopPanel(StageManager stageManager, Image background, GameState gameState) {
         this.stageManager = stageManager;
         this.background = background;
-        setPreferredSize(new Dimension(1280, 720)); // 16:9 ratio
-        setLayout(new BorderLayout()); // Use BorderLayout for better layout control
+        this.gameState = gameState;
+        setPreferredSize(new Dimension(1280, 720));
+        setLayout(new BorderLayout());
 
         // Create the title label
-        titleLabel = new JLabel("Welcome to the trading hub: Recruit your crew");
-        titleLabel.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 28)); // Font
-        titleLabel.setForeground(Color.ORANGE); // Brighter orange
-        titleLabel.setHorizontalAlignment(JLabel.CENTER);
-        add(titleLabel, BorderLayout.NORTH); // Add title to the top
+        lbltitle = new JLabel("Welcome to the trading hub: Recruit your crew");
+        lbltitle.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 28));
+        lbltitle.setForeground(Color.ORANGE);
+        lbltitle.setHorizontalAlignment(JLabel.CENTER);
+        add(lbltitle, BorderLayout.NORTH);
 
-        // Create the money label
-
-        titleLabel = new JLabel("Current Money: ");
-        titleLabel.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 28)); // Font
-        titleLabel.setForeground(Color.ORANGE); // Brighter orange
-        titleLabel.setHorizontalAlignment(JLabel.LEFT);
-        add(titleLabel, BorderLayout.NORTH); // Add title to the top
+        // Create the money label and panel
+        moneyPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        moneyPanel.setOpaque(false); // Make the panel transparent
+        lblmoney = new JLabel("Current Money: $" + gameState.getMoney());
+        lblmoney.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 20));
+        lblmoney.setForeground(Color.ORANGE);
+        moneyPanel.add(lblmoney);
+        add(moneyPanel, BorderLayout.SOUTH); // Add money panel to the bottom
 
         // CHARACTER PANEL FOR BUTTONS
-        JPanel characterPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 50, 50)); // FlowLayout for buttons
-        characterPanel.setOpaque(false); // Make the panel transparent
+        JPanel characterPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 50, 50));
+        characterPanel.setOpaque(false);
         characterButtons = new ArrayList<>();
 
-        //Example
-        createCharacterButton(characterPanel, "Captain Nova", new ImageIcon(getClass().getResource("./img/temp.png")).getImage(), "A trusty old Ally", "Increase Guns");
-        createCharacterButton(characterPanel, "Character 2", new ImageIcon(getClass().getResource("./img/temp.png")).getImage(), "A mysterious and powerful ally.", "Increase Health");
-        createCharacterButton(characterPanel, "Character 3", new ImageIcon(getClass().getResource("./img/temp.png")).getImage(), "A skilled and loyal companion.", "Increase Speed");
+        // Example
+        createCharacterButton(characterPanel, "Captain Nova", new ImageIcon(getClass().getResource("./img/temp.png")).getImage(), "A trusty old Ally", "Increase Guns", 100);
+        createCharacterButton(characterPanel, "Character 2", new ImageIcon(getClass().getResource("./img/temp.png")).getImage(), "A mysterious and powerful ally.", "Increase Health", 150);
+        createCharacterButton(characterPanel, "Character 3", new ImageIcon(getClass().getResource("./img/temp.png")).getImage(), "A skilled and loyal companion.", "Increase Speed", 200);
 
-        add(characterPanel, BorderLayout.CENTER); // Add character panel to the center
+        add(characterPanel, BorderLayout.CENTER);
     }
 
-    private void createCharacterButton(JPanel panel, String name, Image portrait, String description, String upgradeDescription) {
+    private void createCharacterButton(JPanel panel, String name, Image portrait, String description, String upgradeDescription, int cost) {
         JButton button = new JButton();
-        button.setPreferredSize(new Dimension(200, 300)); // Increased height to accommodate new label
+        button.setPreferredSize(new Dimension(200, 300));
         button.setLayout(new BorderLayout());
-        button.setBackground(new Color(50, 50, 50)); // Darker background for buttons
+        button.setBackground(new Color(50, 50, 50));
         button.setForeground(Color.WHITE);
-        button.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 16)); // Changed font
+        button.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 16));
 
         // Create the title label for the character name
         JLabel nameLabel = new JLabel(name);
         nameLabel.setHorizontalAlignment(JLabel.CENTER);
         nameLabel.setForeground(Color.WHITE);
-        nameLabel.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 18)); // Larger font for name
-        button.add(nameLabel, BorderLayout.NORTH); // Add name to the top of the button
+        nameLabel.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 18));
+        button.add(nameLabel, BorderLayout.NORTH);
 
         JLabel portraitLabel = new JLabel(new ImageIcon(portrait.getScaledInstance(150, 150, Image.SCALE_SMOOTH)));
         portraitLabel.setHorizontalAlignment(JLabel.CENTER);
         button.add(portraitLabel, BorderLayout.CENTER);
 
         // Create the description label
-        JLabel descriptionLabel = new JLabel("<html><center>" + description + "</center></html>"); // HTML for text wrapping
+        JLabel descriptionLabel = new JLabel("<html><center>" + description + "</center></html>");
         descriptionLabel.setHorizontalAlignment(JLabel.CENTER);
-        descriptionLabel.setForeground(Color.LIGHT_GRAY); // Lighter gray for description
-        descriptionLabel.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 14)); // Changed font
-        button.add(descriptionLabel, BorderLayout.SOUTH);
+        descriptionLabel.setForeground(Color.LIGHT_GRAY);
+        descriptionLabel.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 14));
 
         // Create the upgrade description label
         JLabel upgradeLabel = new JLabel("<html><center>Upgrade: " + upgradeDescription + "</center></html>");
         upgradeLabel.setHorizontalAlignment(JLabel.CENTER);
-        upgradeLabel.setForeground(Color.CYAN); // Different color for upgrade
+        upgradeLabel.setForeground(Color.CYAN);
         upgradeLabel.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 12));
-        // Create a panel to hold the description and upgrade labels
-        JPanel textPanel = new JPanel(new GridLayout(2, 1)); // 2 rows, 1 column
+
+        // Create the cost label
+        JLabel costLabel = new JLabel("<html><center>Cost: $" + cost + "</center></html>");
+        costLabel.setHorizontalAlignment(JLabel.CENTER);
+        costLabel.setForeground(Color.YELLOW);
+        costLabel.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 12));
+
+        // Create a panel to hold the description, upgrade, and cost labels
+        JPanel textPanel = new JPanel(new GridLayout(3, 1)); // 3 rows, 1 column
         textPanel.setOpaque(false);
         textPanel.add(descriptionLabel);
         textPanel.add(upgradeLabel);
+        textPanel.add(costLabel);
         button.add(textPanel, BorderLayout.SOUTH);
 
         button.addActionListener(new ActionListener() {
@@ -89,7 +101,20 @@ public class ShopPanel extends JPanel {
             public void actionPerformed(ActionEvent e) {
                 // Handle character selection
                 System.out.println(name + " selected!");
-                stageManager.startGameLoop();
+                // Money Check
+                if (gameState.getMoney() >= cost) {
+                    nameLabel.setText("RECRUITED");
+                    button.setEnabled(false);
+                    // Deduct money
+                    gameState.setMoney(gameState.getMoney() - cost);
+                    // Update the money label
+                    lblmoney.setText("Current Money: $" + gameState.getMoney());
+                    // Proceed to the game loop
+                    stageManager.startGameLoop();
+                } else {
+                    // Not enough money, display a message
+                    JOptionPane.showMessageDialog(ShopPanel.this, "Insufficient Funds! " + name + "!", "Insufficient Funds", JOptionPane.WARNING_MESSAGE);
+                }
             }
         });
         characterButtons.add(button);
@@ -97,6 +122,7 @@ public class ShopPanel extends JPanel {
     }
 
     public void showShop() {
+        lblmoney.setText("Current Money: $" + gameState.getMoney());
         revalidate();
         repaint();
         requestFocusInWindow();
