@@ -34,7 +34,9 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
     ArrayList<Image> enemyImgArray;
     ArrayList<Image> specialEnemyImgArray;
     // Game Settings
-    int difficulty = 2;
+
+
+
     long remainingCooldown;
     long remainingCooldownE;
 
@@ -43,7 +45,7 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
     int shipHeight = tileSize; // 32px
     int shipX = tileSize * columns / 2 - tileSize;
     int shipY = boardHeight - tileSize * 2;
-    int shipVelocityX = 0; // Initial velocity is 0
+    int shipVelocityX = 0; // Initial velocity
     int shipAcceleration = 2; // Acceleration rate
     int shipMaxSpeed = 8; // Maximum speed
     int shipDeceleration = 1; // Deceleration rate
@@ -57,28 +59,28 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
     int enemyX = tileSize;
     int enemyY = tileSize;
     int enemyVelocityX = 1;
-    int enemyRows = 3;
+    int enemyRows = 4;
     int enemyColumns = 7;
 
     // Bullets
     ArrayList<Bullet> bulletArray;
     int bulletWidth = tileSize / 8; // Bullet size width
     int bulletHeight = tileSize / 2;
-    int bulletVelocityY = -10; // Bullet movespeed
+    int bulletVelocityY = -20; // Bullet movespeed
     // TacticalQ
     ArrayList<TacticalQ> tacticalArray;
     int tacticalqWidth = tileSize / 4; // Bullet size width
     int tacticalqHeight = tileSize * 9;
     int tacticalqVelocityY = -100; // Bullet movespeed
     long lastTacticalQUseTime; // Last tactical use time
-    long tacticalQCooldown = 3000; // Tactical cooldown in ms
+    long tacticalQCooldown = 3000; // Tactical Q Cooldown in ms
     //TacticalE
     ArrayList<TacticalE> tacticalEArray;
     int tacticaleWidth = tileSize; // Smaller projectile
     int tacticaleHeight = tileSize / 8;
     int tacticaleVelocityY = -10;
     long lastTacticalEUseTime;
-    long tacticalECooldown = 500;
+    long tacticalECooldown = 0; //Tactical E Cooldown in ms
     //Enemy Bullets
     ArrayList<EnemyBullet> enemyBulletArray;
     int enemyBulletWidth = tileSize / 8;
