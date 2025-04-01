@@ -55,8 +55,8 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
     ArrayList<Enemy> enemyArray;
     int enemyWidth = tileSize * 2;
     int enemyHeight = tileSize;
-    int enemyX = tileSize;
-    int enemyY = tileSize;
+    int enemyX = 0;     //X START SPAWN
+    int enemyY = 0;     //Y START SPAWN
     int enemyVelocityX = 1;
     int enemyRows = 5;
     int enemyColumns = 5;
@@ -69,15 +69,15 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
     // TacticalQ
     ArrayList<TacticalQ> tacticalArray;
     int tacticalqWidth = tileSize / 4; // Bullet size width
-    int tacticalqHeight = tileSize * 9;
+    int tacticalqHeight = tileSize * 10;
     int tacticalqVelocityY = -100; // Bullet movespeed
     long lastTacticalQUseTime; // Last tactical use time
-    long tacticalQCooldown = 3000; // Tactical Q Cooldown in ms
+    long tacticalQCooldown = 2500; // Tactical Q Cooldown in ms
     //TacticalE
     ArrayList<TacticalE> tacticalEArray;
     int tacticaleWidth = tileSize; // Smaller projectile
     int tacticaleHeight = tileSize / 8;
-    int tacticaleVelocityY = -10;
+    int tacticaleVelocityY = -15;
     long lastTacticalEUseTime;
     long tacticalECooldown = 0; //Tactical E Cooldown in ms
     //Enemy Bullets
@@ -224,13 +224,20 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
         //DRAW STATS
         // Draw Score
         g.setColor(Color.LIGHT_GRAY);
-        g.setFont(new Font("Arial", Font.PLAIN, 24));
+        g.setFont(new Font("Arial", Font.PLAIN, 16));
         if (gameState.gameOver) {
             g.drawString("Game Over: " + String.valueOf(gameState.score), 10, 35);
         } else {
-            g.drawString(String.valueOf(gameState.score), 10, 35);
+            g.drawString("Score: "+String.valueOf(gameState.score), 10, 35);
         }
-
+        //Draw Money
+        g.setColor(Color.ORANGE);
+        g.setFont(new Font("Arial", Font.PLAIN, 16));
+        g.drawString("Money: " +gameState.money, 10, 60);
+        //Draw Money
+        g.setColor(Color.RED);
+        g.setFont(new Font("Arial", Font.PLAIN, 16));
+        g.drawString("Killed: " +gameState.enemySlain, 672, 60);
         // Draw TacticalQ cooldown
         g.setColor(Color.YELLOW);
         g.setFont(new Font("Arial", Font.PLAIN, 18));
@@ -248,7 +255,7 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
             g.drawString("Tactical E: Ready", 10 + tileSize * 5, tileSize * 24);
         }
         //Draw Stage and Wave String
-        g.drawString("World: " + gameState.currentStage.getStageNumber() + " Wave: " + gameState.currentStage.getCurrentWave(), 10, 60);
+        g.drawString("World: " + gameState.currentStage.getStageNumber() + " Wave: " + gameState.currentStage.getCurrentWave(), 10, 85);
 
     }
 
@@ -258,7 +265,10 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
             int healthBarHeight = 20;
             int healthBarX = boardWidth / 4; // Center the health bar
             int healthBarY = 40; // Position it below the top
-
+            //NAME
+            g.setColor(Color.WHITE);
+            g.setFont(new Font("Arial", Font.BOLD, 12));
+            g.drawString("Miniboss: "+miniboss.getEnemyBossName(), boardWidth/3, 60);
             // Calculate the filled portion of the health bar
             double healthPercentage = (double) miniboss.getHitpoints() / miniboss.getMaxHitpoints();
             int filledWidth = (int) (healthBarWidth * healthPercentage);
@@ -282,7 +292,10 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
             int healthBarHeight = 20;
             int healthBarX = boardWidth / 4; // Center the health bar
             int healthBarY = 40; // Position it below the top
-
+            //NAME
+            g.setColor(Color.WHITE);
+            g.setFont(new Font("Arial", Font.BOLD, 12));
+            g.drawString("BOSS: "+mainboss.getEnemyBossName(), boardWidth/3, 60);
             // Calculate the filled portion of the health bar
             double healthPercentage = (double) mainboss.getHitpoints() / mainboss.getMaxHitpoints();
             int filledWidth = (int) (healthBarWidth * healthPercentage);
@@ -426,16 +439,22 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
             specialEnemy.setHitpoints(specialEnemy.getHitpoints() - 1);
             if (specialEnemy.getHitpoints() <= 0) {
                 if(enemy instanceof Miniboss){
-                    gameState.score += 10000;
+                    gameState.score += 10000;   //SCORES
+                    gameState.money += 2500;    //MONEY
+                    gameState.enemySlain++;     //STAT COUNTER
                 }else if(enemy instanceof MainBoss){
-                    gameState.score += 50000;
+                    gameState.score += 20000;   //SCORES
+                    gameState.money += 5000;    //MONEY
+                    gameState.enemySlain++;     //STAT COUNTER
                 }
                 enemy.setAlive(false);
                 gameState.enemyCount--;
             }
         } else {
             enemy.setAlive(false);
+            gameState.dropLoot();       //RANDOM MONEY
             gameState.score += 100;
+            gameState.enemySlain++;     //STAT COUNTER
             gameState.enemyCount--;
         }
     }
@@ -611,7 +630,9 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
                 specialEnemyImgArray.get(minibossWorld1),
                 100,
                 100,
-                2);
+                2,
+                "Quantum Anomaly"
+                );
         enemyArray.add(miniboss);
         gameState.enemyCount++; // Increment
     }
@@ -626,7 +647,9 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
                 specialEnemyImgArray.get(mainbossWorld1),
                 500,
                 75,
-                2);
+                2,
+                "The Collector"
+                );
         enemyArray.add(mainboss);
         gameState.enemyCount++; // Increment
     }

@@ -157,6 +157,7 @@ class ShootingEnemy extends Enemy{
 class SpecialEnemy extends Enemy{
     Image specialEnemyImg;
     //Default specialEnemy values
+    private String enemyBossName="";
     private int hitpoints = 20;
     private int maxHitpoints = 20;
     private int shootCooldown = 100; // Adjust as needed
@@ -173,6 +174,21 @@ class SpecialEnemy extends Enemy{
         this.shootCooldown=shootCooldown;
         this.maxHitpoints=hitpoints;
         this.specialEnemyVelocityY=specialEnemyVelocityY;
+    }
+    public SpecialEnemy(int x, int y, int width, int height, Image img, int enemyVelocityX, Image specialEnemyImg,int hitpoints,int shootCooldown, int specialEnemyVelocityY, String enemyBossName) {
+        super(x, y, width, height, img, enemyVelocityX);
+        this.enemyBossName=enemyBossName;
+        this.specialEnemyImg=specialEnemyImg;
+        this.hitpoints=hitpoints;
+        this.shootCooldown=shootCooldown;
+        this.maxHitpoints=hitpoints;
+        this.specialEnemyVelocityY=specialEnemyVelocityY;
+    }
+    public String getEnemyBossName() {
+        return enemyBossName;
+    }
+    public void setEnemyBossName(String enemyBossName) {
+        this.enemyBossName = enemyBossName;
     }
     public int getHitpoints() {
         return hitpoints;
@@ -207,6 +223,9 @@ class Miniboss extends SpecialEnemy{
     public Miniboss(int x, int y, int width, int height, Image img, int enemyVelocityX, Image specialEnemyImg, int hitpoints, int shootCooldown, int specialEnemyVelocityY) {
         super(x, y, width, height, img, enemyVelocityX, specialEnemyImg, hitpoints, shootCooldown, specialEnemyVelocityY);
     }
+    public Miniboss(int x, int y, int width, int height, Image img, int enemyVelocityX, Image specialEnemyImg, int hitpoints, int shootCooldown, int specialEnemyVelocityY,String enemyBossName) {
+        super(x, y, width, height, img, enemyVelocityX, specialEnemyImg, hitpoints, shootCooldown, specialEnemyVelocityY,enemyBossName);
+    }
 }
 class MainBoss extends SpecialEnemy{
     public MainBoss(int x, int y, int width, int height, Image img, int enemyVelocityX, Image specialEnemyImg) {
@@ -214,6 +233,9 @@ class MainBoss extends SpecialEnemy{
     }
     public MainBoss(int x, int y, int width, int height, Image img, int enemyVelocityX, Image specialEnemyImg, int hitpoints, int shootCooldown, int specialEnemyVelocityY) {
         super(x, y, width, height, img, enemyVelocityX, specialEnemyImg, hitpoints, shootCooldown, specialEnemyVelocityY);
+    }
+    public MainBoss(int x, int y, int width, int height, Image img, int enemyVelocityX, Image specialEnemyImg, int hitpoints, int shootCooldown, int specialEnemyVelocityY, String enemyBossName) {
+        super(x, y, width, height, img, enemyVelocityX, specialEnemyImg, hitpoints, shootCooldown, specialEnemyVelocityY,enemyBossName);
     }
 }
 

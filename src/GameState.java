@@ -1,3 +1,5 @@
+import java.util.Random;
+
 public class GameState {
     
     //Lose
@@ -6,19 +8,45 @@ public class GameState {
     //Scoring
     public int score;
 
+    //Monies
+    public int money;
+
     //Enemies
     public int enemyCount;  //Enemies to defeat
-
+    public int enemySlain;  //Enemies defeated
+    
     //Stage
     public Stage currentStage;
 
-    public GameState(int score){
+    public GameState(int score,int money){
         this.score=score;
+        this.money=money;
     }
 
     public GameState(){
     }
 
+
+
+    public void dropLoot(){
+        //Money drop
+                Random random = new Random();
+                int rndm=random.nextInt(3);
+                switch(rndm){
+                    case 1:
+                        money += 10;
+                    break;
+                    case 2:
+                        money += 5;
+                    break;
+                    case 0:
+                        money+=0;
+                    break;
+                    default:
+                        money+=0;
+                    break;
+                }
+    }
 }
 
 class Stage {
