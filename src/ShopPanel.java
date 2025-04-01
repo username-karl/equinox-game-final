@@ -25,26 +25,41 @@ public class ShopPanel extends JPanel {
         titleLabel.setHorizontalAlignment(JLabel.CENTER);
         add(titleLabel, BorderLayout.NORTH); // Add title to the top
 
-        // CHARACTER PANNEL FOR BUTTONS
+        // Create the money label
+
+        titleLabel = new JLabel("Current Money: ");
+        titleLabel.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 28)); // Font
+        titleLabel.setForeground(Color.ORANGE); // Brighter orange
+        titleLabel.setHorizontalAlignment(JLabel.LEFT);
+        add(titleLabel, BorderLayout.NORTH); // Add title to the top
+
+        // CHARACTER PANEL FOR BUTTONS
         JPanel characterPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 50, 50)); // FlowLayout for buttons
         characterPanel.setOpaque(false); // Make the panel transparent
         characterButtons = new ArrayList<>();
 
         //Example
-        createCharacterButton(characterPanel, "Captain Nova", new ImageIcon(getClass().getResource("./img/temp.png")).getImage(), "A trusty old Ally");
-        createCharacterButton(characterPanel, "Character 2", new ImageIcon(getClass().getResource("./img/temp.png")).getImage(), "A mysterious and powerful ally.");
-        createCharacterButton(characterPanel, "Character 3", new ImageIcon(getClass().getResource("./img/temp.png")).getImage(), "A skilled and loyal companion.");
+        createCharacterButton(characterPanel, "Captain Nova", new ImageIcon(getClass().getResource("./img/temp.png")).getImage(), "A trusty old Ally", "Increase Guns");
+        createCharacterButton(characterPanel, "Character 2", new ImageIcon(getClass().getResource("./img/temp.png")).getImage(), "A mysterious and powerful ally.", "Increase Health");
+        createCharacterButton(characterPanel, "Character 3", new ImageIcon(getClass().getResource("./img/temp.png")).getImage(), "A skilled and loyal companion.", "Increase Speed");
 
         add(characterPanel, BorderLayout.CENTER); // Add character panel to the center
     }
 
-    private void createCharacterButton(JPanel panel, String name, Image portrait, String description) {
-        JButton button = new JButton(name);
-        button.setPreferredSize(new Dimension(200, 250));
+    private void createCharacterButton(JPanel panel, String name, Image portrait, String description, String upgradeDescription) {
+        JButton button = new JButton();
+        button.setPreferredSize(new Dimension(200, 300)); // Increased height to accommodate new label
         button.setLayout(new BorderLayout());
         button.setBackground(new Color(50, 50, 50)); // Darker background for buttons
         button.setForeground(Color.WHITE);
         button.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 16)); // Changed font
+
+        // Create the title label for the character name
+        JLabel nameLabel = new JLabel(name);
+        nameLabel.setHorizontalAlignment(JLabel.CENTER);
+        nameLabel.setForeground(Color.WHITE);
+        nameLabel.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 18)); // Larger font for name
+        button.add(nameLabel, BorderLayout.NORTH); // Add name to the top of the button
 
         JLabel portraitLabel = new JLabel(new ImageIcon(portrait.getScaledInstance(150, 150, Image.SCALE_SMOOTH)));
         portraitLabel.setHorizontalAlignment(JLabel.CENTER);
@@ -56,6 +71,18 @@ public class ShopPanel extends JPanel {
         descriptionLabel.setForeground(Color.LIGHT_GRAY); // Lighter gray for description
         descriptionLabel.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 14)); // Changed font
         button.add(descriptionLabel, BorderLayout.SOUTH);
+
+        // Create the upgrade description label
+        JLabel upgradeLabel = new JLabel("<html><center>Upgrade: " + upgradeDescription + "</center></html>");
+        upgradeLabel.setHorizontalAlignment(JLabel.CENTER);
+        upgradeLabel.setForeground(Color.CYAN); // Different color for upgrade
+        upgradeLabel.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 12));
+        // Create a panel to hold the description and upgrade labels
+        JPanel textPanel = new JPanel(new GridLayout(2, 1)); // 2 rows, 1 column
+        textPanel.setOpaque(false);
+        textPanel.add(descriptionLabel);
+        textPanel.add(upgradeLabel);
+        button.add(textPanel, BorderLayout.SOUTH);
 
         button.addActionListener(new ActionListener() {
             @Override

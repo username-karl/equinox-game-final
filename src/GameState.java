@@ -11,6 +11,10 @@ public class GameState {
     //Monies
     public int money;
 
+    public int getMoney() {
+        return money;
+    }
+
     //Enemies
     public long enemyCount;  //Enemies to defeat
     public long enemySlain;  //Enemies defeated

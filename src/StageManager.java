@@ -14,6 +14,7 @@ public class StageManager {
     private Image shopBackground;
     private Map<Integer, CutsceneData> cutsceneDataMap; // New: Map to store cutscene data
 
+
     public StageManager(EquinoxGameLogic gameLogic, JFrame frame) {
         this.gameLogic = gameLogic;
         this.frame = frame;
@@ -21,9 +22,12 @@ public class StageManager {
         shopBackground = new ImageIcon(getClass().getResource("./img/shopbg.png")).getImage();
         // Create panels
         cutscenePanel = new CutscenePanel(this, null); // Pass null if no bg
+        //Create shop panel
         shopPanel = new ShopPanel(this, shopBackground);
         // New: Load cutscene data
         loadCutsceneData();
+
+
     }
 
     private void loadCutsceneData() {
