@@ -36,7 +36,6 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
     // Game Settings
 
 
-
     long remainingCooldown;
     long remainingCooldownE;
 
@@ -59,8 +58,8 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
     int enemyX = tileSize;
     int enemyY = tileSize;
     int enemyVelocityX = 1;
-    int enemyRows = 4;
-    int enemyColumns = 7;
+    int enemyRows = 5;
+    int enemyColumns = 5;
 
     // Bullets
     ArrayList<Bullet> bulletArray;
@@ -104,7 +103,7 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
         addKeyListener(this);
         //GameState init
         gameState = new GameState();
-        gameState.currentStage = new Stage(1,10);
+        gameState.currentStage = new Stage(1,7);
 
 
         // Image loading
@@ -319,7 +318,15 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
     private void moveEnemies() {
         for (Enemy enemy : enemyArray) {
             if (enemy.isAlive()) {
-                enemy.move(boardWidth, enemyWidth, enemyHeight);
+                int enemyWidthToUse = enemy.getWidth();
+                if(enemy instanceof Miniboss){
+                    enemyWidthToUse = enemy.getWidth();
+                }else if(enemy instanceof MainBoss){
+                    enemyWidthToUse = enemy.getWidth();
+                }else{
+                    enemyWidthToUse = enemyWidth;
+                }
+                enemy.move(boardWidth, enemyWidthToUse, enemyHeight);
                 if (enemy.isMoveDown()) {
                     enemy.moveDown(enemyHeight);
                 }
@@ -327,11 +334,17 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
                     ((ShootingEnemy) enemy).shoot(enemyBulletArray, enemyBulletImg, enemyBulletWidth, enemyBulletHeight);
                 }
                 if (enemy instanceof Miniboss) {
-                    ((Miniboss) enemy).moveY();
+                    // Only call moveY if not moving down
+                    if (!enemy.isMoveDown()) {
+                        ((Miniboss) enemy).moveY();
+                    }
                     ((Miniboss) enemy).shoot(enemyBulletArray, enemyBulletImg, enemyBulletWidth, enemyBulletHeight);
                 }
                 if (enemy instanceof MainBoss) {
-                    ((MainBoss) enemy).moveY();
+                    // Only call moveY if not moving down
+                    if (!enemy.isMoveDown()) {
+                        ((MainBoss) enemy).moveY();
+                    }
                     ((MainBoss) enemy).shoot(enemyBulletArray, enemyBulletImg, enemyBulletWidth, enemyBulletHeight);
                 }
                 // Lose condition
@@ -499,8 +512,14 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
     // Create enemies
     public void createEnemies() {
         Random random = new Random();
-        for (int r = 0; r < enemyRows; r++) {
-            for (int c = 0; c < enemyColumns; c++) {
+        int currentWave = gameState.currentStage.getCurrentWave();
+        int maxEnemyRows = enemyRows + (currentWave / 2); // Increase rows every 2 waves
+        int maxEnemyColumns = enemyColumns + (currentWave); // Increase columns every 3 waves
+        maxEnemyRows = Math.min(maxEnemyRows, 15); // Limit to max 15 rows
+        maxEnemyColumns = Math.min(maxEnemyColumns, 11); // Limit to max 15 columns
+
+        for (int r = 0; r < maxEnemyRows; r++) {
+            for (int c = 0; c < maxEnemyColumns; c++) {
                 int randomImgIndex = random.nextInt(enemyImgArray.size());
                 int enemyType = random.nextInt(6); // Now 0-5 (6 possibilities)
                 Enemy enemy;

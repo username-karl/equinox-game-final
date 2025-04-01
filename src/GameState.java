@@ -1,5 +1,5 @@
 public class GameState {
-
+    
     //Lose
     public boolean gameOver=false;
 
