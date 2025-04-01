@@ -1,18 +1,3 @@
-/*
-High Priority
-TODO: Enemy Behaviors(Enemy types) Mini boss, Boss Fight
-TODO: Refactor Code
-TODO: Ability Interface for Abilities
-TODO: Constants
-MID PRIORITY
-TODO: Constants
-TODO: Start Menu
-TODO: Different Levels
-TODO: Integrate Story
-TODO: Sound Effects
-
-
- */
 public class GameState {
 
     //Lose
@@ -27,20 +12,27 @@ public class GameState {
     //Stage
     public Stage currentStage;
 
+    public GameState(int score){
+        this.score=score;
+    }
+
+    public GameState(){
+    }
+
 }
 
 class Stage {
     private int stageNumber;
     private int currentWave;
     private int totalWaves;
-    private boolean minibossSpawned = false;
+    private boolean specialEnemySpawned = false;
 
     public Stage(int stageNumber, int totalWaves) {
         this.stageNumber = stageNumber;
         this.totalWaves = totalWaves;
         this.currentWave = 1;
     }
-
+    //SETTERS AND GETTERS
     public int getStageNumber() {
         return stageNumber;
     }
@@ -65,11 +57,11 @@ class Stage {
         this.totalWaves = totalWaves;
     }
 
-    public boolean isMinibossSpawned() {
-        return minibossSpawned;
+    public boolean isSpecialEnemySpawned() {
+        return specialEnemySpawned;
     }
 
-    public void setMinibossSpawned(boolean minibossSpawned) {
-        this.minibossSpawned = minibossSpawned;
+    public void setSpecialEnemySpawned(boolean specialEnemySpawned) {
+        this.specialEnemySpawned = specialEnemySpawned;
     }
 }

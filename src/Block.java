@@ -129,6 +129,9 @@ class Enemy extends Block{
         }
     }
 }
+
+//ENEMY TYPE SUBCLASSES INCLUDES SPECIAL ENEMIES
+
 class FastEnemy extends Enemy{
     public FastEnemy(int x, int y, int width, int height, Image img, int enemyVelocityX) {
         super(x, y, width, height, img, enemyVelocityX);
@@ -151,40 +154,40 @@ class ShootingEnemy extends Enemy{
         }
     }
 }
-class Miniboss extends Enemy{
-    Image minibossImg;
-    //Default miniboss values
+class SpecialEnemy extends Enemy{
+    Image specialEnemyImg;
+    //Default specialEnemy values
     private int hitpoints = 20;
+    private int maxHitpoints = 20;
     private int shootCooldown = 100; // Adjust as needed
     private int currentCooldown = 0;
-    private int minibossVelocityY = 1;
-    public Miniboss(int x, int y, int width, int height, Image img, int enemyVelocityX, Image minibossImg) {
+    private int specialEnemyVelocityY = 1;
+    public SpecialEnemy(int x, int y, int width, int height, Image img, int enemyVelocityX, Image specialEnemyImg) {
         super(x, y, width, height, img, enemyVelocityX);
-        this.minibossImg=minibossImg;
-        this.hitpoints=hitpoints;
-        this.shootCooldown=shootCooldown;
-        this.minibossVelocityY=minibossVelocityY;
-        setMiniBoss(true);
+        this.specialEnemyImg=specialEnemyImg;
     }
-    public Miniboss(int x, int y, int width, int height, Image img, int enemyVelocityX, Image minibossImg,int hitpoints,int shootCooldown, int minibossVelocityY) {
+    public SpecialEnemy(int x, int y, int width, int height, Image img, int enemyVelocityX, Image specialEnemyImg,int hitpoints,int shootCooldown, int specialEnemyVelocityY) {
         super(x, y, width, height, img, enemyVelocityX);
-        this.minibossImg=minibossImg;
+        this.specialEnemyImg=specialEnemyImg;
         this.hitpoints=hitpoints;
         this.shootCooldown=shootCooldown;
-        this.minibossVelocityY=minibossVelocityY;
-        setMiniBoss(true);
+        this.maxHitpoints=hitpoints;
+        this.specialEnemyVelocityY=specialEnemyVelocityY;
     }
     public int getHitpoints() {
         return hitpoints;
+    }
+    public int getMaxHitpoints() {
+        return maxHitpoints;
     }
 
     public void setHitpoints(int hitpoints) {
         this.hitpoints = hitpoints;
     }
     public void moveY(){
-        setY(getY() + minibossVelocityY);
+        setY(getY() + specialEnemyVelocityY);
         if(getY() + getHeight() >= 300 || getY() <= 0){
-            minibossVelocityY *= -1;
+            specialEnemyVelocityY *= -1;
         }
     }
     public void shoot(ArrayList<EnemyBullet> enemyBulletArray, Image enemyBulletImg, int bulletWidth, int bulletHeight) {
@@ -197,6 +200,23 @@ class Miniboss extends Enemy{
         }
     }
 }
+class Miniboss extends SpecialEnemy{
+    public Miniboss(int x, int y, int width, int height, Image img, int enemyVelocityX, Image specialEnemyImg) {
+        super(x, y, width, height, img, enemyVelocityX, specialEnemyImg);
+    }
+    public Miniboss(int x, int y, int width, int height, Image img, int enemyVelocityX, Image specialEnemyImg, int hitpoints, int shootCooldown, int specialEnemyVelocityY) {
+        super(x, y, width, height, img, enemyVelocityX, specialEnemyImg, hitpoints, shootCooldown, specialEnemyVelocityY);
+    }
+}
+class MainBoss extends SpecialEnemy{
+    public MainBoss(int x, int y, int width, int height, Image img, int enemyVelocityX, Image specialEnemyImg) {
+        super(x, y, width, height, img, enemyVelocityX, specialEnemyImg);
+    }
+    public MainBoss(int x, int y, int width, int height, Image img, int enemyVelocityX, Image specialEnemyImg, int hitpoints, int shootCooldown, int specialEnemyVelocityY) {
+        super(x, y, width, height, img, enemyVelocityX, specialEnemyImg, hitpoints, shootCooldown, specialEnemyVelocityY);
+    }
+}
+
 
 class Bullet extends Block{
     private boolean used = false;
