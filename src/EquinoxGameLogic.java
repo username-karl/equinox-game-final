@@ -161,83 +161,84 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
         draw(g);
     }
 
-    // DRAW
+    // DRAW METHOD
     public void draw(Graphics g) {
-
-        // Draw Ship
+        drawShip(g);
+        drawEnemies(g);
+        drawPlayerBullets(g);
+        drawTacticalAbilities(g);
+        drawEnemyBullets(g);
+        drawGameStats(g);
+    }
+    //DRAW PLAYER SHIP
+    private void drawShip(Graphics g) {
         g.drawImage(ship.img, ship.getX(), ship.getY(), ship.getWidth(), ship.getHeight(), null);
-
-        // Draw Enemies
-        for (int i = 0; i < enemyArray.size(); i++) {
-            Enemy enemy = enemyArray.get(i);
+    }
+    //DRAW ENEMY ARRAY
+    private void drawEnemies(Graphics g) {
+        for (Enemy enemy : enemyArray) {
             if (enemy.isAlive()) {
-                if(enemy instanceof Miniboss){
+                if (enemy instanceof Miniboss) {
                     g.drawImage(enemy.img, enemy.getX(), enemy.getY(), enemy.getWidth(), enemy.getHeight(), null);
                     drawBossHealthBar(g, (Miniboss) enemy);
-                }else if(enemy instanceof MainBoss){
+                } else if (enemy instanceof MainBoss) {
                     g.drawImage(enemy.img, enemy.getX(), enemy.getY(), enemy.getWidth(), enemy.getHeight(), null);
                     drawBossHealthBar(g, (MainBoss) enemy);
-                }else{
+                } else {
                     g.drawImage(enemy.img, enemy.getX(), enemy.getY(), enemy.getWidth(), enemy.getHeight(), null);
                 }
             }
         }
-
-
-        // Draw Bullets
+    }
+    //DRAW PLAYER BULLET
+    private void drawPlayerBullets(Graphics g) {
         g.setColor(Color.white);
-        for (int i = 0; i < bulletArray.size(); i++) {
-            Block bullet = bulletArray.get(i);
+        for (Bullet bullet : bulletArray) {
             if (!bullet.isUsed()) {
                 g.drawImage(laserBlue, bullet.getX(), bullet.getY(), bullet.getWidth(), bullet.getHeight(), null);
-                // g.drawRect(bullet.getX(),bullet.getY(),bullet.getWidth(),bullet.getHeight());
-                // g.fillRect(bullet.getX(),bullet.getY(),bullet.getWidth(),bullet.getHeight());
             }
         }
-        // Draw TacticalQ Projectile
-        for (int i = 0; i < tacticalArray.size(); i++) {
-            Block bullet = tacticalArray.get(i);
-            if (!bullet.isUsed()) {
-                // g.drawImage(laserBlue,bullet.getX(),bullet.getY(),bullet.getWidth(),bullet.getHeight(),null);
-                // g.drawRect(bullet.getX(),bullet.getY(),bullet.getWidth(),bullet.getHeight());
-                g.fillRect(bullet.getX(), bullet.getY(), bullet.getWidth(), bullet.getHeight());
+    }
+    //DRAW TACTICALS
+    private void drawTacticalAbilities(Graphics g) {
+        //TACTICAL Q
+        g.setColor(Color.white);
+        for (TacticalQ tacticalq : tacticalArray) {
+            if (!tacticalq.isUsed()) {
+                g.fillRect(tacticalq.getX(), tacticalq.getY(), tacticalq.getWidth(), tacticalq.getHeight());
             }
         }
-        // Draw TacticalE Projectile
-        for (int i = 0; i < tacticalEArray.size(); i++) {
-            Block bullet = tacticalEArray.get(i);
-            if (!bullet.isUsed()) {
-                // g.drawImage(laserBlue,bullet.getX(),bullet.getY(),bullet.getWidth(),bullet.getHeight(),null);
-                // g.drawRect(bullet.getX(),bullet.getY(),bullet.getWidth(),bullet.getHeight());
-                g.fillRect(bullet.getX(), bullet.getY(), bullet.getWidth(), bullet.getHeight());
+        //TACTICAL E
+        for (TacticalE tacticale : tacticalEArray) {
+            if (!tacticale.isUsed()) {
+                g.fillRect(tacticale.getX(), tacticale.getY(), tacticale.getWidth(), tacticale.getHeight());
             }
         }
-        //Draw Enemy Bullets
-        for (int i = 0; i < enemyBulletArray.size(); i++) {
-            EnemyBullet bullet = enemyBulletArray.get(i);
+    }
+    //DRAW ENEMY BULLETS
+    private void drawEnemyBullets(Graphics g) {
+        for (EnemyBullet bullet : enemyBulletArray) {
             g.drawImage(enemyBulletImg, bullet.getX(), bullet.getY(), bullet.getWidth(), bullet.getHeight(), null);
         }
+    }
 
-
-
-
-        //DRAW STATS
+    private void drawGameStats(Graphics g) {
         // Draw Score
         g.setColor(Color.LIGHT_GRAY);
         g.setFont(new Font("Arial", Font.PLAIN, 16));
         if (gameState.gameOver) {
             g.drawString("Game Over: " + String.valueOf(gameState.score), 10, 35);
         } else {
-            g.drawString("Score: "+String.valueOf(gameState.score), 10, 35);
+            g.drawString("Score: " + String.valueOf(gameState.score), 10, 35);
         }
-        //Draw Money
+        // Draw Money
         g.setColor(Color.ORANGE);
         g.setFont(new Font("Arial", Font.PLAIN, 16));
-        g.drawString("Money: " +gameState.money, 10, 60);
-        //Draw Money
+        g.drawString("Money: " + gameState.money, 10, 60);
+        // Draw Killed
         g.setColor(Color.RED);
         g.setFont(new Font("Arial", Font.PLAIN, 16));
-        g.drawString("Killed: " +gameState.enemySlain, 672, 60);
+        g.drawString("Killed: " + gameState.enemySlain, 672, 60);
         // Draw TacticalQ cooldown
         g.setColor(Color.YELLOW);
         g.setFont(new Font("Arial", Font.PLAIN, 18));
@@ -254,9 +255,8 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
         } else {
             g.drawString("Tactical E: Ready", 10 + tileSize * 5, tileSize * 24);
         }
-        //Draw Stage and Wave String
+        // Draw Stage and Wave String
         g.drawString("World: " + gameState.currentStage.getStageNumber() + " Wave: " + gameState.currentStage.getCurrentWave(), 10, 85);
-
     }
 
     private void drawBossHealthBar(Graphics g, Miniboss miniboss) {
@@ -671,7 +671,7 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
                 a.getY() + a.getHeight() > b.getY(); // entity a's bottom left corner passes b's top let corner
     }
 
-    //
+    //IMPLEMENTATION OF ACTION LISTENER
     @Override
     public void actionPerformed(ActionEvent e) {
 
@@ -681,7 +681,7 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
             gameLoop.stop();
         }
     }
-
+    //IMPLEMENTATIONS OF KEY LISTENER INTERFACE
     @Override
     public void keyTyped(KeyEvent e) {
     }

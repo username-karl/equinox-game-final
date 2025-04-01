@@ -12,8 +12,8 @@ public class GameState {
     public int money;
 
     //Enemies
-    public int enemyCount;  //Enemies to defeat
-    public int enemySlain;  //Enemies defeated
+    public long enemyCount;  //Enemies to defeat
+    public long enemySlain;  //Enemies defeated
     
     //Stage
     public Stage currentStage;
