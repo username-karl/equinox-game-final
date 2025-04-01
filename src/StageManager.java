@@ -20,7 +20,7 @@ public class StageManager {
         //Load Background SHOP
         shopBackground = new ImageIcon(getClass().getResource("./img/shopbg.png")).getImage();
         // Create panels
-        cutscenePanel = new CutscenePanel(this, null); // New: Pass null for default background
+        cutscenePanel = new CutscenePanel(this, null); // Pass null if no bg
         shopPanel = new ShopPanel(this, shopBackground);
         // New: Load cutscene data
         loadCutsceneData();

@@ -12,7 +12,7 @@ public class CutscenePanel extends JPanel implements KeyListener {
     private int narrationIndex;
     private StageManager stageManager;
     private Image background;
-    private CutsceneData cutsceneData; // New: Cutscene data
+    private CutsceneData cutsceneData; 
 
     public CutscenePanel(StageManager stageManager, Image background) {
         this.stageManager = stageManager;
@@ -46,39 +46,25 @@ public class CutscenePanel extends JPanel implements KeyListener {
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
         if (background != null) {
-            g.drawImage(background, 0, 0, getWidth(), getHeight(), this); // New: Draw the background
+            g.drawImage(background, 0, 0, getWidth(), getHeight(), this); // Draw CG BG
         }
         // Draw character portrait
         if (characterPortrait != null) {
-            g.drawImage(characterPortrait, 50, 200, 400, 400, this); // Adjust position as needed
+            g.drawImage(characterPortrait, 50, 150, 400, 400, this); // Adjust Character Portrait Position
         }
 
         // Draw narration box
-        g.setColor(Color.DARK_GRAY);
+        g.setColor(new Color(30, 30, 30)); // Darker, semi-transparent box
         g.fillRect(50, 550, 1180, 150); // Adjust position as needed
 
         // Draw narration text
         g.setColor(Color.WHITE);
-        g.setFont(new Font("Arial", Font.PLAIN, 20));
-        drawWrappedText(g, currentNarration, 70, 580, 1140);
+        g.setFont(new Font(Font.SERIF, Font.PLAIN, 22)); // Changed font and size
+        drawText(g, currentNarration, 70, 580, 1140);
     }
 
-    private void drawWrappedText(Graphics g, String text, int x, int y, int maxWidth) {
-        FontMetrics fm = g.getFontMetrics();
-        String[] words = text.split(" ");
-        String currentLine = "";
-        int currentY = y;
-
-        for (String word : words) {
-            if (fm.stringWidth(currentLine + word) < maxWidth) {
-                currentLine += word + " ";
-            } else {
-                g.drawString(currentLine, x, currentY);
-                currentLine = word + " ";
-                currentY += fm.getHeight();
-            }
-        }
-        g.drawString(currentLine, x, currentY);
+    private void drawText(Graphics g, String text, int x, int y, int maxWidth) {
+        g.drawString(text, x, y);
     }
 
     @Override

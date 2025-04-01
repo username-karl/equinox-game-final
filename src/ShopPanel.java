@@ -20,12 +20,12 @@ public class ShopPanel extends JPanel {
 
         // Create the title label
         titleLabel = new JLabel("Welcome to the trading hub: Recruit your crew");
-        titleLabel.setFont(new Font("Arial", Font.BOLD, 24));
-        titleLabel.setForeground(Color.DARK_GRAY);
+        titleLabel.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 28)); // Font
+        titleLabel.setForeground(Color.ORANGE); // Brighter orange
         titleLabel.setHorizontalAlignment(JLabel.CENTER);
         add(titleLabel, BorderLayout.NORTH); // Add title to the top
 
-        // Create a panel for the character buttons and descriptions
+        // CHARACTER PANNEL FOR BUTTONS
         JPanel characterPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 50, 50)); // FlowLayout for buttons
         characterPanel.setOpaque(false); // Make the panel transparent
         characterButtons = new ArrayList<>();
@@ -42,6 +42,9 @@ public class ShopPanel extends JPanel {
         JButton button = new JButton(name);
         button.setPreferredSize(new Dimension(200, 250));
         button.setLayout(new BorderLayout());
+        button.setBackground(new Color(50, 50, 50)); // Darker background for buttons
+        button.setForeground(Color.WHITE);
+        button.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 16)); // Changed font
 
         JLabel portraitLabel = new JLabel(new ImageIcon(portrait.getScaledInstance(150, 150, Image.SCALE_SMOOTH)));
         portraitLabel.setHorizontalAlignment(JLabel.CENTER);
@@ -50,7 +53,8 @@ public class ShopPanel extends JPanel {
         // Create the description label
         JLabel descriptionLabel = new JLabel("<html><center>" + description + "</center></html>"); // HTML for text wrapping
         descriptionLabel.setHorizontalAlignment(JLabel.CENTER);
-        descriptionLabel.setForeground(Color.WHITE);
+        descriptionLabel.setForeground(Color.LIGHT_GRAY); // Lighter gray for description
+        descriptionLabel.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 14)); // Changed font
         button.add(descriptionLabel, BorderLayout.SOUTH);
 
         button.addActionListener(new ActionListener() {
