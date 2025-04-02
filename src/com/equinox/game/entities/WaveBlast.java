@@ -3,10 +3,10 @@ package com.equinox.game.entities;
 import java.awt.Image;
 
 // Extracted into its own file
-public class TacticalE extends Bullet{
+public class WaveBlast extends Bullet{
     // Currently just uses Bullet constructor
-    public TacticalE(int x, int y, int width, int height, Image img) {
+    public WaveBlast(int x, int y, int width, int height, Image img) {
         super(x, y, width, height, img);
     }
-     // Add specific behavior for TacticalE if needed
+    // Add specific behavior for WaveBlast if needed
 } 

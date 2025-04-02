@@ -19,13 +19,15 @@ public class StageManager {
     private CutscenePanel cutscenePanel;
     private ShopPanel shopPanel;
     private JFrame frame;
-    private Image shopBackground;
+    private static Image shopBackground;
     private Map<Integer, CutsceneData> cutsceneDataMap;
 
     public StageManager(EquinoxGameLogic gameLogic, JFrame frame) {
         this.gameLogic = gameLogic;
         this.frame = frame;
-        shopBackground = new ImageIcon(getClass().getResource("/assets/shopbg.png")).getImage();
+        if (shopBackground == null) {
+            shopBackground = new ImageIcon(getClass().getResource("/assets/bg_shop.png")).getImage();
+        }
         cutscenePanel = new CutscenePanel(this, null);
         shopPanel = new ShopPanel(this, shopBackground,gameLogic.getGameState());
         loadCutsceneData();
@@ -41,7 +43,7 @@ public class StageManager {
         stage1Narrations.add("Narrator: Enemies approaching...");
         stage1Narrations.add("Narrator: Get ready all hands on deck and prepare for battle");
         Image stage1Portrait = new ImageIcon(getClass().getResource("/assets/captainnova.png")).getImage();
-        Image stage1Background = new ImageIcon(getClass().getResource("/assets/stage1cg1.png")).getImage();
+        Image stage1Background = new ImageIcon(getClass().getResource("/assets/cg_stage1_scene1.png")).getImage();
         CutsceneData stage1Data = new CutsceneData(stage1Portrait, stage1Narrations, stage1Background);
         cutsceneDataMap.put(1, stage1Data);
 
@@ -50,7 +52,7 @@ public class StageManager {
         stage2Narrations.add("Narrator: The enemies here are stronger.");
         stage2Narrations.add("Narrator: Recruit new allies to help you.");
         Image stage2Portrait = new ImageIcon(getClass().getResource("/assets/captainnova.png")).getImage();
-        Image stage2Background = new ImageIcon(getClass().getResource("/assets/stage2cg1.png")).getImage();
+        Image stage2Background = new ImageIcon(getClass().getResource("/assets/cg_stage2_scene1.png")).getImage();
         CutsceneData stage2Data = new CutsceneData(stage2Portrait, stage2Narrations, stage2Background);
         cutsceneDataMap.put(2, stage2Data);
         List<String> stage3Narrations = new ArrayList<>();
@@ -58,7 +60,7 @@ public class StageManager {
         stage3Narrations.add("Narrator: You grow ever stronger");
         stage3Narrations.add("Narrator: Recruit more allies to help you.");
         Image stage3Portrait = new ImageIcon(getClass().getResource("/assets/captainnova.png")).getImage();
-        Image stage3Background = new ImageIcon(getClass().getResource("/assets/stage2cg1.png")).getImage();
+        Image stage3Background = new ImageIcon(getClass().getResource("/assets/cg_stage2_scene1.png")).getImage();
         CutsceneData stage3Data = new CutsceneData(stage3Portrait, stage3Narrations, stage3Background);
         cutsceneDataMap.put(3, stage3Data);
     }

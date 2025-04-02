@@ -32,7 +32,7 @@ This document provides a concise overview of the step-by-step process to develop
 
 ### 5. Enemy Framework
 *   Create base `Enemy` class.
-*   Implement different enemy types (`ScoutShip`, etc.).
+*   Implement different enemy types (e.g., basic fighter, cruiser).
 *   Design simple AI movement patterns.
 *   Add enemy spawning system (waves).
 

@@ -31,9 +31,9 @@ This document outlines the step-by-step process for building the Equinox game as
     -   [x] Implement shooting mechanics (creating projectiles on key press).
     -   [x] Implement basic collision detection (e.g., rectangle intersection checks) in a `CollisionSystem` (CollisionSystem extracted).
 
-6.  [x] **Create Enemy Framework**
-    -   [x] Design base `Enemy.java` class extending `Entity`.
-    -   [ ] Implement a simple enemy type (e.g., `ScoutShip`).
+6.  [ ] **Create Enemy Framework**
+    -   [ ] Design base `Enemy.java` class extending `Entity`.
+    -   [ ] Implement simple enemy types (e.g., basic fighters).
     -   [ ] Add basic AI movement patterns (e.g., moving downwards).
 
 7.  [ ] **Design Level Structure**

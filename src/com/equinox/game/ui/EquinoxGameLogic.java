@@ -6,8 +6,8 @@ import com.equinox.game.entities.Entity;
 import com.equinox.game.entities.ShipUser;
 import com.equinox.game.entities.Bullet;
 import com.equinox.game.entities.EnemyBullet;
-import com.equinox.game.entities.TacticalQ;
-import com.equinox.game.entities.TacticalE;
+import com.equinox.game.entities.WaveBlast;
+import com.equinox.game.entities.LaserBeam;
 import com.equinox.game.entities.enemies.Enemy;
 import com.equinox.game.entities.enemies.FastEnemy;
 import com.equinox.game.entities.enemies.ShootingEnemy;
@@ -27,8 +27,26 @@ import java.awt.event.KeyListener;
 import java.util.ArrayList;
 import java.util.Random;
 import javax.swing.*;
+import java.util.Map;
+import java.util.HashMap;
 
 public class EquinoxGameLogic extends JPanel implements ActionListener {
+
+    // Game States Enum
+    public enum GameStateEnum {
+        MENU,
+        PLAYING,
+        CUTSCENE, // Placeholder for potential future use
+        GAME_OVER
+    }
+    private GameStateEnum currentState;
+
+    // Menu State Variables
+    private int selectedMenuItem = 0;
+    private String[] menuItems = {"Start Game", "Settings", "Credits", "Cheats", "Exit"}; // Added new items
+
+    // Cheats State
+    private boolean cheatsEnabled = false;
 
     // INIT
     private GameState gameState;
@@ -56,9 +74,12 @@ public class EquinoxGameLogic extends JPanel implements ActionListener {
     ArrayList<Image> specialEnemyImgArray;
     // Game Settings
 
+    // Backgrounds Map
+    Map<Integer, Image> backgroundImages;
 
-    long remainingCooldown;
-    long remainingCooldownE;
+    long remainingWaveBlastCooldown;
+    long remainingLaserBeamCooldown;
+    long remainingPhaseShiftCooldown; // Added for Phase Shift (R)
 
     // Ship
     int shipWidth = tileSize * 2; // 64px
@@ -87,20 +108,26 @@ public class EquinoxGameLogic extends JPanel implements ActionListener {
     int bulletWidth = tileSize / 8; // Bullet size width
     int bulletHeight = tileSize / 2;
     int bulletVelocityY = -20; // Bullet movespeed
-    // TacticalQ
-    ArrayList<TacticalQ> tacticalArray;
-    int tacticalqWidth = tileSize / 4; // Bullet size width
-    int tacticalqHeight = tileSize * 10;
-    int tacticalqVelocityY = -100; // Bullet movespeed
-    long lastTacticalQUseTime; // Last tactical use time
-    long tacticalQCooldown = 2500; // Tactical Q Cooldown in ms
-    //TacticalE
-    ArrayList<TacticalE> tacticalEArray;
-    int tacticaleWidth = tileSize; // Smaller projectile
-    int tacticaleHeight = tileSize / 8;
-    int tacticaleVelocityY = -15;
-    long lastTacticalEUseTime;
-    long tacticalECooldown = 0; //Tactical E Cooldown in ms
+    // WaveBlast (Q)
+    ArrayList<WaveBlast> waveBlastArray;
+    int waveBlastWidth = tileSize / 4; // Renamed from tacticalqWidth
+    int waveBlastHeight = tileSize * 10; // Renamed from tacticalqHeight
+    int waveBlastVelocityY = -100; // Renamed from tacticalqVelocityY
+    long lastWaveBlastUseTime; // Renamed from lastTacticalQUseTime
+    long waveBlastCooldown = 2500; // Renamed from tacticalQCooldown
+    //LaserBeam (E)
+    ArrayList<LaserBeam> laserBeamArray;
+    int laserBeamWidth = tileSize; // Renamed from tacticaleWidth
+    int laserBeamHeight = tileSize / 8; // Renamed from tacticaleHeight
+    int laserBeamVelocityY = -15; // Renamed from tacticaleVelocityY
+    long lastLaserBeamUseTime; // Renamed from lastTacticalEUseTime
+    long laserBeamCooldown = 0; // Renamed from tacticalECooldown
+    // Phase Shift (R)
+    boolean isPhaseShiftActive = false;
+    long phaseShiftEndTime = 0;
+    long phaseShiftDuration = 1500; // 1.5 seconds duration
+    long lastPhaseShiftUseTime = 0;
+    long phaseShiftCooldown = 10000; // 10 seconds cooldown
     //Enemy Bullets
     ArrayList<EnemyBullet> enemyBulletArray;
     int enemyBulletWidth = tileSize / 8;
@@ -116,7 +143,6 @@ public class EquinoxGameLogic extends JPanel implements ActionListener {
 
     //STAGE DOMAIN
     private StageManager stageManager;
-    private boolean gameLoopRunning = false;
 
     
     //MAIN EQUINOX GAME CONSTRUCTOR
@@ -139,12 +165,13 @@ public class EquinoxGameLogic extends JPanel implements ActionListener {
         collisionSystem = new CollisionSystem(this);
         
         setFocusable(true);
+        currentState = GameStateEnum.MENU; // Start in Menu state
 
         // Image loading - Use absolute paths from classpath root
-        shipImg = new ImageIcon(getClass().getResource("/assets/protagtest.png")).getImage();
-        enemyImgVar1 = new ImageIcon(getClass().getResource("/assets/enemyvar1.gif")).getImage();
-        enemyImgVar2 = new ImageIcon(getClass().getResource("/assets/monstertestvar2.png")).getImage();
-        enemyImgVar3 = new ImageIcon(getClass().getResource("/assets/monstertestvar3.png")).getImage();
+        shipImg = new ImageIcon(getClass().getResource("/assets/player_captainnova_portrait.png")).getImage();
+        enemyImgVar1 = new ImageIcon(getClass().getResource("/assets/enemy_drone_animated.gif")).getImage();
+        enemyImgVar2 = new ImageIcon(getClass().getResource("/assets/enemy_alien_type2.png")).getImage();
+        enemyImgVar3 = new ImageIcon(getClass().getResource("/assets/enemy_alien_type3.png")).getImage();
 
 
         enemyImgArray = new ArrayList<Image>();
@@ -153,18 +180,20 @@ public class EquinoxGameLogic extends JPanel implements ActionListener {
         enemyImgArray.add(enemyImgVar3);
 
 
-        minibossImgvar1 = new ImageIcon(getClass().getResource("/assets/minibossvar1.png")).getImage();
-        mainbossImgvar1 = new ImageIcon(getClass().getResource("/assets/mainbossvar1.png")).getImage();
+        minibossImgvar1 = new ImageIcon(getClass().getResource("/assets/boss_mini_alien.png")).getImage();
+        mainbossImgvar1 = new ImageIcon(getClass().getResource("/assets/boss_main_alien.png")).getImage();
         specialEnemyImgArray = new ArrayList<Image>();
         specialEnemyImgArray.add(minibossImgvar1);
         specialEnemyImgArray.add(mainbossImgvar1);
         
 
-        // //Maps
-        world1BG = new ImageIcon(getClass().getResource("/assets/world1BG.png")).getImage();
+        // //Maps - Load backgrounds for all stages
+        // world1BG = new ImageIcon(getClass().getResource("/assets/bg_nebula.png")).getImage(); // Old single background
+        loadBackgroundImages(); // Load backgrounds into the map
+
         // Misc
-        laserBlue = new ImageIcon(getClass().getResource("/assets/laserBlue.png")).getImage();
-        enemyBulletImg = new ImageIcon(getClass().getResource("/assets/laserRed.png")).getImage();
+        laserBlue = new ImageIcon(getClass().getResource("/assets/weapon_laser_blue.png")).getImage();
+        enemyBulletImg = new ImageIcon(getClass().getResource("/assets/weapon_laser_red.png")).getImage();
         // Ship - Add maxHealth parameter
         int initialPlayerHealth = 5; // Example health value
         ship = new ShipUser(shipX, shipY, shipWidth, shipHeight, shipImg, initialPlayerHealth);
@@ -176,8 +205,8 @@ public class EquinoxGameLogic extends JPanel implements ActionListener {
         // Bullets
         bulletArray = new ArrayList<Bullet>();
         // Ship skills
-        tacticalArray = new ArrayList<TacticalQ>();
-        tacticalEArray = new ArrayList<TacticalE>();
+        waveBlastArray = new ArrayList<WaveBlast>();
+        laserBeamArray = new ArrayList<LaserBeam>();
 
         // Game timer
         gameLoop = new Timer(1000 / 60, this);
@@ -194,18 +223,44 @@ public class EquinoxGameLogic extends JPanel implements ActionListener {
         return gameState;
     }
 
+    // Getter for Phase Shift state needed by CollisionSystem
+    public boolean isPhaseShiftActive() {
+        return isPhaseShiftActive;
+    }
+
     // Draw assets
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
 
-        if (world1BG != null) {
-            g.drawImage(world1BG, 0, 0, boardWidth, boardHeight, this);
+        // Draw background based on current stage
+        Image currentBackground = backgroundImages.get(gameState.currentStage.getStageNumber());
+        if (currentBackground == null) {
+             // Fallback if image for stage not found (or handle error)
+             currentBackground = backgroundImages.get(1); // Default to stage 1 or a placeholder
+             if(currentBackground == null) { // If even fallback fails
+                 g.setColor(Color.DARK_GRAY); // Draw plain background
+                 g.fillRect(0, 0, boardWidth, boardHeight);
+             }
         }
-        draw(g);
+
+        if (currentBackground != null) {
+            g.drawImage(currentBackground, 0, 0, boardWidth, boardHeight, this);
+        }
+        // Draw based on current state
+        switch (currentState) {
+            case MENU:
+                drawMainMenu(g);
+                break;
+            case PLAYING:
+            case GAME_OVER: // Use GAME_OVER state for drawing game elements + message
+                drawGame(g);
+                break;
+            // Add cases for CUTSCENE etc. if needed
+        }
     }
 
     // DRAW METHOD
-    public void draw(Graphics g) {
+    public void drawGame(Graphics g) {
         drawShip(g);
         drawEnemies(g);
         drawPlayerBullets(g);
@@ -215,7 +270,13 @@ public class EquinoxGameLogic extends JPanel implements ActionListener {
     }
     //DRAW PLAYER SHIP FOR DRAW()
     private void drawShip(Graphics g) {
-        g.drawImage(ship.getImage(), ship.getX(), ship.getY(), ship.getWidth(), ship.getHeight(), null);
+        Graphics2D g2d = (Graphics2D) g.create(); // Create a copy to not affect other drawings
+        if (isPhaseShiftActive) {
+            // Make ship semi-transparent during phase shift
+            g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.5f));
+        }
+        g2d.drawImage(ship.getImage(), ship.getX(), ship.getY(), ship.getWidth(), ship.getHeight(), null);
+        g2d.dispose(); // Dispose of the graphics copy
     }
     //DRAW ENEMY ARRAY FOR DRAW()
     private void drawEnemies(Graphics g) {
@@ -244,17 +305,17 @@ public class EquinoxGameLogic extends JPanel implements ActionListener {
     }
     //DRAW TACTICALS FOR DRAW()
     private void drawTacticalAbilities(Graphics g) {
-        //TACTICAL Q
+        //WaveBlast (Q)
         g.setColor(Color.white);
-        for (TacticalQ tacticalq : tacticalArray) {
-            if (!tacticalq.isUsed()) {
-                g.fillRect(tacticalq.getX(), tacticalq.getY(), tacticalq.getWidth(), tacticalq.getHeight());
+        for (WaveBlast waveBlast : waveBlastArray) {
+            if (!waveBlast.isUsed()) {
+                g.fillRect(waveBlast.getX(), waveBlast.getY(), waveBlast.getWidth(), waveBlast.getHeight());
             }
         }
-        //TACTICAL E
-        for (TacticalE tacticale : tacticalEArray) {
-            if (!tacticale.isUsed()) {
-                g.fillRect(tacticale.getX(), tacticale.getY(), tacticale.getWidth(), tacticale.getHeight());
+        //LaserBeam (E)
+        for (LaserBeam laserBeam : laserBeamArray) {
+            if (!laserBeam.isUsed()) {
+                g.fillRect(laserBeam.getX(), laserBeam.getY(), laserBeam.getWidth(), laserBeam.getHeight());
             }
         }
     }
@@ -268,65 +329,116 @@ public class EquinoxGameLogic extends JPanel implements ActionListener {
     }
     //DRAW GAME STATS FOR DRAW()
     private void drawGameStats(Graphics g) {
-        // Draw Score
+        int padding = 10;
+        int topY = 25;
+        int bottomY = boardHeight - padding - 20; // Position cooldowns near bottom
+        Font baseFont = new Font("Arial", Font.PLAIN, 16);
+        Font boldFont = new Font("Arial", Font.BOLD, 16);
+        Font cooldownFont = new Font("Arial", Font.PLAIN, 14);
+        Font stageFont = new Font("Arial", Font.BOLD, 18);
+
+        // --- Top Left: Score, Money, Killed ---
+        g.setFont(baseFont);
         g.setColor(Color.LIGHT_GRAY);
-        g.setFont(new Font("Arial", Font.PLAIN, 16));
-        if (gameState.gameOver) {
-            g.drawString("Game Over: " + String.valueOf(gameState.score), 10, 35);
-        } else {
-            g.drawString("Score: " + String.valueOf(gameState.score), 10, 35);
-        }
-        // Draw Money
+        g.drawString("Score: " + gameState.score, padding, topY);
         g.setColor(Color.ORANGE);
-        g.setFont(new Font("Arial", Font.PLAIN, 16));
-        g.drawString("Money: " + gameState.money, 10, 60);
-        // Draw Killed
+        g.drawString("Money: " + gameState.money, padding, topY + 20);
         g.setColor(Color.RED);
-        g.setFont(new Font("Arial", Font.PLAIN, 16));
-        g.drawString("Killed: " + gameState.enemySlain, 672, 60);
-        // Draw TacticalQ cooldown
-        g.setColor(Color.YELLOW);
-        g.setFont(new Font("Arial", Font.PLAIN, 18));
-        if (remainingCooldown > 0) {
-            g.drawString("Tactical Q: " + String.format("%.1f", (double) remainingCooldown / 1000) + "s", 10,
-                    tileSize * 24);
-        } else {
-            g.drawString("Tactical Q: Ready", 10, tileSize * 24);
-        }
-        // Draw TacticalE cooldown
-        if (remainingCooldownE > 0) {
-            g.drawString("Tactical E: " + String.format("%.1f", (double) remainingCooldownE / 1000) + "s", 10 + tileSize * 5,
-                    tileSize * 24);
-        } else {
-            g.drawString("Tactical E: Ready", 10 + tileSize * 5, tileSize * 24);
-        }
-        // Draw Stage and Wave String
-        g.drawString("World: " + gameState.currentStage.getStageNumber() + " Wave: " + gameState.currentStage.getCurrentWave(), 10, 85);
-    
-        // Draw Player Health
-        if (ship != null) {
-            g.setColor(Color.GREEN);
-            g.setFont(new Font("Arial", Font.BOLD, 18));
-            g.drawString("Health: " + ship.getHealth() + " / " + ship.getMaxHealth(), boardWidth - 150, 35); // Position top right
-            
-            // Optional: Draw a simple health bar
-            int barX = boardWidth - 155;
-            int barY = 45;
-            int barWidth = 140;
-            int barHeight = 15;
-            double healthPercent = (double)ship.getHealth() / ship.getMaxHealth();
-            int filledWidth = (int)(barWidth * healthPercent);
-            
-            g.setColor(Color.DARK_GRAY);
-            g.fillRect(barX, barY, barWidth, barHeight);
-            g.setColor(Color.RED);
-            g.fillRect(barX, barY, filledWidth, barHeight);
+        g.drawString("Killed: " + gameState.enemySlain, padding, topY + 40);
+        
+        // --- Top Center: World / Wave ---
+        if (gameState.currentStage != null) {
+            g.setFont(stageFont);
             g.setColor(Color.WHITE);
-            g.drawRect(barX, barY, barWidth, barHeight);
+            String stageText = "World: " + gameState.currentStage.getStageNumber() + " | Wave: " + gameState.currentStage.getCurrentWave();
+            FontMetrics fmStage = g.getFontMetrics();
+            int stageWidth = fmStage.stringWidth(stageText);
+            g.drawString(stageText, (boardWidth - stageWidth) / 2, topY + 10); // Center horizontally
         }
 
-        // Display Game Over message and Restart prompt
-        if (gameState.gameOver) {
+        // --- Top Right: Player Health Bar (Enhanced) ---
+        if (ship != null) {
+            int healthBarWidth = 150;
+            int healthBarHeight = 20;
+            int healthBarX = boardWidth - healthBarWidth - padding;
+            int healthBarY = topY - 5; // Align with other top elements
+            double healthPercent = (double) ship.getHealth() / ship.getMaxHealth();
+            int filledWidth = (int) (healthBarWidth * healthPercent);
+
+            // Health text (e.g., "HP: 5/5")
+            g.setFont(boldFont);
+            g.setColor(Color.WHITE);
+            String healthText = "HP: " + ship.getHealth() + "/" + ship.getMaxHealth();
+            FontMetrics fmHealth = g.getFontMetrics();
+            // int healthTextWidth = fmHealth.stringWidth(healthText);
+            g.drawString(healthText, healthBarX, healthBarY + healthBarHeight + 15); // Draw below bar
+
+            // Health bar background
+            g.setColor(Color.DARK_GRAY);
+            g.fillRect(healthBarX, healthBarY, healthBarWidth, healthBarHeight);
+            // Health bar fill (Green to Red gradient is complex, using simple Green for now)
+            g.setColor(Color.GREEN); 
+            g.fillRect(healthBarX, healthBarY, filledWidth, healthBarHeight);
+            // Health bar border
+            g.setColor(Color.WHITE);
+            g.drawRect(healthBarX, healthBarY, healthBarWidth, healthBarHeight);
+        }
+        
+        // --- Bottom Left: Ability Cooldowns ---
+        int cooldownX = padding;
+        int cooldownY = bottomY;
+        g.setFont(cooldownFont);
+
+        // Wave Blast (Q)
+        g.setColor(Color.YELLOW);
+        String qText;
+        if (remainingWaveBlastCooldown > 0) {
+            qText = String.format("Q: %.1fs", (double) remainingWaveBlastCooldown / 1000);
+        } else {
+            qText = "Q: Ready";
+            g.setColor(Color.GREEN); // Indicate ready
+        }
+        g.drawString(qText, cooldownX, cooldownY);
+
+        // Laser Beam (E)
+        g.setColor(Color.ORANGE); // Different color
+        String eText;
+        int eOffset = g.getFontMetrics().stringWidth(qText) + 15; // Position after Q text
+        if (remainingLaserBeamCooldown > 0) {
+            eText = String.format("E: %.1fs", (double) remainingLaserBeamCooldown / 1000);
+        } else {
+            eText = "E: Ready";
+            g.setColor(Color.GREEN); // Indicate ready
+        }
+        g.drawString(eText, cooldownX + eOffset, cooldownY);
+
+        // Phase Shift (R)
+        g.setColor(Color.CYAN);
+        String rText;
+        int rOffset = eOffset + g.getFontMetrics().stringWidth(eText) + 15; // Position after E text
+        if (isPhaseShiftActive) {
+            rText = "R: ACTIVE";
+            g.setColor(Color.MAGENTA); // Special color for active
+        } else if (remainingPhaseShiftCooldown > 0) {
+            rText = String.format("R: %.1fs", (double) remainingPhaseShiftCooldown / 1000);
+        } else {
+            rText = "R: Ready";
+            g.setColor(Color.GREEN); // Indicate ready
+        }
+        g.drawString(rText, cooldownX + rOffset, cooldownY);
+
+        // --- Cheat Indicator ---
+        if (cheatsEnabled) {
+            g.setFont(boldFont);
+            g.setColor(Color.MAGENTA);
+            String cheatText = "CHEATS ACTIVE";
+            FontMetrics fmCheat = g.getFontMetrics();
+            int cheatWidth = fmCheat.stringWidth(cheatText);
+            g.drawString(cheatText, (boardWidth - cheatWidth) / 2, bottomY); // Center bottom
+        }
+
+        // --- Game Over Message ---
+        if (currentState == GameStateEnum.GAME_OVER) {
             g.setColor(Color.RED);
             g.setFont(new Font("Arial", Font.BOLD, 48));
             FontMetrics fm = g.getFontMetrics();
@@ -398,14 +510,15 @@ public class EquinoxGameLogic extends JPanel implements ActionListener {
     }
     // MAIN MOVE GAME FUNCTION
     public void moveGame() {
-        if (gameLoopRunning) {
+        // Only move game elements if in PLAYING state
+        if (currentState == GameStateEnum.PLAYING) {
             moveEnemies();
             moveEnemyBullets();
             movePlayerBullets();
             moveTacticalAbilities();
             // Call CollisionSystem methods
             collisionSystem.checkPlayerBulletCollisions(bulletArray, enemyArray);
-            collisionSystem.checkTacticalCollisions(tacticalArray, tacticalEArray, enemyArray);
+            collisionSystem.checkTacticalCollisions(waveBlastArray, laserBeamArray, enemyArray);
             collisionSystem.checkEnemyBulletCollisions(enemyBulletArray, ship);
             clearOffScreenBullets();
             handleStageAndWaveLogic();
@@ -416,12 +529,12 @@ public class EquinoxGameLogic extends JPanel implements ActionListener {
     
     //GAME LOOP HANDLING
     public void startGameLoop(){
-        gameLoopRunning = true;
-        gameLoop.start();
+        // gameLoopRunning = true; // Now handled by state
+        gameLoop.start(); // Ensure timer is running
     }
     public void stopGameLoop(){
-        gameLoopRunning = false;
-        gameLoop.stop();
+        // gameLoopRunning = false; // Now handled by state
+        gameLoop.stop(); // Stop the timer
     }
     
     // MOVE ENEMIES for MOVE GAME FUNCTION
@@ -459,7 +572,8 @@ public class EquinoxGameLogic extends JPanel implements ActionListener {
                 }
                 // Lose condition
                 if (enemy.getY() >= ship.getY()) {
-                    gameState.gameOver = true;
+                    currentState = GameStateEnum.GAME_OVER; // Change state on loss
+                    gameState.gameOver = true; // Keep flag for potential other uses/checks
                 }
             }
         }
@@ -478,11 +592,11 @@ public class EquinoxGameLogic extends JPanel implements ActionListener {
     }
     // MOVE SKILLS for MOVE GAME FUNCTION
     private void moveTacticalAbilities() {
-        for (TacticalQ tacticalq : tacticalArray) {
-            tacticalq.setY(tacticalq.getY() + tacticalqVelocityY);
+        for (WaveBlast waveBlast : waveBlastArray) {
+            waveBlast.setY(waveBlast.getY() + waveBlastVelocityY);
         }
-        for (TacticalE tacticale : tacticalEArray) {
-            tacticale.setY(tacticale.getY() + tacticaleVelocityY);
+        for (LaserBeam laserBeam : laserBeamArray) {
+            laserBeam.setY(laserBeam.getY() + laserBeamVelocityY);
         }
     }
     //ENEMY HIT for MOVE GAME FUNCTION - Make public for CollisionSystem
@@ -515,8 +629,8 @@ public class EquinoxGameLogic extends JPanel implements ActionListener {
     //OPTIMIZATIONS for MOVE GAME FUNCTION
     private void clearOffScreenBullets() {
         bulletArray.removeIf(bullet -> bullet.isUsed() || bullet.getY() < 0);
-        tacticalArray.removeIf(tacticalq -> tacticalq.isUsed() || tacticalq.getY() < 0);
-        tacticalEArray.removeIf(tacticale -> tacticale.isUsed() || tacticale.getY() < 0);
+        waveBlastArray.removeIf(waveBlast -> waveBlast.isUsed() || waveBlast.getY() < 0);
+        laserBeamArray.removeIf(laserBeam -> laserBeam.isUsed() || laserBeam.getY() < 0);
         enemyBulletArray.removeIf(enemyBullet -> enemyBullet.isUsed() || enemyBullet.getY() > boardHeight);
     }
     //STAGE WAVE LOGIC for MOVE GAME FUNCTION
@@ -536,31 +650,42 @@ public class EquinoxGameLogic extends JPanel implements ActionListener {
                 gameState.currentStage.setSpecialEnemySpawned(true);
                 createMainboss();
                 gameState.currentStage.setCurrentWave(gameState.currentStage.getCurrentWave() + 1);
-                startGameLoop();
+                // startGameLoop(); // Loop continues, no need to restart
             } else if (gameState.currentStage.getCurrentWave() == gameState.currentStage.getTotalWaves() - 2) {
                 // Spawn the miniboss
                 gameState.currentStage.setSpecialEnemySpawned(true);
                 createMiniboss();
                 gameState.currentStage.setCurrentWave(gameState.currentStage.getCurrentWave() + 1);
-                startGameLoop();
+                // startGameLoop(); // Loop continues
             } else {
                 // Move to the next wave
                 gameState.currentStage.setCurrentWave(gameState.currentStage.getCurrentWave() + 1);
                 reset();
-                startGameLoop(); // Add this line to restart the game loop
+                // startGameLoop(); // Loop continues
             }
         }
     }
     // Cooldowns for MOVE GAME FUNCTION
     private void updateCooldowns() {
         long currentTime = System.currentTimeMillis();
-        remainingCooldown = tacticalQCooldown - (currentTime - lastTacticalQUseTime);
-        if (remainingCooldown < 0) {
-            remainingCooldown = 0;
+        // Wave Blast Cooldown
+        remainingWaveBlastCooldown = waveBlastCooldown - (currentTime - lastWaveBlastUseTime);
+        if (remainingWaveBlastCooldown < 0) {
+            remainingWaveBlastCooldown = 0;
         }
-        remainingCooldownE = tacticalECooldown - (currentTime - lastTacticalEUseTime);
-        if (remainingCooldownE < 0) {
-            remainingCooldownE = 0;
+        // Laser Beam Cooldown
+        remainingLaserBeamCooldown = laserBeamCooldown - (currentTime - lastLaserBeamUseTime);
+        if (remainingLaserBeamCooldown < 0) {
+            remainingLaserBeamCooldown = 0;
+        }
+        // Phase Shift Cooldown & Active Check
+        remainingPhaseShiftCooldown = phaseShiftCooldown - (currentTime - lastPhaseShiftUseTime);
+        if (remainingPhaseShiftCooldown < 0) {
+            remainingPhaseShiftCooldown = 0;
+        }
+        // Check if phase shift duration has ended
+        if (isPhaseShiftActive && currentTime >= phaseShiftEndTime) {
+            isPhaseShiftActive = false;
         }
     }
     // MOVE SHIP for MOVE GAME FUNCTION
@@ -594,8 +719,11 @@ public class EquinoxGameLogic extends JPanel implements ActionListener {
         enemyArray.clear();
         bulletArray.clear();
         enemyBulletArray.clear();
-        tacticalArray.clear();
-        tacticalEArray.clear();
+        waveBlastArray.clear();
+        laserBeamArray.clear();
+        // Reset Phase Shift state
+        isPhaseShiftActive = false; 
+        phaseShiftEndTime = 0;
         createEnemies();
     }
     //CREATING ENEMY INSTANCES
@@ -677,16 +805,18 @@ public class EquinoxGameLogic extends JPanel implements ActionListener {
     //Interfaced from Action Listener
     @Override
     public void actionPerformed(ActionEvent e) {
-        // Only run game logic if loop is active AND game is not over
-        if (gameLoopRunning && !gameState.gameOver) { 
+        // Run game logic only when PLAYING
+        if (currentState == GameStateEnum.PLAYING) { 
              moveGame();
              repaint();
-        } else if (gameState.gameOver) {
+        } else if (currentState == GameStateEnum.GAME_OVER) {
             // If game is over, stop the loop but keep repainting to show message
             stopGameLoop(); 
             repaint(); 
+        } else if (currentState == GameStateEnum.MENU) {
+            // Only need to repaint menu if state changes (handled by input)
+            // repaint(); // Repaint constantly if needed, but usually event-driven
         }
-        // Removed the direct stopGameLoop() call based on gameOver flag from here
     }
 
     // --- Action Methods Called by InputHandler ---
@@ -700,82 +830,266 @@ public class EquinoxGameLogic extends JPanel implements ActionListener {
         bulletArray.add(bullet);
     }
 
-    public void fireTacticalQ() {
+    public void fireWaveBlast() {
          long currentTime = System.currentTimeMillis();
-        if (remainingCooldown <= 0) { // Check remaining cooldown directly
-            TacticalQ tacticalq = new TacticalQ(
-                ship.getX() + ship.getWidth() / 2 - tacticalqWidth / 2, // Center ability 
-                ship.getY() - tacticalqHeight, // Start above ship?
-                tacticalqWidth, 
-                tacticalqHeight, 
-                null); // Needs an image or draw differently
-            tacticalArray.add(tacticalq);
-            lastTacticalQUseTime = currentTime; // Update the last use time
-            remainingCooldown = tacticalQCooldown; // Reset cooldown display immediately
+        // Allow firing if cooldown is ready OR cheats are enabled
+        if (remainingWaveBlastCooldown <= 0 || cheatsEnabled) { 
+            WaveBlast waveBlast = new WaveBlast(
+                ship.getX() + ship.getWidth() / 2 - waveBlastWidth / 2,
+                ship.getY() - waveBlastHeight,
+                waveBlastWidth,
+                waveBlastHeight,
+                null);
+            waveBlastArray.add(waveBlast);
+            lastWaveBlastUseTime = currentTime;
+            // Only set cooldown if cheats are NOT enabled
+            if (!cheatsEnabled) {
+                remainingWaveBlastCooldown = waveBlastCooldown;
+            }
         } else {
-            System.out.println("Tactical Q on cooldown! " + String.format("%.1f", (double) remainingCooldown / 1000) + "s");
+            System.out.println("Wave Blast (Q) on cooldown! " + String.format("%.1f", (double) remainingWaveBlastCooldown / 1000) + "s");
         }
     }
 
-    public void fireTacticalE() {
+    public void fireLaserBeam() {
          long currentTime = System.currentTimeMillis();
-        if (remainingCooldownE <= 0) { // Check remaining cooldown directly
-            int numBullets = boardWidth / tileSize; // Number of bullets based on board width
-            int startX = 0; // Start at the left edge of the screen
+        // Allow firing if cooldown is ready OR cheats are enabled
+        if (remainingLaserBeamCooldown <= 0 || cheatsEnabled) {
+            int numBullets = boardWidth / tileSize;
+            int startX = 0;
             for (int i = 0; i < numBullets; i++) {
-                TacticalE tacticale = new TacticalE(
-                    startX + i * tileSize + (tileSize / 2) - (tacticaleWidth / 2), // Center in each tile
+                LaserBeam laserBeam = new LaserBeam(
+                    startX + i * tileSize + (tileSize / 2) - (laserBeamWidth / 2),
                     ship.getY(), 
-                    tacticaleWidth, 
-                    tacticaleHeight, 
-                    null); // Needs an image or draw differently
-                tacticalEArray.add(tacticale);
+                    laserBeamWidth,
+                    laserBeamHeight,
+                    null);
+                laserBeamArray.add(laserBeam);
             }
-            lastTacticalEUseTime = currentTime; // Update the last use time
-            remainingCooldownE = tacticalECooldown; // Reset cooldown display immediately
+            lastLaserBeamUseTime = currentTime;
+            // Only set cooldown if cheats are NOT enabled
+            if (!cheatsEnabled) {
+                remainingLaserBeamCooldown = laserBeamCooldown;
+            }
         } 
         else {
-            System.out.println("Tactical E on cooldown! " + String.format("%.1f", (double) remainingCooldownE / 1000) + "s");
+            System.out.println("Laser Beam (E) on cooldown! " + String.format("%.1f", (double) remainingLaserBeamCooldown / 1000) + "s");
+        }
+    }
+
+    public void firePhaseShift() {
+        long currentTime = System.currentTimeMillis();
+        // Allow firing if cooldown is ready OR cheats are enabled (and not already active)
+        if ((remainingPhaseShiftCooldown <= 0 || cheatsEnabled) && !isPhaseShiftActive) {
+            isPhaseShiftActive = true;
+            lastPhaseShiftUseTime = currentTime;
+            phaseShiftEndTime = currentTime + phaseShiftDuration;
+            // Only set cooldown if cheats are NOT enabled
+            if (!cheatsEnabled) {
+                remainingPhaseShiftCooldown = phaseShiftCooldown;
+            }
+            System.out.println("Phase Shift Activated!"); // Optional debug message
+        } else if (isPhaseShiftActive) {
+            System.out.println("Phase Shift already active!");
+        } else {
+            System.out.println("Phase Shift (R) on cooldown! " + String.format("%.1f", (double) remainingPhaseShiftCooldown / 1000) + "s");
         }
     }
 
     // Method to reset the current level/stage state
     public void restartLevel() {
-        if (gameState.gameOver) { // Only restart if game is actually over
+        if (currentState == GameStateEnum.GAME_OVER) { // Check state
             System.out.println("Restarting level...");
             
             // Reset Game State flags/values
             gameState.gameOver = false;
-            gameState.score = 0; // Or reset score per level?
-            // gameState.money = ???; // Reset money? Keep money?
+            gameState.score = 0;
             gameState.enemySlain = 0;
             
             // Reset Player state
             ship.resetHealth();
-            ship.setX(shipX); // Reset position
+            ship.setX(shipX);
             ship.setY(shipY);
-            shipVelocityX = 0; // Reset velocity
+            shipVelocityX = 0;
             
-            // Reset Stage (stay on the same stage/wave where player died?)
-            // OR reset to the beginning of the current stage?
-            // Let's reset to the beginning of the current stage:
+            // Reset Stage
             gameState.currentStage.setCurrentWave(1);
             gameState.currentStage.setSpecialEnemySpawned(false);
             
             // Clear entities and create initial wave
-            reset(); // Calls createEnemies inside
+            reset();
             
             // Reset cooldowns
-            lastTacticalQUseTime = 0;
-            lastTacticalEUseTime = 0;
-            remainingCooldown = 0;
-            remainingCooldownE = 0;
+            lastWaveBlastUseTime = 0;
+            lastLaserBeamUseTime = 0;
+            lastPhaseShiftUseTime = 0; // Reset Phase Shift cooldown timer
+            remainingWaveBlastCooldown = 0;
+            remainingLaserBeamCooldown = 0;
+            remainingPhaseShiftCooldown = 0; // Reset Phase Shift cooldown display
+            
+            currentState = GameStateEnum.PLAYING; // Change state back to playing
             
             // Restart the game loop
             startGameLoop();
             
             // Ensure focus for input
             requestFocusInWindow(); 
+        }
+    }
+
+    // Method to load background images for different stages
+    private void loadBackgroundImages() {
+        backgroundImages = new HashMap<>();
+        try {
+            backgroundImages.put(1, new ImageIcon(getClass().getResource("/assets/bg_location1.png")).getImage());
+            backgroundImages.put(2, new ImageIcon(getClass().getResource("/assets/bg_location2.png")).getImage());
+            backgroundImages.put(3, new ImageIcon(getClass().getResource("/assets/bg_location3.png")).getImage());
+        } catch (Exception e) {
+            System.err.println("Error loading background images: " + e.getMessage());
+            backgroundImages.put(1, new ImageIcon(getClass().getResource("/assets/bg_nebula.png")).getImage());
+            backgroundImages.put(2, new ImageIcon(getClass().getResource("/assets/bg_nebula.png")).getImage());
+            backgroundImages.put(3, new ImageIcon(getClass().getResource("/assets/bg_nebula.png")).getImage());
+        }
+    }
+
+    // --- State Management Methods ---
+    public GameStateEnum getCurrentState() {
+        return currentState;
+    }
+
+    public void startGame() {
+        // Reset game elements before starting
+        resetGameForStart(); 
+        currentState = GameStateEnum.PLAYING;
+        // Call StageManager to potentially start cutscene/first level
+        if (stageManager != null) {
+            stageManager.startCutscene(); // Or a different method if appropriate for starting game
+        }
+        System.out.println("State changed to PLAYING");
+    }
+
+    public void exitGame() {
+        System.out.println("Exiting game.");
+        System.exit(0);
+    }
+
+    // Method to reset necessary game components when starting a new game from menu
+    private void resetGameForStart() {
+        gameState.score = 0;
+        gameState.money = 0;
+        gameState.enemySlain = 0;
+        gameState.gameOver = false; 
+        // Reset player state
+        ship.resetHealth();
+        ship.setX(shipX);
+        ship.setY(shipY);
+        shipVelocityX = 0;
+        // Reset stage
+        gameState.currentStage.setStageNumber(1); // Start from stage 1
+        gameState.currentStage.setCurrentWave(1); // Start from wave 1
+        gameState.currentStage.setSpecialEnemySpawned(false);
+        // Clear entities and cooldowns
+        reset(); // Clears enemies/bullets
+        lastWaveBlastUseTime = 0;
+        lastLaserBeamUseTime = 0;
+        lastPhaseShiftUseTime = 0; 
+        remainingWaveBlastCooldown = 0;
+        remainingLaserBeamCooldown = 0;
+        remainingPhaseShiftCooldown = 0;
+        isPhaseShiftActive = false;
+        phaseShiftEndTime = 0;
+    }
+
+    // Methods for menu navigation (called by InputHandler)
+    public void menuUp() {
+        if (currentState == GameStateEnum.MENU) {
+            selectedMenuItem = (selectedMenuItem - 1 + menuItems.length) % menuItems.length;
+            repaint(); // Redraw menu with new selection
+        }
+    }
+
+    public void menuDown() {
+        if (currentState == GameStateEnum.MENU) {
+            selectedMenuItem = (selectedMenuItem + 1) % menuItems.length;
+            repaint(); // Redraw menu with new selection
+        }
+    }
+
+    public void menuSelect() {
+        if (currentState == GameStateEnum.MENU) {
+            switch (selectedMenuItem) {
+                case 0: // Start Game
+                    startGame();
+                    break;
+                case 1: // Settings
+                    System.out.println("Settings selected (Not implemented yet)");
+                    // Future: Change state to SETTINGS
+                    break;
+                case 2: // Credits
+                    System.out.println("Credits selected (Not implemented yet)");
+                    // Future: Change state to CREDITS
+                    break;
+                case 3: // Cheats
+                    toggleCheats(); 
+                    break;
+                case 4: // Exit
+                    exitGame();
+                    break;
+            }
+        }
+    }
+
+    // --- Cheat Management ---
+    public void toggleCheats() {
+        cheatsEnabled = !cheatsEnabled;
+        System.out.println("Cheats " + (cheatsEnabled ? "Enabled" : "Disabled"));
+        if (cheatsEnabled) {
+            // Grant some initial cheat benefits
+            gameState.money += 100000; // Add lots of money
+            System.out.println("+100,000 Money!");
+            // Optionally reset cooldowns immediately
+            remainingWaveBlastCooldown = 0;
+            remainingLaserBeamCooldown = 0;
+            remainingPhaseShiftCooldown = 0;
+        }
+        repaint(); // Redraw menu or HUD if cheats toggled from menu
+    }
+
+    public boolean areCheatsEnabled() {
+        return cheatsEnabled;
+    }
+
+    // --- Draw Main Menu ---
+    private void drawMainMenu(Graphics g) {
+        // Background (optional, could reuse a background image)
+        g.setColor(Color.BLACK);
+        g.fillRect(0, 0, boardWidth, boardHeight);
+
+        // Title
+        g.setFont(new Font("Arial", Font.BOLD, 72));
+        g.setColor(Color.CYAN);
+        String title = "EQUINOX";
+        FontMetrics fmTitle = g.getFontMetrics();
+        int titleWidth = fmTitle.stringWidth(title);
+        g.drawString(title, (boardWidth - titleWidth) / 2, boardHeight / 3);
+
+        // Menu Items
+        g.setFont(new Font("Arial", Font.PLAIN, 36));
+        FontMetrics fmItems = g.getFontMetrics();
+        int itemY = boardHeight / 2 + 50;
+        for (int i = 0; i < menuItems.length; i++) {
+            if (i == selectedMenuItem) {
+                g.setColor(Color.YELLOW);
+            } else {
+                g.setColor(Color.WHITE);
+            }
+            // Special color for Cheats option based on state
+            if (i == 3) { // Index of "Cheats"
+                g.setColor(cheatsEnabled ? Color.MAGENTA : (i == selectedMenuItem ? Color.YELLOW : Color.WHITE));
+            }
+            String itemText = menuItems[i];
+            int itemWidth = fmItems.stringWidth(itemText);
+            g.drawString(itemText, (boardWidth - itemWidth) / 2, itemY + i * 50);
         }
     }
 } 

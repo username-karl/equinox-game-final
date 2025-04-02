@@ -3,8 +3,8 @@ package com.equinox.game.systems;
 import com.equinox.game.entities.Entity;
 import com.equinox.game.entities.Bullet;
 import com.equinox.game.entities.EnemyBullet;
-import com.equinox.game.entities.TacticalQ;
-import com.equinox.game.entities.TacticalE;
+import com.equinox.game.entities.WaveBlast;
+import com.equinox.game.entities.LaserBeam;
 import com.equinox.game.entities.ShipUser;
 import com.equinox.game.entities.enemies.Enemy;
 import com.equinox.game.ui.EquinoxGameLogic; // To call handleEnemyHit, access GameState
@@ -43,26 +43,26 @@ public class CollisionSystem {
     }
 
     // Check player tactical abilities against enemies
-    public void checkTacticalCollisions(ArrayList<TacticalQ> tacticalQArray, ArrayList<TacticalE> tacticalEArray, ArrayList<Enemy> enemyArray) {
-        // Tactical Q (Piercing?)
-        for (TacticalQ tacticalq : tacticalQArray) {
-            if (!tacticalq.isUsed()) { 
+    public void checkTacticalCollisions(ArrayList<WaveBlast> waveBlastArray, ArrayList<LaserBeam> laserBeamArray, ArrayList<Enemy> enemyArray) {
+        // WaveBlast (Q)
+        for (WaveBlast waveBlast : waveBlastArray) {
+            if (!waveBlast.isUsed()) {
                 for (Enemy enemy : enemyArray) {
-                    if (enemy.isAlive() && detectCollision(tacticalq, enemy)) {
+                    if (enemy.isAlive() && detectCollision(waveBlast, enemy)) {
                         gameLogic.handleEnemyHit(enemy); 
-                        // tacticalq.setUsed(true); // Uncomment if Q is single hit
+                        // waveBlast.setUsed(true); // Uncomment if WaveBlast is single hit
                     }
                 }
             }
         }
-        // Tactical E (Single Hit)
-        for (TacticalE tacticale : tacticalEArray) {
-            if (!tacticale.isUsed()) {
+        // LaserBeam (E)
+        for (LaserBeam laserBeam : laserBeamArray) {
+            if (!laserBeam.isUsed()) {
                 for (Enemy enemy : enemyArray) {
-                    if (enemy.isAlive() && detectCollision(tacticale, enemy)) {
-                        tacticale.setUsed(true);
+                    if (enemy.isAlive() && detectCollision(laserBeam, enemy)) {
+                        laserBeam.setUsed(true);
                         gameLogic.handleEnemyHit(enemy);
-                        break; // Tactical E hits one enemy and is used
+                        break; // LaserBeam hits one enemy and is used
                     }
                 }
             }
@@ -71,7 +71,8 @@ public class CollisionSystem {
 
     // Check enemy bullets against player ship
     public void checkEnemyBulletCollisions(ArrayList<EnemyBullet> enemyBulletArray, ShipUser ship) {
-        if (ship == null || !ship.isAlive()) return; // Don't check collisions if ship is dead or null
+        // Skip collision check if ship is null, dead, phase shift is active, OR CHEATS ARE ENABLED
+        if (ship == null || !ship.isAlive() || gameLogic.isPhaseShiftActive() || gameLogic.areCheatsEnabled()) return; 
         
         for (EnemyBullet bullet : enemyBulletArray) {
              if (!bullet.isUsed()) { 

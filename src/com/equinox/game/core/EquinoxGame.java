@@ -30,14 +30,18 @@ public class EquinoxGame {
         // Note: StageManager is assumed to be in com.equinox.game.systems
         StageManager stageManager = new StageManager(equinox, frame);
         equinox.setStageManager(stageManager);
-        
-        // Start the cutscene immediately
-        stageManager.startCutscene();
+
+        // Add the game logic panel to the frame's content pane
+        frame.add(equinox);
+        frame.pack(); // Adjust frame size to fit the preferred size of the panel
 
         // Center the window on the screen
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-        int centerX = (screenSize.width - frame.getWidth()) / 2;
-        int centerY = (screenSize.height - frame.getHeight()) / 2;
+        // Get frame size *after* packing
+        int frameWidth = frame.getWidth(); 
+        int frameHeight = frame.getHeight();
+        int centerX = (screenSize.width - frameWidth) / 2;
+        int centerY = (screenSize.height - frameHeight) / 2;
         frame.setLocation(centerX, centerY);
     
         frame.setVisible(true);
