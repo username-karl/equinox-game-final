@@ -1,3 +1,8 @@
+package com.equinox.game.ui;
+
+import com.equinox.game.systems.StageManager; // Import StageManager
+import com.equinox.game.data.GameState;    // Import GameState
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -19,7 +24,7 @@ public class ShopPanel extends JPanel {
         this.stageManager = stageManager;
         this.background = background;
         this.gameState = gameState;
-        setPreferredSize(new Dimension(1280, 720));
+        setPreferredSize(new Dimension(768, 768)); // Adjusted size
         setLayout(new BorderLayout());
 
         // Create the title label
@@ -43,10 +48,10 @@ public class ShopPanel extends JPanel {
         characterPanel.setOpaque(false);
         characterButtons = new ArrayList<>();
 
-        // Example
-        createCharacterButton(characterPanel, "Captain Nova", new ImageIcon(getClass().getResource("./img/temp.png")).getImage(), "A trusty old Ally", "Increase Guns", 100);
-        createCharacterButton(characterPanel, "Character 2", new ImageIcon(getClass().getResource("./img/temp.png")).getImage(), "A mysterious and powerful ally.", "Increase Health", 150);
-        createCharacterButton(characterPanel, "Character 3", new ImageIcon(getClass().getResource("./img/temp.png")).getImage(), "A skilled and loyal companion.", "Increase Speed", 200);
+        // Example - Use absolute paths
+        createCharacterButton(characterPanel, "Captain Nova", new ImageIcon(getClass().getResource("/assets/temp.png")).getImage(), "A trusty old Ally", "Increase Guns", 100);
+        createCharacterButton(characterPanel, "Character 2", new ImageIcon(getClass().getResource("/assets/temp.png")).getImage(), "A mysterious and powerful ally.", "Increase Health", 150);
+        createCharacterButton(characterPanel, "Character 3", new ImageIcon(getClass().getResource("/assets/temp.png")).getImage(), "A skilled and loyal companion.", "Increase Speed", 200);
 
         add(characterPanel, BorderLayout.CENTER);
     }
@@ -135,4 +140,4 @@ public class ShopPanel extends JPanel {
             g.drawImage(background, 0, 0, getWidth(), getHeight(), this);
         }
     }
-}
+} 

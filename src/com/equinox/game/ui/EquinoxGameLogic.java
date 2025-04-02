@@ -1,3 +1,24 @@
+package com.equinox.game.ui;
+
+import com.equinox.game.data.GameState;
+import com.equinox.game.data.Stage;
+import com.equinox.game.entities.Entity;
+import com.equinox.game.entities.ShipUser;
+import com.equinox.game.entities.Bullet;
+import com.equinox.game.entities.EnemyBullet;
+import com.equinox.game.entities.TacticalQ;
+import com.equinox.game.entities.TacticalE;
+import com.equinox.game.entities.enemies.Enemy;
+import com.equinox.game.entities.enemies.FastEnemy;
+import com.equinox.game.entities.enemies.ShootingEnemy;
+import com.equinox.game.entities.enemies.SpecialEnemy;
+import com.equinox.game.entities.enemies.Miniboss;
+import com.equinox.game.entities.enemies.MainBoss;
+
+import com.equinox.game.systems.StageManager;
+import com.equinox.game.systems.InputHandler;
+import com.equinox.game.systems.CollisionSystem;
+
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -7,7 +28,7 @@ import java.util.ArrayList;
 import java.util.Random;
 import javax.swing.*;
 
-public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListener {
+public class EquinoxGameLogic extends JPanel implements ActionListener {
 
     // INIT
     private GameState gameState;
@@ -88,9 +109,10 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
     // Timer
     Timer gameLoop;
 
-    // Movement flags
-    boolean moveLeft = false;
-    boolean moveRight = false;
+    // Input Handler instance
+    private InputHandler inputHandler;
+    // Collision System instance
+    private CollisionSystem collisionSystem;
 
     //STAGE DOMAIN
     private StageManager stageManager;
@@ -99,27 +121,30 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
     
     //MAIN EQUINOX GAME CONSTRUCTOR
     //ALL THE LOGIC HERE IS CONTAINED
-    EquinoxGameLogic() {
+    public EquinoxGameLogic() { // Made public
         //SetFrame
         setPreferredSize(new Dimension(boardWidth, boardHeight));
         setBackground(Color.DARK_GRAY);
 
-        setFocusable(true);
-        addKeyListener(this);
         //GameState init
         gameState = new GameState();
+        // Access Stage via gameState instance
         gameState.currentStage = new Stage(1,7);
 
+        // Create and set InputHandler
+        inputHandler = new InputHandler(this);
+        addKeyListener(inputHandler); // Add handler as listener
 
+        // Create CollisionSystem
+        collisionSystem = new CollisionSystem(this);
         
+        setFocusable(true);
 
-
-        // Image loading
-        // Creatures
-        shipImg = new ImageIcon(getClass().getResource("./img/protagtest.png")).getImage();
-        enemyImgVar1 = new ImageIcon(getClass().getResource("./img/enemyvar1.gif")).getImage();
-        enemyImgVar2 = new ImageIcon(getClass().getResource("./img/monstertestvar2.png")).getImage();
-        enemyImgVar3 = new ImageIcon(getClass().getResource("./img/monstertestvar3.png")).getImage();
+        // Image loading - Use absolute paths from classpath root
+        shipImg = new ImageIcon(getClass().getResource("/assets/protagtest.png")).getImage();
+        enemyImgVar1 = new ImageIcon(getClass().getResource("/assets/enemyvar1.gif")).getImage();
+        enemyImgVar2 = new ImageIcon(getClass().getResource("/assets/monstertestvar2.png")).getImage();
+        enemyImgVar3 = new ImageIcon(getClass().getResource("/assets/monstertestvar3.png")).getImage();
 
 
         enemyImgArray = new ArrayList<Image>();
@@ -128,20 +153,21 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
         enemyImgArray.add(enemyImgVar3);
 
 
-        minibossImgvar1 = new ImageIcon(getClass().getResource("./img/minibossvar1.png")).getImage();
-        mainbossImgvar1 = new ImageIcon(getClass().getResource("./img/mainbossvar1.png")).getImage();
+        minibossImgvar1 = new ImageIcon(getClass().getResource("/assets/minibossvar1.png")).getImage();
+        mainbossImgvar1 = new ImageIcon(getClass().getResource("/assets/mainbossvar1.png")).getImage();
         specialEnemyImgArray = new ArrayList<Image>();
         specialEnemyImgArray.add(minibossImgvar1);
         specialEnemyImgArray.add(mainbossImgvar1);
         
 
         // //Maps
-        world1BG = new ImageIcon(getClass().getResource("./img/world1BG.png")).getImage();
+        world1BG = new ImageIcon(getClass().getResource("/assets/world1BG.png")).getImage();
         // Misc
-        laserBlue = new ImageIcon(getClass().getResource("./img/laserBlue.png")).getImage();
-        enemyBulletImg = new ImageIcon(getClass().getResource("./img/laserRed.png")).getImage();
-        // Ship
-        ship = new ShipUser(shipX, shipY, shipWidth, shipHeight, shipImg);
+        laserBlue = new ImageIcon(getClass().getResource("/assets/laserBlue.png")).getImage();
+        enemyBulletImg = new ImageIcon(getClass().getResource("/assets/laserRed.png")).getImage();
+        // Ship - Add maxHealth parameter
+        int initialPlayerHealth = 5; // Example health value
+        ship = new ShipUser(shipX, shipY, shipWidth, shipHeight, shipImg, initialPlayerHealth);
 
         // Enemy Array Group
         enemyArray = new ArrayList<Enemy>();
@@ -189,20 +215,20 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
     }
     //DRAW PLAYER SHIP FOR DRAW()
     private void drawShip(Graphics g) {
-        g.drawImage(ship.img, ship.getX(), ship.getY(), ship.getWidth(), ship.getHeight(), null);
+        g.drawImage(ship.getImage(), ship.getX(), ship.getY(), ship.getWidth(), ship.getHeight(), null);
     }
     //DRAW ENEMY ARRAY FOR DRAW()
     private void drawEnemies(Graphics g) {
         for (Enemy enemy : enemyArray) {
             if (enemy.isAlive()) {
                 if (enemy instanceof Miniboss) {
-                    g.drawImage(enemy.img, enemy.getX(), enemy.getY(), enemy.getWidth(), enemy.getHeight(), null);
+                    g.drawImage(enemy.getImage(), enemy.getX(), enemy.getY(), enemy.getWidth(), enemy.getHeight(), null);
                     drawBossHealthBar(g, (Miniboss) enemy);
                 } else if (enemy instanceof MainBoss) {
-                    g.drawImage(enemy.img, enemy.getX(), enemy.getY(), enemy.getWidth(), enemy.getHeight(), null);
+                    g.drawImage(enemy.getImage(), enemy.getX(), enemy.getY(), enemy.getWidth(), enemy.getHeight(), null);
                     drawBossHealthBar(g, (MainBoss) enemy);
                 } else {
-                    g.drawImage(enemy.img, enemy.getX(), enemy.getY(), enemy.getWidth(), enemy.getHeight(), null);
+                    g.drawImage(enemy.getImage(), enemy.getX(), enemy.getY(), enemy.getWidth(), enemy.getHeight(), null);
                 }
             }
         }
@@ -235,7 +261,9 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
     //DRAW ENEMY BULLETS FOR DRAW()
     private void drawEnemyBullets(Graphics g) {
         for (EnemyBullet bullet : enemyBulletArray) {
-            g.drawImage(enemyBulletImg, bullet.getX(), bullet.getY(), bullet.getWidth(), bullet.getHeight(), null);
+            if (!bullet.isUsed()) {
+                g.drawImage(enemyBulletImg, bullet.getX(), bullet.getY(), bullet.getWidth(), bullet.getHeight(), null);
+            }
         }
     }
     //DRAW GAME STATS FOR DRAW()
@@ -274,6 +302,44 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
         }
         // Draw Stage and Wave String
         g.drawString("World: " + gameState.currentStage.getStageNumber() + " Wave: " + gameState.currentStage.getCurrentWave(), 10, 85);
+    
+        // Draw Player Health
+        if (ship != null) {
+            g.setColor(Color.GREEN);
+            g.setFont(new Font("Arial", Font.BOLD, 18));
+            g.drawString("Health: " + ship.getHealth() + " / " + ship.getMaxHealth(), boardWidth - 150, 35); // Position top right
+            
+            // Optional: Draw a simple health bar
+            int barX = boardWidth - 155;
+            int barY = 45;
+            int barWidth = 140;
+            int barHeight = 15;
+            double healthPercent = (double)ship.getHealth() / ship.getMaxHealth();
+            int filledWidth = (int)(barWidth * healthPercent);
+            
+            g.setColor(Color.DARK_GRAY);
+            g.fillRect(barX, barY, barWidth, barHeight);
+            g.setColor(Color.RED);
+            g.fillRect(barX, barY, filledWidth, barHeight);
+            g.setColor(Color.WHITE);
+            g.drawRect(barX, barY, barWidth, barHeight);
+        }
+
+        // Display Game Over message and Restart prompt
+        if (gameState.gameOver) {
+            g.setColor(Color.RED);
+            g.setFont(new Font("Arial", Font.BOLD, 48));
+            FontMetrics fm = g.getFontMetrics();
+            String gameOverMsg = "GAME OVER";
+            int msgWidth = fm.stringWidth(gameOverMsg);
+            g.drawString(gameOverMsg, (boardWidth - msgWidth) / 2, boardHeight / 2 - 30);
+            
+            g.setFont(new Font("Arial", Font.PLAIN, 24));
+            fm = g.getFontMetrics();
+            String restartMsg = "Press 'R' to Retry";
+            int restartWidth = fm.stringWidth(restartMsg);
+            g.drawString(restartMsg, (boardWidth - restartWidth) / 2, boardHeight / 2 + 20);
+        }
     }
     //DRAW BOSS HEALTH BARS FOR DRAW()
     private void drawBossHealthBar(Graphics g, Miniboss miniboss) {
@@ -337,9 +403,10 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
             moveEnemyBullets();
             movePlayerBullets();
             moveTacticalAbilities();
-            checkBulletCollisions();
-            checkTacticalCollisions();
-            checkEnemyBulletCollisions();
+            // Call CollisionSystem methods
+            collisionSystem.checkPlayerBulletCollisions(bulletArray, enemyArray);
+            collisionSystem.checkTacticalCollisions(tacticalArray, tacticalEArray, enemyArray);
+            collisionSystem.checkEnemyBulletCollisions(enemyBulletArray, ship);
             clearOffScreenBullets();
             handleStageAndWaveLogic();
             updateCooldowns();
@@ -418,52 +485,9 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
             tacticale.setY(tacticale.getY() + tacticaleVelocityY);
         }
     }
-    //CHECK BULLET COLLISIONS for MOVE GAME FUNCTION
-    private void checkBulletCollisions() {
-        for (Bullet bullet : bulletArray) {
-            if (!bullet.isUsed()) {
-                for (Enemy enemy : enemyArray) {
-                    if (enemy.isAlive() && detectCollision(bullet, enemy)) {
-                        bullet.setUsed(true);
-                        handleEnemyHit(enemy);
-                    }
-                }
-            }
-        }
-    }
-    //CHECK SKILL HIT for MOVE GAME FUNCTION
-    private void checkTacticalCollisions() {
-        for (TacticalQ tacticalq : tacticalArray) {
-            if (!tacticalq.isUsed()) {
-                for (Enemy enemy : enemyArray) {
-                    if (enemy.isAlive() && detectCollision(tacticalq, enemy)) {
-                        handleEnemyHit(enemy);
-                    }
-                }
-            }
-        }
-        for (TacticalE tacticale : tacticalEArray) {
-            if (!tacticale.isUsed()) {
-                for (Enemy enemy : enemyArray) {
-                    if (enemy.isAlive() && detectCollision(tacticale, enemy)) {
-                        tacticale.setUsed(true);
-                        handleEnemyHit(enemy);
-                    }
-                }
-            }
-        }
-    }
-    //ENEMY BULLET CHECK COLLISION for MOVE GAME FUNCTION
-    private void checkEnemyBulletCollisions(){
-        for (EnemyBullet bullet : enemyBulletArray) {
-            // Bullet collision check
-            if(detectCollision(bullet, ship)){
-                gameState.gameOver = true;
-            }
-        }
-    }
-    //ENEMY HIT for MOVE GAME FUNCTION
-    private void handleEnemyHit(Enemy enemy) {
+    //ENEMY HIT for MOVE GAME FUNCTION - Make public for CollisionSystem
+    public void handleEnemyHit(Enemy enemy) {
+        // Check specific types correctly
         if (enemy instanceof SpecialEnemy) {
             SpecialEnemy specialEnemy = (SpecialEnemy) enemy;
             specialEnemy.setHitpoints(specialEnemy.getHitpoints() - 1);
@@ -541,7 +565,11 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
     }
     // MOVE SHIP for MOVE GAME FUNCTION
     private void moveShip() {
-        // Ship movement
+        // Get input state from InputHandler
+        boolean moveLeft = inputHandler.isMoveLeft(); 
+        boolean moveRight = inputHandler.isMoveRight();
+
+        // Ship movement acceleration/deceleration
         if (moveLeft) {
             shipVelocityX = Math.max(shipVelocityX - shipAcceleration, -shipMaxSpeed);
         } else if (moveRight) {
@@ -645,94 +673,109 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
         enemyArray.add(mainboss);
         gameState.enemyCount++; // Increment
     }
-    //COLLISION LOGIC
-    public boolean detectCollision(Block a, Block b) {
-        return a.getX() < b.getX() + b.getWidth() && // entity a's top left corner doesn't reach b's top right corner
-                a.getX() + a.getWidth() > b.getX() && // entity a's top right corner passes b's top left corner
-                a.getY() < b.getY() + b.getHeight() && // entity a's top left corner doesn't reach b's bottom left corner
-                a.getY() + a.getHeight() > b.getY(); // entity a's bottom left corner passes b's top let corner
-    }
 
     //Interfaced from Action Listener
     @Override
     public void actionPerformed(ActionEvent e) {
+        // Only run game logic if loop is active AND game is not over
+        if (gameLoopRunning && !gameState.gameOver) { 
+             moveGame();
+             repaint();
+        } else if (gameState.gameOver) {
+            // If game is over, stop the loop but keep repainting to show message
+            stopGameLoop(); 
+            repaint(); 
+        }
+        // Removed the direct stopGameLoop() call based on gameOver flag from here
+    }
 
-        moveGame();
-        repaint();
-        if (gameState.gameOver) {
-            gameLoop.stop();
+    // --- Action Methods Called by InputHandler ---
+    public void fireBullet() {
+         Bullet bullet = new Bullet(
+            ship.getX() + ship.getWidth() / 2 - bulletWidth / 2, // Center bullet 
+            ship.getY(), 
+            bulletWidth, 
+            bulletHeight,
+            laserBlue);
+        bulletArray.add(bullet);
+    }
+
+    public void fireTacticalQ() {
+         long currentTime = System.currentTimeMillis();
+        if (remainingCooldown <= 0) { // Check remaining cooldown directly
+            TacticalQ tacticalq = new TacticalQ(
+                ship.getX() + ship.getWidth() / 2 - tacticalqWidth / 2, // Center ability 
+                ship.getY() - tacticalqHeight, // Start above ship?
+                tacticalqWidth, 
+                tacticalqHeight, 
+                null); // Needs an image or draw differently
+            tacticalArray.add(tacticalq);
+            lastTacticalQUseTime = currentTime; // Update the last use time
+            remainingCooldown = tacticalQCooldown; // Reset cooldown display immediately
+        } else {
+            System.out.println("Tactical Q on cooldown! " + String.format("%.1f", (double) remainingCooldown / 1000) + "s");
         }
     }
-    //Interfaced from Key Listener to listen for keyboard
-    @Override
-    public void keyTyped(KeyEvent e) {
-    }
 
-    @Override
-    public void keyPressed(KeyEvent e) {
-        // Ship movement flag raise
-        if (e.getKeyCode() == KeyEvent.VK_A) {
-            moveLeft = true;
-        } else if (e.getKeyCode() == KeyEvent.VK_D) {
-            moveRight = true;
-        }
-    }
-    //KEY TAP LOGIC
-    @Override
-    public void keyReleased(KeyEvent e) {
-        //KEY PRESS LOGIC
-        // Ship movement flag released
-        if (e.getKeyCode() == KeyEvent.VK_A) {
-            moveLeft = false;
-        } else if (e.getKeyCode() == KeyEvent.VK_D) {
-            moveRight = false;
-        } 
-        //Ship Basic Attack Trigger
-        else if (e.getKeyCode() == KeyEvent.VK_SPACE) {
-            Bullet bullet = new Bullet(ship.getX() + ship.getWidth() * 15 / 32, ship.getY(), bulletWidth, bulletHeight,
-                    laserBlue);
-            bulletArray.add(bullet);
-        } 
-        // TacticalQ Trigger
-        else if (e.getKeyCode() == KeyEvent.VK_Q) {
-            
-            long currentTime = System.currentTimeMillis();
-
-            if (currentTime - lastTacticalQUseTime >= tacticalQCooldown) {
-                // Cooldown is over, allow the ability
-                TacticalQ tacticalq = new TacticalQ(ship.getX() + ship.getWidth() * 15 / 32, ship.getY(),
-                        tacticalqWidth, tacticalqHeight, null);
-                tacticalArray.add(tacticalq);
-                lastTacticalQUseTime = currentTime; // Update the last use time
-            } else {
-                // Ability is on cooldown
-                System.out.println("Tactical Q on cooldown!");
+    public void fireTacticalE() {
+         long currentTime = System.currentTimeMillis();
+        if (remainingCooldownE <= 0) { // Check remaining cooldown directly
+            int numBullets = boardWidth / tileSize; // Number of bullets based on board width
+            int startX = 0; // Start at the left edge of the screen
+            for (int i = 0; i < numBullets; i++) {
+                TacticalE tacticale = new TacticalE(
+                    startX + i * tileSize + (tileSize / 2) - (tacticaleWidth / 2), // Center in each tile
+                    ship.getY(), 
+                    tacticaleWidth, 
+                    tacticaleHeight, 
+                    null); // Needs an image or draw differently
+                tacticalEArray.add(tacticale);
             }
+            lastTacticalEUseTime = currentTime; // Update the last use time
+            remainingCooldownE = tacticalECooldown; // Reset cooldown display immediately
         } 
-        // TacticalE Trigger
-        else if (e.getKeyCode() == KeyEvent.VK_E) {
-            
-            long currentTime = System.currentTimeMillis();
-
-            if (currentTime - lastTacticalEUseTime >= tacticalECooldown) {
-                // Cooldown is over, allow the ability
-                int numBullets = boardWidth / tileSize; // Number of bullets based on board width
-                int startX = 0; // Start at the left edge of the screen
-                for (int i = 0; i < numBullets; i++) {
-                    TacticalE tacticale = new TacticalE(startX + i * tileSize, ship.getY(),
-                            tacticaleWidth, tacticaleHeight, null);
-                    tacticalEArray.add(tacticale);
-                }
-                lastTacticalEUseTime = currentTime; // Update the last use time
-            } 
-        // SPECIAL Trigger
-        
-        
-            else {
-                // Ability is on cooldown
-                System.out.println("Tactical E on cooldown!");
-            }
+        else {
+            System.out.println("Tactical E on cooldown! " + String.format("%.1f", (double) remainingCooldownE / 1000) + "s");
         }
-
     }
-}
+
+    // Method to reset the current level/stage state
+    public void restartLevel() {
+        if (gameState.gameOver) { // Only restart if game is actually over
+            System.out.println("Restarting level...");
+            
+            // Reset Game State flags/values
+            gameState.gameOver = false;
+            gameState.score = 0; // Or reset score per level?
+            // gameState.money = ???; // Reset money? Keep money?
+            gameState.enemySlain = 0;
+            
+            // Reset Player state
+            ship.resetHealth();
+            ship.setX(shipX); // Reset position
+            ship.setY(shipY);
+            shipVelocityX = 0; // Reset velocity
+            
+            // Reset Stage (stay on the same stage/wave where player died?)
+            // OR reset to the beginning of the current stage?
+            // Let's reset to the beginning of the current stage:
+            gameState.currentStage.setCurrentWave(1);
+            gameState.currentStage.setSpecialEnemySpawned(false);
+            
+            // Clear entities and create initial wave
+            reset(); // Calls createEnemies inside
+            
+            // Reset cooldowns
+            lastTacticalQUseTime = 0;
+            lastTacticalEUseTime = 0;
+            remainingCooldown = 0;
+            remainingCooldownE = 0;
+            
+            // Restart the game loop
+            startGameLoop();
+            
+            // Ensure focus for input
+            requestFocusInWindow(); 
+        }
+    }
+} 
