@@ -23,7 +23,7 @@ public class EquinoxGame {
         EquinoxGameLogic equinox = new EquinoxGameLogic();
         StageManager stageManager = new StageManager(equinox, frame);
         equinox.setStageManager(stageManager);
-
+        
         // Start the cutscene immediately
         stageManager.startCutscene();
 
