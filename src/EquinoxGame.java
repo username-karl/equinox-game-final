@@ -32,7 +32,7 @@ public class EquinoxGame {
         int centerX = (screenSize.width - frame.getWidth()) / 2;
         int centerY = (screenSize.height - frame.getHeight()) / 2;
         frame.setLocation(centerX, centerY);
-
+    
         frame.setVisible(true);
     }
 }
