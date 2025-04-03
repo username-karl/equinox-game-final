@@ -34,12 +34,12 @@ This document outlines the step-by-step process for building the Equinox game as
 6.  [ ] **Create Enemy Framework**
     -   [ ] Design base `Enemy.java` class extending `Entity`.
     -   [ ] Implement simple enemy types (e.g., basic fighters).
-    -   [ ] Add basic AI movement patterns (e.g., moving downwards).
+    -   [x] Add basic AI movement patterns (e.g., moving downwards).
 
-7.  [ ] **Design Level Structure**
-    -   [ ] Create `Level.java` to manage game state for a level.
-    -   [ ] Implement wave-based enemy spawning within `GamePanel` or a dedicated `Wave` class.
-    -   [ ] Implement basic background rendering (e.g., a scrolling starfield drawn with `Graphics2D`).
+7.  [x] **Design Level Structure**
+    -   [x] Create `Level.java` to manage game state for a level.
+    -   [x] Implement wave-based enemy spawning within `GamePanel` or a dedicated `Wave` class.
+    -   [x] Implement basic background rendering (e.g., a scrolling starfield drawn with `Graphics2D`).
 
 8.  [x] **Refine Core Mechanics**
     -   [x] Improve collision handling in `CollisionSystem` (entity-specific logic).
@@ -54,9 +54,9 @@ This document outlines the step-by-step process for building the Equinox game as
     -   [ ] Add logic to show the `UpgradePanel` after completing levels.
 
 10. **Implement Boss Fights**
-    -   [ ] Create specialized `Boss.java` class extending `Enemy`.
+    -   [x] Create specialized `Boss.java` class extending `Enemy`.
     -   [ ] Design unique attack patterns and behaviors for each boss.
-    -   [ ] Add boss health display (likely in the `HUD`).
+    -   [x] Add boss health display (likely in the `HUD`).
 
 11. [ ] **Create Location Transitions**
     -   [x] Add `NarrativePanel.java` (extending `JPanel`) for story display (basic implementation exists).
@@ -84,6 +84,7 @@ This document outlines the step-by-step process for building the Equinox game as
     -   [ ] Implement opening sequence/panel.
     -   [x] Show narrative panels between locations (basic panel exists).
     -   [x] Implement `GameOverPanel` and `VictoryPanel` (GameOver/Retry exists).
+    -   [ ] add more cutscenes to the game.
 
 ## Phase 5: Final Polishing
 

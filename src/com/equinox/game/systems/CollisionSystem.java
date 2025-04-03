@@ -7,7 +7,7 @@ import com.equinox.game.entities.WaveBlast;
 import com.equinox.game.entities.LaserBeam;
 import com.equinox.game.entities.ShipUser;
 import com.equinox.game.entities.enemies.Enemy;
-import com.equinox.game.ui.EquinoxGameLogic; // To call handleEnemyHit, access GameState
+import com.equinox.game.ui.EquinoxGameLogic; 
 
 import java.util.ArrayList;
 
@@ -82,12 +82,10 @@ public class CollisionSystem {
                     
                     // Check if player died from this hit
                     if (!ship.isAlive()) {
-                        // Set game over state if player health reached 0
-                         if (gameLogic.getGameState() != null) { 
-                            gameLogic.getGameState().gameOver = true; 
-                         }
-                         // Optionally break here if game over should happen immediately
-                         // break; 
+                        // Call the method in GameLogic to handle player death
+                        gameLogic.playerDied();
+                        // Optionally break here if game over should happen immediately
+                        // break; 
                     }
                     // Consider if bullet should disappear after hitting player, or if multiple bullets can hit
                     // break; // Uncomment if one bullet hit is enough per frame

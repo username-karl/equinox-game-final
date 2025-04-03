@@ -1,7 +1,7 @@
 package com.equinox.game.core;
 
 import com.equinox.game.ui.EquinoxGameLogic;
-import com.equinox.game.systems.StageManager; // Assuming StageManager will be in systems
+import com.equinox.game.systems.StageManager;
 
 import java.awt.Dimension;
 import java.awt.Toolkit;
@@ -25,9 +25,7 @@ public class EquinoxGame {
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         //Game Screen
-        // Note: EquinoxGameLogic is now in com.equinox.game.ui
         EquinoxGameLogic equinox = new EquinoxGameLogic();
-        // Note: StageManager is assumed to be in com.equinox.game.systems
         StageManager stageManager = new StageManager(equinox, frame);
         equinox.setStageManager(stageManager);
 

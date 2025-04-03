@@ -121,7 +121,7 @@ public class EquinoxGameLogic extends JPanel implements ActionListener {
     int laserBeamHeight = tileSize / 8; // Renamed from tacticaleHeight
     int laserBeamVelocityY = -15; // Renamed from tacticaleVelocityY
     long lastLaserBeamUseTime; // Renamed from lastTacticalEUseTime
-    long laserBeamCooldown = 0; // Renamed from tacticalECooldown
+    long laserBeamCooldown = 1000; // Give it a 1-second cooldown (was 0)
     // Phase Shift (R)
     boolean isPhaseShiftActive = false;
     long phaseShiftEndTime = 0;
@@ -545,7 +545,7 @@ public class EquinoxGameLogic extends JPanel implements ActionListener {
                 if(enemy instanceof Miniboss){
                     enemyWidthToUse = enemy.getWidth();
                 }else if(enemy instanceof MainBoss){
-                    enemyWidthToUse = enemy.getWidth();
+                    enemyWidthToUse = enemyWidth;
                 }else{
                     enemyWidthToUse = enemyWidth;
                 }
@@ -637,7 +637,6 @@ public class EquinoxGameLogic extends JPanel implements ActionListener {
     private void handleStageAndWaveLogic() {
         // Next wave of enemies
         if (gameState.enemyCount == 0) {
-            stopGameLoop();
             if (gameState.currentStage.getCurrentWave() == gameState.currentStage.getTotalWaves()) {
                 // Move to the next stage
                 gameState.currentStage.setStageNumber(gameState.currentStage.getStageNumber() + 1);
@@ -650,18 +649,15 @@ public class EquinoxGameLogic extends JPanel implements ActionListener {
                 gameState.currentStage.setSpecialEnemySpawned(true);
                 createMainboss();
                 gameState.currentStage.setCurrentWave(gameState.currentStage.getCurrentWave() + 1);
-                // startGameLoop(); // Loop continues, no need to restart
             } else if (gameState.currentStage.getCurrentWave() == gameState.currentStage.getTotalWaves() - 2) {
                 // Spawn the miniboss
                 gameState.currentStage.setSpecialEnemySpawned(true);
                 createMiniboss();
                 gameState.currentStage.setCurrentWave(gameState.currentStage.getCurrentWave() + 1);
-                // startGameLoop(); // Loop continues
             } else {
                 // Move to the next wave
                 gameState.currentStage.setCurrentWave(gameState.currentStage.getCurrentWave() + 1);
                 reset();
-                // startGameLoop(); // Loop continues
             }
         }
     }
@@ -776,7 +772,7 @@ public class EquinoxGameLogic extends JPanel implements ActionListener {
                 specialEnemyImgArray.get(minibossWorld1),
                 enemyVelocityX,
                 specialEnemyImgArray.get(minibossWorld1),
-                100,
+                50,
                 100,
                 2,
                 "Quantum Anomaly"
@@ -793,7 +789,7 @@ public class EquinoxGameLogic extends JPanel implements ActionListener {
                 specialEnemyImgArray.get(mainbossWorld1),
                 enemyVelocityX,
                 specialEnemyImgArray.get(mainbossWorld1),
-                500,
+                100,
                 75,
                 2,
                 "The Collector"
@@ -810,8 +806,6 @@ public class EquinoxGameLogic extends JPanel implements ActionListener {
              moveGame();
              repaint();
         } else if (currentState == GameStateEnum.GAME_OVER) {
-            // If game is over, stop the loop but keep repainting to show message
-            stopGameLoop(); 
             repaint(); 
         } else if (currentState == GameStateEnum.MENU) {
             // Only need to repaint menu if state changes (handled by input)
@@ -960,6 +954,11 @@ public class EquinoxGameLogic extends JPanel implements ActionListener {
     public void startGame() {
         // Reset game elements before starting
         resetGameForStart(); 
+        if (cheatsEnabled) {
+            gameState.money += 100000;
+            System.out.println("Cheats Active: +100,000 Money!");
+            // Cooldowns are already reset in toggleCheats if enabled
+        }
         currentState = GameStateEnum.PLAYING;
         // Call StageManager to potentially start cutscene/first level
         if (stageManager != null) {
@@ -976,7 +975,7 @@ public class EquinoxGameLogic extends JPanel implements ActionListener {
     // Method to reset necessary game components when starting a new game from menu
     private void resetGameForStart() {
         gameState.score = 0;
-        gameState.money = 0;
+        gameState.money = 150; // Give starting money
         gameState.enemySlain = 0;
         gameState.gameOver = false; 
         // Reset player state
@@ -1044,9 +1043,6 @@ public class EquinoxGameLogic extends JPanel implements ActionListener {
         cheatsEnabled = !cheatsEnabled;
         System.out.println("Cheats " + (cheatsEnabled ? "Enabled" : "Disabled"));
         if (cheatsEnabled) {
-            // Grant some initial cheat benefits
-            gameState.money += 100000; // Add lots of money
-            System.out.println("+100,000 Money!");
             // Optionally reset cooldowns immediately
             remainingWaveBlastCooldown = 0;
             remainingLaserBeamCooldown = 0;
@@ -1090,6 +1086,15 @@ public class EquinoxGameLogic extends JPanel implements ActionListener {
             String itemText = menuItems[i];
             int itemWidth = fmItems.stringWidth(itemText);
             g.drawString(itemText, (boardWidth - itemWidth) / 2, itemY + i * 50);
+        }
+    }
+
+    // Method called by CollisionSystem when player health reaches 0
+    public void playerDied() {
+        if (currentState == GameStateEnum.PLAYING) { // Only transition if currently playing
+            currentState = GameStateEnum.GAME_OVER;
+            gameState.gameOver = true; // Keep flag for compatibility if needed elsewhere
+            System.out.println("State changed to GAME_OVER");
         }
     }
 } 

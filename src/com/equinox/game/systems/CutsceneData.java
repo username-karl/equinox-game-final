@@ -27,9 +27,4 @@ public class CutsceneData {
         return background;
     }
 
-    // Note: addNarration was removed as List.of makes the list immutable typically.
-    // If mutability is needed, use new ArrayList<>(...) in constructor and keep this method.
-    // public void addNarration(String narration) {
-    //     narrations.add(narration); 
-    // }
 } 
