@@ -12,7 +12,8 @@ public class ShootingEnemy extends Enemy{
     private int currentCooldown = 0;
 
     public ShootingEnemy(int x, int y, int width, int height, Image img, int enemyVelocityX) {
-        super(x, y, width, height, img, enemyVelocityX);
+        // Call new Enemy constructor, passing slightly increased health (e.g., 2)
+        super(x, y, width, height, img, enemyVelocityX, 2); // Pass 2 as initialHealth
     }
 
     // Handles shooting logic, accept List instead of ArrayList

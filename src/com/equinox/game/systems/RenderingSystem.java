@@ -46,13 +46,20 @@ public class RenderingSystem {
         }
     }
 
+    // Draw Background based on current stage
     private void drawBackground(Graphics g, GameState gameState) {
-         Image currentBackground = assetLoader.getBackgroundImage(gameState.currentStage.getStageNumber());
-        if (currentBackground != null) {
-            g.drawImage(currentBackground, 0, 0, Constants.BOARD_WIDTH, Constants.BOARD_HEIGHT, null);
+        if (gameState == null || gameState.currentStage == null || assetLoader == null) return;
+        
+        int stageNumber = gameState.currentStage.getStageNumber();
+        Image bgImage = assetLoader.getBackgroundImage(stageNumber);
+        
+        if (bgImage != null) {
+            g.drawImage(bgImage, 0, 0, Constants.BOARD_WIDTH, Constants.BOARD_HEIGHT, null);
         } else {
-            g.setColor(Color.DARK_GRAY);
+            // Fallback if specific stage background not found
+            g.setColor(Color.BLACK); // Or use a default background image
             g.fillRect(0, 0, Constants.BOARD_WIDTH, Constants.BOARD_HEIGHT);
+             System.err.println("Warning: Background image not found for stage " + stageNumber + ". Using fallback.");
         }
     }
 

@@ -50,6 +50,16 @@ public class GameState {
     // Win/Loss State
     public boolean gameWon = false; // Flag to indicate if game ended in victory
 
+    // --- Upgrade Levels --- (Initialized to 0 in reset)
+    public int healthUpgradeLevel;
+    public int speedUpgradeLevel;
+    public int damageUpgradeLevel;
+    public int fireRateUpgradeLevel;
+    public int cooldownQEUpgradeLevel;
+    public int bulletPierceLevel;
+    public int cooldownRUpgradeLevel;
+    public int moneyMultUpgradeLevel;
+
     // Constructor
     public GameState(){
         // Initialize Stage (Example values)
@@ -144,12 +154,30 @@ public class GameState {
         maxMoneyAchieved = money; // Initial max money is starting money
         gameWon = false; // Ensure gameWon flag is reset
 
+        // Initialize upgrade levels
+        healthUpgradeLevel = 0;
+        speedUpgradeLevel = 0;
+        damageUpgradeLevel = 0;
+        fireRateUpgradeLevel = 0;
+        cooldownQEUpgradeLevel = 0;
+        bulletPierceLevel = 0;
+        cooldownRUpgradeLevel = 0;
+        moneyMultUpgradeLevel = 0;
+
         System.out.println("GameState reset for new game.");
     }
 
     // Helper to update money and track max achieved
     public void addMoney(int amount) {
-        this.money += amount;
+        if (amount < 0) {
+            // Don't apply multiplier to deductions (costs)
+            this.money += amount;
+        } else {
+            // Apply multiplier bonus (+15% per level)
+            double multiplierBonus = 0.15 * this.moneyMultUpgradeLevel;
+            int finalAmount = (int) Math.round(amount * (1.0 + multiplierBonus));
+            this.money += finalAmount;
+        }
         this.maxMoneyAchieved = Math.max(this.maxMoneyAchieved, this.money);
         // System.out.println("Money: " + this.money + " | MaxMoney: " + this.maxMoneyAchieved); // Debug
     }

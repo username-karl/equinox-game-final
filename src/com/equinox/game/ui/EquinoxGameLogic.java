@@ -178,9 +178,9 @@ public class EquinoxGameLogic extends JPanel implements ActionListener {
         gameState = new GameState();
         gameState.currentStage = new Stage(1,7);
 
-        // Create entities
+        // Create entities - Pass gameState to ShipUser constructor
         ship = new ShipUser(Constants.SHIP_START_X, Constants.SHIP_START_Y, Constants.SHIP_WIDTH, Constants.SHIP_HEIGHT,
-                          this.assetLoader.getImage(Constants.PLAYER_SHIP_IMG_KEY), Constants.SHIP_INITIAL_HEALTH);
+                          this.assetLoader.getImage(Constants.PLAYER_SHIP_IMG_KEY), gameState);
         enemyArray = new ArrayList<>();
         bulletArray = new ArrayList<>();
         waveBlastArray = new ArrayList<>();

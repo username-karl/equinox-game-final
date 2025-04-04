@@ -36,7 +36,7 @@ public class StageManager {
             } catch (Exception e) { System.err.println("Failed to load shop background"); }
         }
         cutscenePanel = new CutscenePanel(this, assetLoader);
-        shopPanel = new ShopPanel(this, shopBackground,gameLogic.getGameState());
+        shopPanel = new ShopPanel(this, shopBackground, gameLogic.getGameState(), assetLoader);
         loadCutsceneData();
     }
 
@@ -133,7 +133,7 @@ public class StageManager {
         frame.pack();
         frame.revalidate();
         frame.repaint();
-        shopPanel.showShop();
+        shopPanel.setupShopUI();
     }
 
     public void startGameLoop() {
@@ -143,6 +143,10 @@ public class StageManager {
         frame.pack();
         frame.revalidate();
         frame.repaint();
+        // Recalculate ship stats based on any upgrades purchased
+        if (gameLogic.gameState != null && gameLogic.gameState.ship != null) {
+            gameLogic.gameState.ship.recalculateStats(gameLogic.gameState);
+        }
         gameLogic.startGameLoop();
         gameLogic.requestFocus();
     }

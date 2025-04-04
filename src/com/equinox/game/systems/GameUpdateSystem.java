@@ -153,15 +153,29 @@ public class GameUpdateSystem {
         boolean moveLeft = inputHandler.isMoveLeft();
         boolean moveRight = inputHandler.isMoveRight();
 
+        // --- Calculate speed/accel based on upgrades --- 
+        // Example: +0.5 max speed per level, +0.2 accel per level
+        double speedBonusPerLevel = 0.5;
+        double accelBonusPerLevel = 0.2;
+        int currentMaxSpeed = Constants.SHIP_MAX_SPEED + (int)Math.round(gameState.speedUpgradeLevel * speedBonusPerLevel);
+        double currentAcceleration = Constants.SHIP_ACCELERATION + (gameState.speedUpgradeLevel * accelBonusPerLevel);
+        // Adjust deceleration proportionally? Maybe cap it?
+        double currentDeceleration = Constants.SHIP_DECELERATION + (gameState.speedUpgradeLevel * accelBonusPerLevel * 0.5);
+        currentDeceleration = Math.min(currentDeceleration, currentAcceleration); // Ensure decel isn't > accel
+        // --------------------------------------------
+
         if (moveLeft) {
-            shipVelocityX = Math.max(shipVelocityX - Constants.SHIP_ACCELERATION, -Constants.SHIP_MAX_SPEED);
+            // Use calculated values
+            shipVelocityX = Math.max(shipVelocityX - (int)Math.round(currentAcceleration), -currentMaxSpeed);
         } else if (moveRight) {
-            shipVelocityX = Math.min(shipVelocityX + Constants.SHIP_ACCELERATION, Constants.SHIP_MAX_SPEED);
+             // Use calculated values
+            shipVelocityX = Math.min(shipVelocityX + (int)Math.round(currentAcceleration), currentMaxSpeed);
         } else {
+             // Use calculated values
             if (shipVelocityX > 0) {
-                shipVelocityX = Math.max(0, shipVelocityX - Constants.SHIP_DECELERATION);
+                shipVelocityX = Math.max(0, shipVelocityX - (int)Math.round(currentDeceleration));
             } else if (shipVelocityX < 0) {
-                shipVelocityX = Math.min(0, shipVelocityX + Constants.SHIP_DECELERATION);
+                shipVelocityX = Math.min(0, shipVelocityX + (int)Math.round(currentDeceleration));
             }
         }
 
@@ -173,9 +187,24 @@ public class GameUpdateSystem {
     private void updateCooldowns() {
         if (gameState == null) return;
         long currentTime = System.currentTimeMillis();
-        gameState.remainingWaveBlastCooldown = Math.max(0, Constants.WAVE_BLAST_COOLDOWN_MS - (currentTime - gameState.lastWaveBlastUseTime));
-        gameState.remainingLaserBeamCooldown = Math.max(0, Constants.LASER_BEAM_COOLDOWN_MS - (currentTime - gameState.lastLaserBeamUseTime));
-        gameState.remainingPhaseShiftCooldown = Math.max(0, Constants.PHASE_SHIFT_COOLDOWN_MS - (currentTime - gameState.lastPhaseShiftUseTime));
+
+        // --- Calculate effective cooldowns based on upgrades --- 
+        double reductionPerLevelQE = 0.10; // 10% reduction per level
+        double reductionPerLevelR = 0.15;  // 15% reduction per level
+        double maxReduction = 0.75; // Cap reduction at 75%
+
+        double currentReductionQE = Math.min(maxReduction, gameState.cooldownQEUpgradeLevel * reductionPerLevelQE);
+        double currentReductionR = Math.min(maxReduction, gameState.cooldownRUpgradeLevel * reductionPerLevelR);
+
+        long effectiveCooldownQ = (long) (Constants.WAVE_BLAST_COOLDOWN_MS * (1.0 - currentReductionQE));
+        long effectiveCooldownE = (long) (Constants.LASER_BEAM_COOLDOWN_MS * (1.0 - currentReductionQE)); // QE upgrade affects both
+        long effectiveCooldownR = (long) (Constants.PHASE_SHIFT_COOLDOWN_MS * (1.0 - currentReductionR));
+        // ------------------------------------------------------
+
+        // Use effective cooldowns for calculation
+        gameState.remainingWaveBlastCooldown = Math.max(0, effectiveCooldownQ - (currentTime - gameState.lastWaveBlastUseTime));
+        gameState.remainingLaserBeamCooldown = Math.max(0, effectiveCooldownE - (currentTime - gameState.lastLaserBeamUseTime));
+        gameState.remainingPhaseShiftCooldown = Math.max(0, effectiveCooldownR - (currentTime - gameState.lastPhaseShiftUseTime));
 
         if (gameState.isPhaseShiftActive && currentTime >= gameState.phaseShiftEndTime) {
             gameState.isPhaseShiftActive = false;
@@ -202,7 +231,7 @@ public class GameUpdateSystem {
             int currentStageNum = gameState.currentStage.getStageNumber();
             int currentWave = gameState.currentStage.getCurrentWave();
             int totalWaves = gameState.currentStage.getTotalWaves();
-            int finalStage = 3; // Assuming stage 3 is the last one
+            int finalStage = 4; // Updated to 4 as per requirement
 
             // Check if the final wave of the final stage is completed
             if (currentStageNum == finalStage && currentWave == totalWaves) {
@@ -216,8 +245,20 @@ public class GameUpdateSystem {
             if (currentWave == totalWaves) {
                  System.out.println("DEBUG: End of Stage " + gameState.currentStage.getStageNumber() + ". Moving to next stage cutscene.");
                 // Move to the next stage
-                gameState.currentStage.setStageNumber(gameState.currentStage.getStageNumber() + 1);
+                int nextStageNum = currentStageNum + 1;
+                gameState.currentStage.setStageNumber(nextStageNum);
                 gameState.currentStage.setCurrentWave(1);
+                // --- SET TOTAL WAVES FOR NEXT STAGE ---
+                int wavesForNextStage;
+                 switch (nextStageNum) {
+                     case 2: wavesForNextStage = 7; break; // Example: Stage 2 has 7 waves
+                     case 3: wavesForNextStage = 8; break; // Example: Stage 3 has 8 waves
+                     case 4: wavesForNextStage = 9; break; // Example: Stage 4 has 9 waves
+                     default: wavesForNextStage = 7; break; // Fallback
+                 }
+                 gameState.currentStage.setTotalWaves(wavesForNextStage);
+                 System.out.println("DEBUG: Set TotalWaves for Stage " + nextStageNum + " to " + wavesForNextStage);
+                 // -------------------------------------
                 gameState.currentStage.setSpecialEnemySpawned(false);
                 resetEntityLists(); 
                 stageManager.startCutscene(); // Trigger cutscene between stages
@@ -273,12 +314,16 @@ public class GameUpdateSystem {
                 gameState.enemySlain++;
                 gameState.enemyCount--;
             }
-        } else {
-            enemy.setAlive(false);
-            dropLoot(enemy); 
-            gameState.score += Constants.SCORE_PER_ENEMY;
-            gameState.enemySlain++;
-            gameState.enemyCount--;
+        } else { // Regular Enemy
+            // Apply damage and check if dead
+            enemy.takeDamage(1); // Assuming player bullet damage is 1 for now
+            if (enemy.getHitpoints() <= 0) {
+                enemy.setAlive(false);
+                dropLoot(enemy); 
+                gameState.score += Constants.SCORE_PER_ENEMY;
+                gameState.enemySlain++;
+                gameState.enemyCount--;
+            } // If not dead (hitpoints > 0), nothing else happens yet
         }
     }
 
@@ -298,6 +343,7 @@ public class GameUpdateSystem {
      public void createEnemies() {
         if (gameState == null || gameState.currentStage == null || gameState.enemyArray == null || assetLoader == null) return;
         
+        int stageNum = gameState.currentStage.getStageNumber();
         Random random = new Random();
         int currentWave = gameState.currentStage.getCurrentWave();
         int maxEnemyRows = Constants.ENEMY_INITIAL_ROWS + (currentWave / 2);
@@ -309,22 +355,63 @@ public class GameUpdateSystem {
 
         for (int r = 0; r < maxEnemyRows; r++) {
             for (int c = 0; c < maxEnemyColumns; c++) {
-                Image enemyImg = assetLoader.getRandomEnemyImage();
-                int enemyType = random.nextInt(6); // TODO: Use constants or enum for types
+                Image enemyImg;
                 Enemy enemy;
                 int spawnX = Constants.ENEMY_START_X + c * Constants.ENEMY_WIDTH;
                 int spawnY = Constants.ENEMY_START_Y + r * Constants.ENEMY_HEIGHT;
-                if (enemyType == 3) { // Shooting Enemy
-                    enemy = new ShootingEnemy(
-                            spawnX, spawnY, Constants.ENEMY_WIDTH, Constants.ENEMY_HEIGHT,
-                            enemyImg, Constants.ENEMY_BASE_VELOCITY_X
-                    );
-                } else { // Fast Enemy (or other types)
-                    enemy = new FastEnemy(
-                            spawnX, spawnY, Constants.ENEMY_WIDTH, Constants.ENEMY_HEIGHT,
-                            enemyImg, Constants.ENEMY_BASE_VELOCITY_X + 3
-                    );
+                int baseHealth = 1; // Base health for world 1
+
+                // Determine enemy type, image, and health based on stage
+                switch (stageNum) {
+                    case 1: 
+                        enemyImg = assetLoader.getRandomEnemyImage(); 
+                        baseHealth = 1; // Explicitly W1 health
+                        if (random.nextInt(6) == 3) { 
+                             enemy = new ShootingEnemy(spawnX, spawnY, Constants.ENEMY_WIDTH, Constants.ENEMY_HEIGHT, enemyImg, Constants.ENEMY_BASE_VELOCITY_X); // Uses its own constructor default health (2)
+                        } else { 
+                            enemy = new FastEnemy(spawnX, spawnY, Constants.ENEMY_WIDTH, Constants.ENEMY_HEIGHT, enemyImg, Constants.ENEMY_BASE_VELOCITY_X + 3); // Uses its own constructor default health (1)
+                        }
+                        break;
+                    case 2: 
+                        String[] w2Keys = {Constants.ENEMY_W2_TYPE1_IMG_KEY, Constants.ENEMY_W2_TYPE2_IMG_KEY, Constants.ENEMY_W2_TYPE3_IMG_KEY, Constants.ENEMY_W2_TYPE4_IMG_KEY, Constants.ENEMY_W2_TYPE5_IMG_KEY };
+                        enemyImg = assetLoader.getImage(w2Keys[random.nextInt(w2Keys.length)]);
+                        baseHealth = 2; // Example: W2 enemies have 2 base HP
+                        // TODO: Create specific W2 Enemy subclasses
+                        enemy = new Enemy(spawnX, spawnY, Constants.ENEMY_WIDTH, Constants.ENEMY_HEIGHT, enemyImg, Constants.ENEMY_BASE_VELOCITY_X + 1, baseHealth); 
+                        break;
+                    case 3: 
+                        String[] w3Keys = {Constants.ENEMY_W3_TYPE1_IMG_KEY, Constants.ENEMY_W3_TYPE2_IMG_KEY, Constants.ENEMY_W3_TYPE3_IMG_KEY, Constants.ENEMY_W3_TYPE4_IMG_KEY, Constants.ENEMY_W3_TYPE5_IMG_KEY };
+                        enemyImg = assetLoader.getImage(w3Keys[random.nextInt(w3Keys.length)]);
+                        baseHealth = 3; // Example: W3 enemies have 3 base HP
+                         // TODO: Create specific W3 Enemy subclasses
+                        enemy = new Enemy(spawnX, spawnY, Constants.ENEMY_WIDTH, Constants.ENEMY_HEIGHT, enemyImg, Constants.ENEMY_BASE_VELOCITY_X + 2, baseHealth); 
+                        break;
+                    case 4: 
+                        String[] w4Keys = {Constants.ENEMY_W4_TYPE1_IMG_KEY, Constants.ENEMY_W4_TYPE2_IMG_KEY, Constants.ENEMY_W4_TYPE3_IMG_KEY, Constants.ENEMY_W4_TYPE4_IMG_KEY, Constants.ENEMY_W4_TYPE5_IMG_KEY };
+                        enemyImg = assetLoader.getImage(w4Keys[random.nextInt(w4Keys.length)]);
+                        baseHealth = 4; // Example: W4 enemies have 4 base HP
+                         // TODO: Create specific W4 Enemy subclasses
+                        enemy = new Enemy(spawnX, spawnY, Constants.ENEMY_WIDTH, Constants.ENEMY_HEIGHT, enemyImg, Constants.ENEMY_BASE_VELOCITY_X + 3, baseHealth); 
+                        break;
+                    default: 
+                         enemyImg = assetLoader.getRandomEnemyImage();
+                         baseHealth = 1;
+                         enemy = new Enemy(spawnX, spawnY, Constants.ENEMY_WIDTH, Constants.ENEMY_HEIGHT, enemyImg, Constants.ENEMY_BASE_VELOCITY_X, baseHealth); 
+                        break;
                 }
+                
+                if (enemyImg == null) { // Fallback logic
+                    System.err.println("Warning: Failed to load intended enemy image for stage " + stageNum + ". Spawning fallback Stage 1 enemy.");
+                     enemyImg = assetLoader.getRandomEnemyImage(); 
+                     if (enemyImg != null) {
+                        // Spawn fallback with base health 1
+                         enemy = new Enemy(spawnX, spawnY, Constants.ENEMY_WIDTH, Constants.ENEMY_HEIGHT, enemyImg, Constants.ENEMY_BASE_VELOCITY_X, 1); 
+                     } else {
+                         System.err.println("CRITICAL: Failed to load even fallback Stage 1 enemy image. Skipping enemy spawn.");
+                         continue; 
+                     }
+                }
+
                 gameState.enemyArray.add(enemy);
             }
         }
@@ -333,29 +420,132 @@ public class GameUpdateSystem {
     }
 
     public void createMiniboss(){
-        if (gameState == null || gameState.enemyArray == null || assetLoader == null) return;
+        if (gameState == null || gameState.enemyArray == null || assetLoader == null || gameState.currentStage == null) return;
+        int stageNum = gameState.currentStage.getStageNumber();
         gameState.enemyArray.clear();
-        Image minibossImg = assetLoader.getImage(Constants.MINIBOSS_IMG_KEY);
-        com.equinox.game.entities.enemies.Miniboss miniboss = new com.equinox.game.entities.enemies.Miniboss(
-                Constants.BOARD_WIDTH/2 - Constants.TILE_SIZE * 2, Constants.TILE_SIZE,
-                Constants.TILE_SIZE*4, Constants.TILE_SIZE*4, minibossImg, Constants.ENEMY_BASE_VELOCITY_X,
-                minibossImg, 50, 100, 2, "Quantum Anomaly" );
-        gameState.enemyArray.add(miniboss);
-        gameState.enemyCount = 1;
-        System.out.println("Created Miniboss: " + miniboss.getEnemyBossName());
+        Enemy miniboss = null;
+
+        switch (stageNum) {
+             case 1: // World 1 Miniboss (Original)
+                Image minibossImg1 = assetLoader.getImage(Constants.MINIBOSS_IMG_KEY);
+                miniboss = new com.equinox.game.entities.enemies.Miniboss(
+                    Constants.BOARD_WIDTH/2 - Constants.TILE_SIZE * 2, Constants.TILE_SIZE,
+                    Constants.TILE_SIZE*4, Constants.TILE_SIZE*4, minibossImg1, Constants.ENEMY_BASE_VELOCITY_X,
+                    minibossImg1, 50, 100, 2, "Quantum Anomaly" );
+                break;
+             case 2: // World 2 Miniboss (Guardian Spawn)
+                // TODO: Create GuardianSpawn class extending Miniboss or SpecialEnemy
+                 Image minibossImg2 = assetLoader.getImage(Constants.GUARDIAN_SPAWN_IMG_KEY);
+                 if (minibossImg2 != null) {
+                     // Use Miniboss for now, replace with GuardianSpawn when created
+                     miniboss = new com.equinox.game.entities.enemies.Miniboss(
+                         Constants.BOARD_WIDTH/2 - Constants.TILE_SIZE * 2, Constants.TILE_SIZE,
+                         Constants.TILE_SIZE*4, Constants.TILE_SIZE*4, minibossImg2, Constants.ENEMY_BASE_VELOCITY_X,
+                         minibossImg2, 75, 90, 3, "Guardian Spawn" ); // Example stats
+                 }
+                break;
+            // Case 3 & 4: No miniboss specified in the requirements?
+            default:
+                System.out.println("No specific miniboss defined for stage " + stageNum + ". Attempting fallback.");
+                // REMOVED return; - Allow fallback logic to execute
+                break; // Added break to prevent unintended fallthrough if more cases added later
+        }
+
+        // --- Fallback Logic --- 
+        if (miniboss == null) {
+             System.err.println("Warning: Failed to create intended miniboss for stage " + stageNum + ". Falling back to Stage 1 Miniboss.");
+            Image fallbackImg = assetLoader.getImage(Constants.MINIBOSS_IMG_KEY);
+            if (fallbackImg != null) {
+                miniboss = new com.equinox.game.entities.enemies.Miniboss(
+                    Constants.BOARD_WIDTH/2 - Constants.TILE_SIZE * 2, Constants.TILE_SIZE,
+                    Constants.TILE_SIZE*4, Constants.TILE_SIZE*4, fallbackImg, Constants.ENEMY_BASE_VELOCITY_X,
+                    fallbackImg, 50, 100, 2, "Quantum Anomaly (Fallback)" );
+            }
+        }
+        // --------------------
+
+        if (miniboss != null) {
+            gameState.enemyArray.add(miniboss);
+            gameState.enemyCount = 1;
+            System.out.println("Created Miniboss for Stage " + stageNum + ": " + ((SpecialEnemy)miniboss).getEnemyBossName());
+        } else {
+             System.err.println("Warning: Failed to create miniboss for stage " + stageNum);
+             gameState.enemyCount = 0; // Ensure count is 0 if creation failed
+        }
     }
 
     public void createMainboss(){
-        if (gameState == null || gameState.enemyArray == null || assetLoader == null) return;
+        if (gameState == null || gameState.enemyArray == null || assetLoader == null || gameState.currentStage == null) return;
+         int stageNum = gameState.currentStage.getStageNumber();
         gameState.enemyArray.clear();
-        Image mainbossImg = assetLoader.getImage(Constants.MAINBOSS_IMG_KEY);
-        com.equinox.game.entities.enemies.MainBoss mainboss = new com.equinox.game.entities.enemies.MainBoss(
-                Constants.BOARD_WIDTH/2 - Constants.TILE_SIZE * 4, Constants.TILE_SIZE,
-                Constants.TILE_SIZE*8, Constants.TILE_SIZE*8, mainbossImg, Constants.ENEMY_BASE_VELOCITY_X,
-                mainbossImg, 100, 75, 2, "The Collector" );
-        gameState.enemyArray.add(mainboss);
-        gameState.enemyCount = 1;
-        System.out.println("Created Main Boss: " + mainboss.getEnemyBossName());
+        Enemy boss = null;
+        Image bossImg;
+
+        switch (stageNum) {
+            case 1: // World 1 Main Boss (Original)
+                 bossImg = assetLoader.getImage(Constants.MAINBOSS_IMG_KEY);
+                boss = new com.equinox.game.entities.enemies.MainBoss(
+                        Constants.BOARD_WIDTH/2 - Constants.TILE_SIZE * 4, Constants.TILE_SIZE,
+                        Constants.TILE_SIZE*8, Constants.TILE_SIZE*8, bossImg, Constants.ENEMY_BASE_VELOCITY_X,
+                        bossImg, 100, 75, 2, "The Collector" );
+                break;
+             case 2: // World 2 Boss (Guardian Construct)
+                // TODO: Create GuardianConstruct class extending MainBoss or SpecialEnemy
+                bossImg = assetLoader.getImage(Constants.GUARDIAN_CONSTRUCT_IMG_KEY);
+                 if (bossImg != null) {
+                     // Use MainBoss for now, replace with GuardianConstruct when created
+                    boss = new com.equinox.game.entities.enemies.MainBoss(
+                            Constants.BOARD_WIDTH/2 - Constants.TILE_SIZE * 4, Constants.TILE_SIZE,
+                            Constants.TILE_SIZE*8, Constants.TILE_SIZE*8, bossImg, Constants.ENEMY_BASE_VELOCITY_X,
+                            bossImg, 150, 60, 3, "Guardian Construct" ); // Example stats
+                 }
+                 break;
+             case 3: // World 3 Boss (Paradox Entity)
+                 // TODO: Create ParadoxEntity class
+                 bossImg = assetLoader.getImage(Constants.PARADOX_ENTITY_IMG_KEY);
+                 if (bossImg != null) {
+                    boss = new com.equinox.game.entities.enemies.MainBoss(
+                            Constants.BOARD_WIDTH/2 - Constants.TILE_SIZE * 5, Constants.TILE_SIZE, // Slightly different size?
+                            Constants.TILE_SIZE*10, Constants.TILE_SIZE*10, bossImg, Constants.ENEMY_BASE_VELOCITY_X -1, // Slower base speed?
+                            bossImg, 200, 50, 3, "Paradox Entity" ); // Example stats
+                 }
+                 break;
+             case 4: // World 4 Boss (Temple Guardian - FINAL)
+                 // TODO: Create TempleGuardian class
+                 bossImg = assetLoader.getImage(Constants.TEMPLE_GUARDIAN_IMG_KEY);
+                  if (bossImg != null) {
+                    boss = new com.equinox.game.entities.enemies.MainBoss(
+                            Constants.BOARD_WIDTH/2 - Constants.TILE_SIZE * 6, Constants.TILE_SIZE, // Larger?
+                            Constants.TILE_SIZE*12, Constants.TILE_SIZE*12, bossImg, Constants.ENEMY_BASE_VELOCITY_X, 
+                            bossImg, 250, 40, 4, "Temple Guardian" ); // Example stats
+                 }
+                 break;
+             default:
+                System.err.println("Warning: Tried to create main boss for invalid stage " + stageNum);
+                return; // Don't add anything
+        }
+
+        // --- Fallback Logic --- 
+        if (boss == null) {
+            System.err.println("Warning: Failed to create intended main boss for stage " + stageNum + ". Falling back to Stage 1 MainBoss.");
+            Image fallbackImg = assetLoader.getImage(Constants.MAINBOSS_IMG_KEY);
+            if (fallbackImg != null) {
+                boss = new com.equinox.game.entities.enemies.MainBoss(
+                    Constants.BOARD_WIDTH/2 - Constants.TILE_SIZE * 4, Constants.TILE_SIZE,
+                    Constants.TILE_SIZE*8, Constants.TILE_SIZE*8, fallbackImg, Constants.ENEMY_BASE_VELOCITY_X,
+                    fallbackImg, 100, 75, 2, "The Collector (Fallback)" );
+            }
+        }
+        // --------------------
+
+        if (boss != null) {
+             gameState.enemyArray.add(boss);
+            gameState.enemyCount = 1;
+             System.out.println("Created Main Boss for Stage " + stageNum + ": " + ((SpecialEnemy)boss).getEnemyBossName());
+        } else {
+             System.err.println("Warning: Failed to create main boss for stage " + stageNum);
+             gameState.enemyCount = 0; // Ensure count is 0 if creation failed
+        }
     }
     
     // --- Player Actions (Called by EquinoxGameLogic via InputHandler) ---
@@ -376,6 +566,13 @@ public class GameUpdateSystem {
     public void fireWaveBlast() {
         if (gameState == null || gameState.ship == null || gameState.waveBlastArray == null) return;
         long currentTime = System.currentTimeMillis();
+        
+        // Recalculate effective cooldown here too, in case upgrades change mid-game (unlikely but safer)
+        double reductionPerLevelQE = 0.10; 
+        double maxReduction = 0.75; 
+        double currentReductionQE = Math.min(maxReduction, gameState.cooldownQEUpgradeLevel * reductionPerLevelQE);
+        long effectiveCooldownQ = (long) (Constants.WAVE_BLAST_COOLDOWN_MS * (1.0 - currentReductionQE));
+        
         if (gameState.remainingWaveBlastCooldown <= 0 || gameState.cheatsEnabled) {
             WaveBlast waveBlast = new WaveBlast(
                 gameState.ship.getX() + gameState.ship.getWidth() / 2 - Constants.WAVE_BLAST_WIDTH / 2,
@@ -386,7 +583,8 @@ public class GameUpdateSystem {
             gameState.waveBlastArray.add(waveBlast);
             gameState.lastWaveBlastUseTime = currentTime;
             if (!gameState.cheatsEnabled) {
-                gameState.remainingWaveBlastCooldown = Constants.WAVE_BLAST_COOLDOWN_MS;
+                // Use effective cooldown when resetting
+                gameState.remainingWaveBlastCooldown = effectiveCooldownQ;
             }
         } else {
             System.out.println("Wave Blast (Q) on cooldown! " + String.format("%.1f", (double) gameState.remainingWaveBlastCooldown / 1000) + "s");
@@ -396,6 +594,13 @@ public class GameUpdateSystem {
     public void fireLaserBeam() {
          if (gameState == null || gameState.ship == null || gameState.laserBeamArray == null) return;
          long currentTime = System.currentTimeMillis();
+
+         // Recalculate effective cooldown E
+         double reductionPerLevelQE = 0.10; 
+         double maxReduction = 0.75; 
+         double currentReductionQE = Math.min(maxReduction, gameState.cooldownQEUpgradeLevel * reductionPerLevelQE);
+         long effectiveCooldownE = (long) (Constants.LASER_BEAM_COOLDOWN_MS * (1.0 - currentReductionQE));
+
         if (gameState.remainingLaserBeamCooldown <= 0 || gameState.cheatsEnabled) {
             int numBeams = Constants.BOARD_WIDTH / Constants.TILE_SIZE;
             int startX = 0;
@@ -410,7 +615,8 @@ public class GameUpdateSystem {
             }
             gameState.lastLaserBeamUseTime = currentTime;
             if (!gameState.cheatsEnabled) {
-                gameState.remainingLaserBeamCooldown = Constants.LASER_BEAM_COOLDOWN_MS;
+                // Use effective cooldown when resetting
+                gameState.remainingLaserBeamCooldown = effectiveCooldownE;
             }
         } else {
             System.out.println("Laser Beam (E) on cooldown! " + String.format("%.1f", (double) gameState.remainingLaserBeamCooldown / 1000) + "s");
@@ -420,12 +626,20 @@ public class GameUpdateSystem {
     public void firePhaseShift() {
         if (gameState == null) return;
         long currentTime = System.currentTimeMillis();
+
+        // Recalculate effective cooldown R
+        double reductionPerLevelR = 0.15;  
+        double maxReduction = 0.75; 
+        double currentReductionR = Math.min(maxReduction, gameState.cooldownRUpgradeLevel * reductionPerLevelR);
+        long effectiveCooldownR = (long) (Constants.PHASE_SHIFT_COOLDOWN_MS * (1.0 - currentReductionR));
+
         if ((gameState.remainingPhaseShiftCooldown <= 0 || gameState.cheatsEnabled) && !gameState.isPhaseShiftActive) {
             gameState.isPhaseShiftActive = true;
             gameState.lastPhaseShiftUseTime = currentTime;
             gameState.phaseShiftEndTime = currentTime + Constants.PHASE_SHIFT_DURATION_MS;
             if (!gameState.cheatsEnabled) {
-                gameState.remainingPhaseShiftCooldown = Constants.PHASE_SHIFT_COOLDOWN_MS;
+                 // Use effective cooldown when resetting
+                gameState.remainingPhaseShiftCooldown = effectiveCooldownR;
             }
             System.out.println("Phase Shift Activated!");
         } else if (gameState.isPhaseShiftActive) {

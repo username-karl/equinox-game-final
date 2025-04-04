@@ -44,15 +44,45 @@ public class AssetLoader {
             loadImage(Constants.PLAYER_LASER_IMG_KEY, "/assets/weapon_laser_blue.png");
             loadImage(Constants.ENEMY_LASER_IMG_KEY, "/assets/weapon_laser_red.png");
 
-            // Load Backgrounds 
-            loadBackgroundImage(0, Constants.BG_DEFAULT_KEY, "/assets/bg_nebula.png"); // Default gameplay BG
-            // Load specific Cutscene Backgrounds
-            loadImage(Constants.BG_CUTSCENE_1_KEY, "/assets/cg_stage1_scene1.png"); // Load Cutscene 1 BG
-            loadImage(Constants.BG_CUTSCENE_2_KEY, "/assets/cg_stage2_scene1.png"); // Load Cutscene 2 BG
-            // Map gameplay backgrounds for stages 1, 2, 3 to the default nebula
-            backgroundImages.put(1, getImage(Constants.BG_DEFAULT_KEY));
-            backgroundImages.put(2, getImage(Constants.BG_DEFAULT_KEY)); 
-            backgroundImages.put(3, getImage(Constants.BG_DEFAULT_KEY));
+            // Load Backgrounds (Store them in the map)
+            loadAndStoreBackground(Constants.BG_STAGE_1_KEY, "/assets/bg_space_nebula.png");
+            loadAndStoreBackground(Constants.BG_STAGE_2_KEY, "/assets/bg_ancient_ruins.png"); // World 2 Background
+            loadAndStoreBackground(Constants.BG_STAGE_3_KEY, "/assets/bg_quantum_singularity.png"); // World 3 Background
+            loadAndStoreBackground(Constants.BG_STAGE_4_KEY, "/assets/bg_sacred_temple.png"); // World 4 Background
+            loadAndStoreBackground(Constants.BG_DEFAULT_KEY, "/assets/bg_space_nebula.png"); // Default fallback
+
+             // Load Cutscene Backgrounds (Assuming these paths are correct or placeholders)
+            loadAndStoreBackground(Constants.BG_CUTSCENE_1_KEY, "/assets/bg_cutscene_bridge.png"); 
+            loadAndStoreBackground(Constants.BG_CUTSCENE_2_KEY, "/assets/bg_cutscene_planet.png"); 
+
+            // Load World 2 Enemy Assets (Update paths)
+            loadImage(Constants.ENEMY_W2_TYPE1_IMG_KEY, "/assets/enemy_w2_type1.png"); // Placeholder enemy name
+            loadImage(Constants.ENEMY_W2_TYPE2_IMG_KEY, "/assets/enemy_w2_type2.png"); // Placeholder enemy name
+            loadImage(Constants.ENEMY_W2_TYPE3_IMG_KEY, "/assets/enemy_w2_type3.png"); // Placeholder enemy name
+            loadImage(Constants.ENEMY_W2_TYPE4_IMG_KEY, "/assets/enemy_w2_type4.png"); // Placeholder enemy name
+            loadImage(Constants.ENEMY_W2_TYPE5_IMG_KEY, "/assets/enemy_w2_type5.png"); // Placeholder enemy name
+            loadImage(Constants.GUARDIAN_SPAWN_IMG_KEY, "/assets/guardian_spawn.png"); // Miniboss W2
+            loadImage(Constants.GUARDIAN_CONSTRUCT_IMG_KEY, "/assets/guardian_construct.png"); // Boss W2
+
+            // Load World 3 Enemy Assets (Update paths)
+            loadImage(Constants.ENEMY_W3_TYPE1_IMG_KEY, "/assets/enemy_w3_type1.png"); // Placeholder enemy name
+            loadImage(Constants.ENEMY_W3_TYPE2_IMG_KEY, "/assets/enemy_w3_type2.png"); // Placeholder enemy name
+            loadImage(Constants.ENEMY_W3_TYPE3_IMG_KEY, "/assets/enemy_w3_type3.png"); // Placeholder enemy name
+            loadImage(Constants.ENEMY_W3_TYPE4_IMG_KEY, "/assets/enemy_w3_type4.png"); // Placeholder enemy name
+            loadImage(Constants.ENEMY_W3_TYPE5_IMG_KEY, "/assets/enemy_w3_type5.png"); // Placeholder enemy name
+            loadImage(Constants.PARADOX_ENTITY_IMG_KEY, "/assets/paradox_entity.png"); // Boss W3
+
+            // Load World 4 Enemy Assets (Update paths)
+            loadImage(Constants.ENEMY_W4_TYPE1_IMG_KEY, "/assets/enemy_w4_type1.png"); // Placeholder enemy name
+            loadImage(Constants.ENEMY_W4_TYPE2_IMG_KEY, "/assets/enemy_w4_type2.png"); // Placeholder enemy name
+            loadImage(Constants.ENEMY_W4_TYPE3_IMG_KEY, "/assets/enemy_w4_type3.png"); // Placeholder enemy name
+            loadImage(Constants.ENEMY_W4_TYPE4_IMG_KEY, "/assets/enemy_w4_type4.png"); // Placeholder enemy name
+            loadImage(Constants.ENEMY_W4_TYPE5_IMG_KEY, "/assets/enemy_w4_type5.png"); // Placeholder enemy name
+            loadImage(Constants.TEMPLE_GUARDIAN_IMG_KEY, "/assets/temple_guardian.png"); // Final Boss W4
+
+            // Load UI Placeholders
+            loadImage(Constants.PLACEHOLDER_ICON_KEY, "/assets/temp.png");
+            loadImage(Constants.BG_SHOP_KEY, "/assets/bg_shop_deep_space.png"); // Load shop background
 
             System.out.println("Assets loaded successfully.");
 
@@ -64,27 +94,43 @@ public class AssetLoader {
 
     private Image loadImage(String key, String path) {
         try {
-            Image img = new ImageIcon(getClass().getResource(path)).getImage();
-            if (img != null) {
-                imageMap.put(key, img);
-                System.out.println("Loaded: " + key + " from " + path);
-                return img;
+            // Use getResourceAsStream for better path handling, especially in JARs
+            java.io.InputStream imgStream = getClass().getResourceAsStream(path);
+            if (imgStream != null) {
+                Image img = new ImageIcon(javax.imageio.ImageIO.read(imgStream)).getImage();
+                if (img != null) {
+                    imageMap.put(key, img);
+                    System.out.println("SUCCESS: Loaded asset '" + key + "' from path: " + path);
+                    return img;
+                } else {
+                    System.err.println("ERROR: Failed to decode image for key '" + key + "' from path: " + path);
+                    return null;
+                }
             } else {
-                 System.err.println("Failed to load image: " + key + " from " + path + " (Resource not found)");
+                 System.err.println("ERROR: Asset resource not found for key '" + key + "' at path: " + path);
                  return null;
             }
         } catch (Exception e) {
-            System.err.println("Failed to load image: " + key + " from " + path);
+            System.err.println("EXCEPTION loading asset '" + key + "' from path: " + path);
             e.printStackTrace();
             return null;
         }
     }
 
-    private void loadBackgroundImage(int stageNumber, String key, String path) {
-        Image bg = loadImage(key, path);
-        if (bg != null) {
-            backgroundImages.put(stageNumber, bg);
+    private Image loadAndStoreBackground(String key, String path) {
+        Image img = loadImage(key, path);
+        if (img != null) {
+            // Determine stage number from key (simple example)
+             if (key.contains("_STAGE_1")) backgroundImages.put(1, img);
+            else if (key.contains("_STAGE_2")) backgroundImages.put(2, img);
+            else if (key.contains("_STAGE_3")) backgroundImages.put(3, img);
+            else if (key.contains("_STAGE_4")) backgroundImages.put(4, img);
+             // Add logic for cutscene keys if storing differently
+            else if (key.equals(Constants.BG_CUTSCENE_1_KEY)) imageMap.put(key, img); // Store cutscenes normally for now
+            else if (key.equals(Constants.BG_CUTSCENE_2_KEY)) imageMap.put(key, img);
+             // Handle default separately or based on map contents later
         }
+        return img;
     }
 
     public Image getImage(String key) {
@@ -116,7 +162,7 @@ public class AssetLoader {
 
     public Image getBackgroundImage(int stageNumber) {
         // Return specific stage background if available, otherwise default
-        return backgroundImages.getOrDefault(stageNumber, backgroundImages.get(0)); 
+        return backgroundImages.getOrDefault(stageNumber, getImage(Constants.BG_DEFAULT_KEY)); 
     }
 
     // Maybe add methods for loading sounds in the future

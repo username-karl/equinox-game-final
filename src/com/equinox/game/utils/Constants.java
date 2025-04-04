@@ -103,9 +103,39 @@ public class Constants {
     public static final String BG_STAGE_1_KEY = "bg_stage1";
     public static final String BG_STAGE_2_KEY = "bg_stage2";
     public static final String BG_STAGE_3_KEY = "bg_stage3";
+    public static final String BG_STAGE_4_KEY = "bg_stage4";
     public static final String BG_DEFAULT_KEY = "bg_default";
     public static final String CAPTAIN_PORTRAIT_KEY = "captain_portrait";
     public static final String BG_CUTSCENE_1_KEY = "bg_cutscene1";
     public static final String BG_CUTSCENE_2_KEY = "bg_cutscene2";
+
+    // --- World 2 Enemy/Boss Keys (Placeholders) ---
+    public static final String ENEMY_W2_TYPE1_IMG_KEY = "enemy_w2_type1";
+    public static final String ENEMY_W2_TYPE2_IMG_KEY = "enemy_w2_type2";
+    public static final String ENEMY_W2_TYPE3_IMG_KEY = "enemy_w2_type3";
+    public static final String ENEMY_W2_TYPE4_IMG_KEY = "enemy_w2_type4";
+    public static final String ENEMY_W2_TYPE5_IMG_KEY = "enemy_w2_type5";
+    public static final String GUARDIAN_SPAWN_IMG_KEY = "guardian_spawn";
+    public static final String GUARDIAN_CONSTRUCT_IMG_KEY = "guardian_construct";
+
+    // --- World 3 Enemy/Boss Keys (Placeholders) ---
+    public static final String ENEMY_W3_TYPE1_IMG_KEY = "enemy_w3_type1";
+    public static final String ENEMY_W3_TYPE2_IMG_KEY = "enemy_w3_type2";
+    public static final String ENEMY_W3_TYPE3_IMG_KEY = "enemy_w3_type3";
+    public static final String ENEMY_W3_TYPE4_IMG_KEY = "enemy_w3_type4";
+    public static final String ENEMY_W3_TYPE5_IMG_KEY = "enemy_w3_type5";
+    public static final String PARADOX_ENTITY_IMG_KEY = "paradox_entity";
+
+    // --- World 4 Enemy/Boss Keys (Placeholders) ---
+    public static final String ENEMY_W4_TYPE1_IMG_KEY = "enemy_w4_type1";
+    public static final String ENEMY_W4_TYPE2_IMG_KEY = "enemy_w4_type2";
+    public static final String ENEMY_W4_TYPE3_IMG_KEY = "enemy_w4_type3";
+    public static final String ENEMY_W4_TYPE4_IMG_KEY = "enemy_w4_type4";
+    public static final String ENEMY_W4_TYPE5_IMG_KEY = "enemy_w4_type5";
+    public static final String TEMPLE_GUARDIAN_IMG_KEY = "temple_guardian";
+
+    // --- UI & Misc Keys ---
+    public static final String PLACEHOLDER_ICON_KEY = "placeholder_icon";
+    public static final String BG_SHOP_KEY = "bg_shop";
 
 } 

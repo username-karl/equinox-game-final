@@ -44,4 +44,4 @@ public class Stage {
     public void setSpecialEnemySpawned(boolean specialEnemySpawned) {
         this.specialEnemySpawned = specialEnemySpawned;
     }
-} 
+}
