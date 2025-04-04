@@ -1,4 +1,5 @@
-# Presentation
+#Dev notes
+## Presentation
 *1 person explain the story:
 	* summarize:
 		*put summarize button in the game.
@@ -19,7 +20,7 @@
  	*make it OOP
 	*Add overall game timer HH::MM:SS
 	*implement more assets
-		*world 2 assets
+		##world 2 assets
 			-Ancient ruins bg
 			-5 new enemies
 				-Enemy types refer to GameDesign Doc
@@ -27,7 +28,7 @@
 				-
 				-guardian spawn (miniboss)
 				-guardian construct (stage boss)
-		*world 3 assets
+		##world 3 assets
 			-quantum singularity bg
 			-5 new enemies
 				-
@@ -35,7 +36,7 @@
 				-
 				-
 				-paradox entity (stage boss)
-		*world 4 assets
+		##world 4 assets
 			-sacred temple bg
 			-5 new enemies
 				-
