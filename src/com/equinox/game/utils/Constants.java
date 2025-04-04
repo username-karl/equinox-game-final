@@ -108,7 +108,7 @@ public class Constants {
     public static final String CAPTAIN_PORTRAIT_KEY = "captain_portrait";
     public static final String BG_CUTSCENE_1_KEY = "bg_cutscene1";
     public static final String BG_CUTSCENE_2_KEY = "bg_cutscene2";
-
+    public static final String BG_MAIN_MENU_KEY = "bg_main_menu";
     // --- World 2 Enemy/Boss Keys (Placeholders) ---
     public static final String ENEMY_W2_TYPE1_IMG_KEY = "enemy_w2_type1";
     public static final String ENEMY_W2_TYPE2_IMG_KEY = "enemy_w2_type2";

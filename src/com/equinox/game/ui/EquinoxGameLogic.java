@@ -68,6 +68,7 @@ public class EquinoxGameLogic extends JPanel implements ActionListener {
     Image world1BG;
     Image laserBlue;
     Image enemyBulletImg;
+    Image mainMenuBG;
 
     Image mainbossImgvar1;
     Image minibossImgvar1;
@@ -524,8 +525,13 @@ public class EquinoxGameLogic extends JPanel implements ActionListener {
 
     // --- Draw Main Menu ---
     private void drawMainMenu(Graphics g) {
-        g.setColor(Color.BLACK);
-        g.fillRect(0, 0, boardWidth, boardHeight);
+        if (assetLoader.getImage(Constants.BG_MAIN_MENU_KEY) != null) {
+            g.drawImage(assetLoader.getImage(Constants.BG_MAIN_MENU_KEY), 0, 0, boardWidth, boardHeight, null);
+        } else {
+            // Fallback to black background if image is not loaded
+            g.setColor(Color.BLACK);
+            g.fillRect(0, 0, boardWidth, boardHeight);
+        }
 
         g.setFont(new Font("Arial", Font.BOLD, 72));
         g.setColor(Constants.MENU_TITLE_COLOR);

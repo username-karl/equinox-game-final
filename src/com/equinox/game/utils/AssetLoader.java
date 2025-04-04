@@ -83,6 +83,17 @@ public class AssetLoader {
             // Load UI Placeholders
             loadImage(Constants.PLACEHOLDER_ICON_KEY, "/assets/temp.png");
             loadImage(Constants.BG_SHOP_KEY, "/assets/bg_shop_deep_space.png"); // Load shop background
+            // Load Backgrounds 
+            // Title Screen Background
+            loadImage(Constants.BG_MAIN_MENU_KEY, "/assets/bg_main_menu.png");
+            loadBackgroundImage(0, Constants.BG_DEFAULT_KEY, "/assets/bg_nebula.png"); // Default gameplay BG
+            // Load specific Cutscene Backgrounds
+            loadImage(Constants.BG_CUTSCENE_1_KEY, "/assets/cg_stage1_scene1.png"); // Load Cutscene 1 BG
+            loadImage(Constants.BG_CUTSCENE_2_KEY, "/assets/cg_stage2_scene1.png"); // Load Cutscene 2 BG
+            // Map gameplay backgrounds for stages 1, 2, 3 to the default nebula
+            backgroundImages.put(1, getImage(Constants.BG_DEFAULT_KEY));
+            backgroundImages.put(2, getImage(Constants.BG_DEFAULT_KEY)); 
+            backgroundImages.put(3, getImage(Constants.BG_DEFAULT_KEY));
 
             System.out.println("Assets loaded successfully.");
 
