@@ -22,6 +22,7 @@ import com.equinox.game.systems.RenderingSystem;
 import com.equinox.game.systems.GameUpdateSystem;
 import com.equinox.game.utils.Constants;
 import com.equinox.game.utils.AssetLoader;
+import com.equinox.game.leaderboard.LeaderboardPanel;
 
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -43,7 +44,7 @@ public class EquinoxGameLogic extends JPanel implements ActionListener {
 
     // Menu State Variables
     private int selectedMenuItem = 0;
-    private String[] menuItems = {"Start Game", "Settings", "Credits", "Cheats", "Exit"};
+    private String[] menuItems = {"Start Game", "Settings", "Leaderboard", "Credits", "Cheats", "Exit"};
 
     // Cheats State
     private boolean cheatsEnabled = false;
@@ -164,6 +165,8 @@ public class EquinoxGameLogic extends JPanel implements ActionListener {
 
     //STAGE DOMAIN
     private StageManager stageManager;
+    private LeaderboardPanel leaderboardPanel;
+    private JFrame mainFrame;
 
     
     //MAIN EQUINOX GAME CONSTRUCTOR
@@ -204,6 +207,8 @@ public class EquinoxGameLogic extends JPanel implements ActionListener {
         this.collisionSystem = new CollisionSystem(this.gameState, this.gameUpdateSystem, this);
         this.gameUpdateSystem.setCollisionSystem(this.collisionSystem); // Set the dependency
 
+        this.leaderboardPanel = new LeaderboardPanel(this);
+
         setPreferredSize(new Dimension(Constants.BOARD_WIDTH, Constants.BOARD_HEIGHT));
         setBackground(Color.DARK_GRAY);
         addKeyListener(inputHandler);
@@ -215,6 +220,7 @@ public class EquinoxGameLogic extends JPanel implements ActionListener {
     // Initialize StageManager after GameUpdateSystem is created
     // And pass necessary AssetLoader reference
     public void initializeStageManager(JFrame frame) {
+         this.mainFrame = frame;
          this.stageManager = new StageManager(this, frame, this.assetLoader);
          // Now give GameUpdateSystem the reference to StageManager if it needs it
          if (this.gameUpdateSystem != null) {
@@ -449,16 +455,49 @@ public class EquinoxGameLogic extends JPanel implements ActionListener {
                 case 1: // Settings
                     System.out.println("Settings selected (Not implemented yet)");
                     break;
-                case 2: // Credits
+                case 2: // Leaderboard
+                    showLeaderboard();
+                    break;
+                case 3: // Credits
                     System.out.println("Credits selected (Not implemented yet)");
                     break;
-                case 3: // Cheats
+                case 4: // Cheats
                     toggleCheats();
                     break;
-                case 4: // Exit
+                case 5: // Exit
                     exitGame();
                     break;
             }
+        }
+    }
+
+    // --- Display Control ---
+    public void showLeaderboard() {
+         if (mainFrame != null && currentState == GameStateEnum.MENU) {
+            mainFrame.remove(this);
+            leaderboardPanel.loadAndDisplayScores(); // Load scores before showing
+            mainFrame.add(leaderboardPanel);
+            mainFrame.pack();
+            mainFrame.revalidate();
+            mainFrame.repaint();
+            leaderboardPanel.requestFocusInWindow();
+            // Do NOT change game state here, panel handles its own logic/back button
+        }
+    }
+
+    public void showMainMenu() {
+        if (mainFrame != null) { // Check frame exists
+            // Assume current panel is LeaderboardPanel (or ShopPanel, CutscenePanel etc.)
+            // A more robust way would track the current non-game panel
+            mainFrame.remove(leaderboardPanel); // Remove leaderboard
+            // Potentially remove other panels if logic gets complex
+            
+            mainFrame.add(this); // Add the main logic panel back
+            setCurrentState(GameStateEnum.MENU); // Set state to MENU
+            mainFrame.pack();
+            mainFrame.revalidate();
+            mainFrame.repaint();
+            requestFocusInWindow();
         }
     }
 
@@ -510,13 +549,27 @@ public class EquinoxGameLogic extends JPanel implements ActionListener {
         }
     }
 
-    // Method called by CollisionSystem when player health reaches 0
+    // Called by GameUpdateSystem when win condition is met
+    public void handleGameWin() {
+        if (currentState == GameStateEnum.PLAYING) {
+            // Only set the game state here. Prompt/save is handled in signalGameOver
+             signalGameOver(); 
+        }
+    }
+
+    // Method called by CollisionSystem when player health reaches 0 OR game is won
     public void signalGameOver() {
         if (currentState == GameStateEnum.PLAYING) {
+             stopGameLoop(); // Stop updates
+            gameState.gameOver = true; // Mark game as over
+            // The gameWon flag is set by GameUpdateSystem if applicable
             currentState = GameStateEnum.GAME_OVER;
-            gameState.gameOver = true;
-            stopGameLoop();
-            System.out.println("State changed to GAME_OVER");
+            System.out.println("State changed to GAME_OVER (Win status: " + gameState.gameWon + ")");
+
+            // REMOVED: Prompt and save logic moved to handleGiveUp
+            
+            // Ensure repaint happens for Game Over screen
+            repaint();
         }
     }
 
@@ -562,5 +615,41 @@ public class EquinoxGameLogic extends JPanel implements ActionListener {
         } 
         // Repaint might be needed depending on how panels are switched
         repaint(); 
+    }
+
+    // Called when Esc is pressed on Game Over screen
+    public void handleGiveUp() {
+        if (currentState == GameStateEnum.GAME_OVER) {
+            System.out.println("Give Up / Submit Score selected...");
+            
+            // Determine prompt message based on win/loss
+            String promptTitle = gameState.gameWon ? "Victory!" : "Game Over";
+            String promptMessage = gameState.gameWon ? 
+                "You Won! Enter your name for the leaderboard:" :
+                "Game Over. Enter your name to save score:";
+
+            // Prompt for player name
+            String playerName = JOptionPane.showInputDialog(
+                mainFrame, 
+                promptMessage, 
+                promptTitle, 
+                JOptionPane.PLAIN_MESSAGE
+            );
+
+            // Handle empty or cancelled input
+            if (playerName == null || playerName.trim().isEmpty()) {
+                playerName = "Player"; // Default name
+            }
+            playerName = playerName.trim(); 
+            if (playerName.length() > 15) { 
+                playerName = playerName.substring(0, 15); 
+            }
+
+            // Save score with the entered name
+            com.equinox.game.leaderboard.LeaderboardManager.addEntryFromGameState(gameState, playerName);
+
+            // After saving, go back to the main menu
+            showMainMenu();
+        }
     }
 } 

@@ -13,6 +13,7 @@ public class InputHandler implements KeyListener {
     // Input state flags (moved from EquinoxGameLogic)
     private boolean moveLeft = false;
     private boolean moveRight = false;
+    private boolean spacePressed = false;
 
     public InputHandler(EquinoxGameLogic gameLogic) {
         this.gameLogic = gameLogic;
@@ -35,26 +36,81 @@ public class InputHandler implements KeyListener {
     @Override
     public void keyPressed(KeyEvent e) {
         int keyCode = e.getKeyCode();
-        GameStateEnum currentState = gameLogic.getCurrentState(); // Get current state
+        EquinoxGameLogic.GameStateEnum currentState = gameLogic.getCurrentState();
+        boolean cheats = gameLogic.areCheatsEnabled();
 
-        switch (currentState) {
-            case MENU:
-                handleMenuInputPressed(keyCode);
-                break;
-            case PLAYING:
-                handlePlayingInputPressed(keyCode);
-                break;
-            case GAME_OVER:
-                handleGameOverInputPressed(keyCode);
-                break;
-            // Add cases for CUTSCENE etc. if needed
+        // Gameplay Controls (Only active during PLAYING state)
+        if (currentState == EquinoxGameLogic.GameStateEnum.PLAYING) {
+            switch (keyCode) {
+                case KeyEvent.VK_LEFT:
+                case KeyEvent.VK_A:
+                    moveLeft = true;
+                    break;
+                case KeyEvent.VK_RIGHT:
+                case KeyEvent.VK_D:
+                    moveRight = true;
+                    break;
+                case KeyEvent.VK_SPACE:
+                    if (!spacePressed) { // Prevent continuous fire from holding key
+                        gameLogic.fireBullet();
+                        spacePressed = true;
+                    }
+                    break;
+                 case KeyEvent.VK_Q:
+                     gameLogic.fireWaveBlast();
+                    break;
+                case KeyEvent.VK_E:
+                    gameLogic.fireLaserBeam();
+                    break;
+                case KeyEvent.VK_R:
+                    gameLogic.firePhaseShift();
+                    break;
+            }
+        }
+
+        // Menu Controls (Only active during MENU state)
+        if (currentState == EquinoxGameLogic.GameStateEnum.MENU) {
+            switch (keyCode) {
+                case KeyEvent.VK_UP:
+                case KeyEvent.VK_W:
+                    gameLogic.menuUp();
+                    break;
+                case KeyEvent.VK_DOWN:
+                case KeyEvent.VK_S:
+                    gameLogic.menuDown();
+                    break;
+                case KeyEvent.VK_ENTER:
+                    gameLogic.menuSelect();
+                    break;
+                 case KeyEvent.VK_ESCAPE: // Allow Esc to exit from main menu
+                     gameLogic.exitGame();
+                     break;
+            }
+        }
+        
+        // Game Over Controls (Only active during GAME_OVER state)
+        if (currentState == EquinoxGameLogic.GameStateEnum.GAME_OVER) {
+            switch (keyCode) {
+                 case KeyEvent.VK_R:
+                     gameLogic.restartLevel();
+                     break;
+                 case KeyEvent.VK_ESCAPE: // Changed: Esc now handles giving up / submitting score
+                     gameLogic.handleGiveUp();
+                     break;
+            }
+        }
+
+         // Cheat Toggle (Can be toggled anytime for testing? Or only in Menu?)
+        // Example: Allow toggling with F1 anytime
+        if (keyCode == KeyEvent.VK_F1) {
+            gameLogic.toggleCheats();
         }
     }
 
     @Override
     public void keyReleased(KeyEvent e) {
         int keyCode = e.getKeyCode();
-        GameStateEnum currentState = gameLogic.getCurrentState(); // Get current state
+        EquinoxGameLogic.GameStateEnum currentState = gameLogic.getCurrentState(); // Get current state
 
         switch (currentState) {
             case MENU:

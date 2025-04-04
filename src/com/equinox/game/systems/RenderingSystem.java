@@ -294,5 +294,10 @@ public class RenderingSystem {
         String restartMsg = "Press 'R' to Retry";
         int restartWidth = fm.stringWidth(restartMsg);
         g.drawString(restartMsg, (Constants.BOARD_WIDTH - restartWidth) / 2, Constants.BOARD_HEIGHT / 2 + 20);
+
+        // Change Esc text
+        String menuMsg = "Press 'Esc' to Submit Score / Give Up";
+        int menuWidth = fm.stringWidth(menuMsg);
+        g.drawString(menuMsg, (Constants.BOARD_WIDTH - menuWidth) / 2, Constants.BOARD_HEIGHT / 2 + 50);
     }
 } 

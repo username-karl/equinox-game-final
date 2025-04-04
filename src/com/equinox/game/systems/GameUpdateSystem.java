@@ -207,10 +207,9 @@ public class GameUpdateSystem {
             // Check if the final wave of the final stage is completed
             if (currentStageNum == finalStage && currentWave == totalWaves) {
                 System.out.println("DEBUG: Final wave of final stage cleared! Game Won!");
-                // Save score to leaderboard
-                LeaderboardManager.addEntryFromGameState(gameState, "Player"); 
-                // Trigger Game Over or Victory Screen?
-                gameLogic.signalGameOver(); // Or a signalGameWon() if you add one
+                gameState.gameWon = true; // Set the win flag
+                // Call GameLogic to handle win sequence (prompt, save, game over)
+                gameLogic.handleGameWin(); 
                 return; // Stop further stage/wave processing
             }
 

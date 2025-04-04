@@ -8,7 +8,7 @@ import java.util.List;
 public class LeaderboardManager {
 
     private static final String LEADERBOARD_FILE = "leaderboard.dat";
-    private static final int MAX_ENTRIES = 10;
+    public static final int MAX_ENTRIES = 10;
 
     // Load entries from the file
     @SuppressWarnings("unchecked") // Suppress warning for the cast from Object

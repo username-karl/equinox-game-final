@@ -47,6 +47,9 @@ public class GameState {
     public long startTimeMillis; // Time the current game started
     public int maxMoneyAchieved; // Highest money held during the run
 
+    // Win/Loss State
+    public boolean gameWon = false; // Flag to indicate if game ended in victory
+
     // Constructor
     public GameState(){
         // Initialize Stage (Example values)
@@ -139,6 +142,7 @@ public class GameState {
         // Initialize leaderboard tracking fields
         startTimeMillis = 0; // Will be set properly when game starts
         maxMoneyAchieved = money; // Initial max money is starting money
+        gameWon = false; // Ensure gameWon flag is reset
 
         System.out.println("GameState reset for new game.");
     }
