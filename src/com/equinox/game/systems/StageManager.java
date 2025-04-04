@@ -50,12 +50,12 @@ public class StageManager {
             assetLoader.getImage(Constants.CAPTAIN_PORTRAIT_KEY)
         ));
         stage1Data.addFrame(new CutsceneData.CutsceneFrame(
-            "Narrator: You have a mission...",
+            "Narrator: Ancient records confirmed... a powerful artifact, shattered across the galaxy.",
              assetLoader.getImage(Constants.BG_CUTSCENE_1_KEY),
              assetLoader.getImage(Constants.CAPTAIN_PORTRAIT_KEY)
         ));
          stage1Data.addFrame(new CutsceneData.CutsceneFrame(
-            "Narrator: You must begin your journey",
+            "Narrator: Four pieces. Scattered. Can't let them fall into the wrong hands.",
              assetLoader.getImage(Constants.BG_CUTSCENE_1_KEY),
              assetLoader.getImage(Constants.CAPTAIN_PORTRAIT_KEY)
         ));
@@ -65,7 +65,7 @@ public class StageManager {
              null
         ));
          stage1Data.addFrame(new CutsceneData.CutsceneFrame(
-            "Narrator: Get ready all hands on deck and prepare for battle",
+            "Narrator: Time to gear up. The hunt begins now.",
              assetLoader.getImage(Constants.BG_CUTSCENE_1_KEY),
              assetLoader.getImage(Constants.CAPTAIN_PORTRAIT_KEY)
         ));
@@ -73,17 +73,17 @@ public class StageManager {
 
         CutsceneData stage2Data = new CutsceneData();
         stage2Data.addFrame(new CutsceneData.CutsceneFrame(
-            "Narrator: You have bested The Collector",
+            "Narrator: Survived the anomaly and took down the Serpent",
              assetLoader.getImage(Constants.BG_CUTSCENE_2_KEY),
              assetLoader.getImage(Constants.CAPTAIN_PORTRAIT_KEY)
         ));
         stage2Data.addFrame(new CutsceneData.CutsceneFrame(
-            "Narrator: The enemies here are stronger.",
+            "Narrator: Approaching the Ancient Ruins. Readings show active defense systems.",
              assetLoader.getImage(Constants.BG_CUTSCENE_2_KEY),
              assetLoader.getImage(Constants.CAPTAIN_PORTRAIT_KEY)
         ));
         stage2Data.addFrame(new CutsceneData.CutsceneFrame(
-            "Narrator: Recruit new allies to help you.",
+            "Narrator: This civilization vanished, but its guardians remain. The second piece is here.",
              assetLoader.getImage(Constants.BG_CUTSCENE_2_KEY),
              assetLoader.getImage(Constants.CAPTAIN_PORTRAIT_KEY)
         ));
@@ -91,17 +91,22 @@ public class StageManager {
 
         CutsceneData stage3Data = new CutsceneData();
         stage3Data.addFrame(new CutsceneData.CutsceneFrame(
-            "Narrator: You have bested this area",
+            "Narrator: Took down the old war machine and escaped the unstable core.",
              assetLoader.getImage(Constants.BG_DEFAULT_KEY),
              assetLoader.getImage(Constants.CAPTAIN_PORTRAIT_KEY)
         ));
          stage3Data.addFrame(new CutsceneData.CutsceneFrame(
-            "Narrator: You grow ever stronger",
+            "Narrator: Used the energy signature data to pinpoint the Singularity's location. Setting course.",
              assetLoader.getImage(Constants.BG_DEFAULT_KEY),
              assetLoader.getImage(Constants.CAPTAIN_PORTRAIT_KEY)
         ));
          stage3Data.addFrame(new CutsceneData.CutsceneFrame(
-            "Narrator: Recruit more allies to help you.",
+            "Narrator: Entering the Quantum Singularity. Physics are breaking down.",
+             assetLoader.getImage(Constants.BG_DEFAULT_KEY),
+             assetLoader.getImage(Constants.CAPTAIN_PORTRAIT_KEY)
+        ));
+        stage3Data.addFrame(new CutsceneData.CutsceneFrame(
+            "Readings are chaotic. The third piece is lost somewhere in this maelstrom.",
              assetLoader.getImage(Constants.BG_DEFAULT_KEY),
              assetLoader.getImage(Constants.CAPTAIN_PORTRAIT_KEY)
         ));

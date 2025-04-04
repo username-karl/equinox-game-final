@@ -56,7 +56,7 @@ public class AssetLoader {
             loadAndStoreBackground(Constants.BG_CUTSCENE_2_KEY, "/assets/bg_cutscene_planet.png"); 
 
             // Load World 2 Enemy Assets (Update paths)
-            loadImage(Constants.ENEMY_W2_TYPE1_IMG_KEY, "/assets/enemy_w2_type1.png"); // Placeholder enemy name
+            loadImage(Constants.ENEMY_W2_TYPE1_IMG_KEY, "/assets/enemy_w2_type1.gif"); // Placeholder enemy name
             loadImage(Constants.ENEMY_W2_TYPE2_IMG_KEY, "/assets/enemy_w2_type2.png"); // Placeholder enemy name
             loadImage(Constants.ENEMY_W2_TYPE3_IMG_KEY, "/assets/enemy_w2_type3.png"); // Placeholder enemy name
             loadImage(Constants.ENEMY_W2_TYPE4_IMG_KEY, "/assets/enemy_w2_type4.png"); // Placeholder enemy name
@@ -86,7 +86,7 @@ public class AssetLoader {
             // Load Backgrounds 
             // Title Screen Background
             loadImage(Constants.BG_MAIN_MENU_KEY, "/assets/bg_main_menu.png");
-            loadBackgroundImage(0, Constants.BG_DEFAULT_KEY, "/assets/bg_nebula.png"); // Default gameplay BG
+            // loadAndStoreBackground(0, Constants.BG_DEFAULT_KEY, "/assets/bg_nebula.png"); // Default gameplay BG
             // Load specific Cutscene Backgrounds
             loadImage(Constants.BG_CUTSCENE_1_KEY, "/assets/cg_stage1_scene1.png"); // Load Cutscene 1 BG
             loadImage(Constants.BG_CUTSCENE_2_KEY, "/assets/cg_stage2_scene1.png"); // Load Cutscene 2 BG
