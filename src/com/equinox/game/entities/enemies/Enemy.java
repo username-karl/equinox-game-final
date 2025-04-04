@@ -48,13 +48,22 @@ public class Enemy extends Entity{
 
     // Basic horizontal movement with boundary check and triggering downward move
     public void move(int boardWidth, int enemyWidth, int enemyHeight) {
-        setX(getX() + enemyVelocityX);
+        int currentX = getX(); // Store current X before moving
+        setX(currentX + enemyVelocityX);
 
         // Check boundaries and reverse direction
         if (getX() <= 0 || getX() + enemyWidth >= boardWidth) {
-            enemyVelocityX *= -1;
-            setX(getX() + enemyVelocityX); // Adjust position slightly after reversing
-            setMoveDown(true); // Signal to move down on the next step
+            // Only trigger moveDown when hitting the right edge (i.e., when velocity was positive before reversal)
+            boolean movingRightBeforeHit = enemyVelocityX > 0;
+            
+            enemyVelocityX *= -1; // Reverse horizontal direction
+            setX(currentX + enemyVelocityX); // Adjust position slightly based on original X and new velocity
+            
+            if (movingRightBeforeHit && getX() + enemyWidth >= boardWidth) { // Check we actually hit the right edge
+                 setMoveDown(true); // Signal to move down only after hitting the right boundary
+            } else {
+                 setMoveDown(false); // Ensure flag is false if hitting left edge
+            }
         }
     }
 

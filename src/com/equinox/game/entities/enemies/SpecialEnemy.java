@@ -4,6 +4,7 @@ import com.equinox.game.entities.EnemyBullet;
 
 import java.awt.Image;
 import java.util.ArrayList;
+import java.util.List;
 
 // Extracted into its own file
 public class SpecialEnemy extends Enemy{
@@ -12,8 +13,8 @@ public class SpecialEnemy extends Enemy{
     private String enemyBossName="";
     private int hitpoints = 20;
     private int maxHitpoints = 20;
-    private int shootCooldown = 100; // Ticks between shots
-    private int currentCooldown = 0;
+    protected int shootCooldown = 100; // Ticks between shots - PROTECTED
+    protected int currentCooldown = 0; // PROTECTED
     private int specialEnemyVelocityY = 1; // Vertical movement speed
 
     // Constructor chain for flexibility
@@ -70,14 +71,18 @@ public class SpecialEnemy extends Enemy{
         }
     }
 
-    // Shooting logic (similar to ShootingEnemy)
-    public void shoot(ArrayList<EnemyBullet> enemyBulletArray, Image enemyBulletImg, int bulletWidth, int bulletHeight) {
+    // Shooting logic (similar to ShootingEnemy) - Use List
+    public void shoot(List<EnemyBullet> enemyBulletArray, Image enemyBulletImg, int bulletWidth, int bulletHeight) {
         if (currentCooldown <= 0) {
+            int defaultVelocityX = 0;
+            int defaultVelocityY = 5; // Default enemy bullet speed
             EnemyBullet bullet = new EnemyBullet(getX() + getWidth() / 2 - bulletWidth / 2, // Center bullet
                                              getY() + getHeight(), 
                                              bulletWidth, 
                                              bulletHeight, 
-                                             enemyBulletImg);
+                                             enemyBulletImg,
+                                             defaultVelocityX,
+                                             defaultVelocityY);
             enemyBulletArray.add(bullet);
             currentCooldown = shootCooldown; // Reset cooldown
         } else {

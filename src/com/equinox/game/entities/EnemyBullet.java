@@ -4,15 +4,19 @@ import java.awt.Image;
 
 // Extracted into its own file
 public class EnemyBullet extends Bullet{
-    private int bulletVelocityY = 10; // Default downward speed for enemy bullets
+    // Removed private velocity field - inherited from Bullet
+    // private int bulletVelocityY = 10;
 
-    public EnemyBullet(int x, int y, int width, int height, Image img) {
-        super(x, y, width, height, img);
+    // Updated constructor to accept velocities and pass to super
+    public EnemyBullet(int x, int y, int width, int height, Image img, int velocityX, int velocityY) {
+        super(x, y, width, height, img, velocityX, velocityY);
     }
 
-    // Specific move method for enemy bullets (moves down)
+    // Removed move() override - inherits updated move() from Bullet
+    /*
     public void move(){
         // Calls the generic move from the parent Bullet class with its velocity
         super.move(bulletVelocityY); 
     }
+    */
 }
