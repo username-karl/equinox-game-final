@@ -2,6 +2,7 @@ package com.equinox.game.core;
 
 import com.equinox.game.ui.EquinoxGameLogic;
 import com.equinox.game.systems.StageManager;
+import com.equinox.game.utils.AssetLoader;
 
 import java.awt.Dimension;
 import java.awt.Toolkit;
@@ -24,10 +25,14 @@ public class EquinoxGame {
         frame.setResizable(false);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-        //Game Screen
-        EquinoxGameLogic equinox = new EquinoxGameLogic();
-        StageManager stageManager = new StageManager(equinox, frame);
-        equinox.setStageManager(stageManager);
+        // Create AssetLoader first
+        AssetLoader assetLoader = new AssetLoader();
+
+        //Game Screen - Pass AssetLoader
+        EquinoxGameLogic equinox = new EquinoxGameLogic(assetLoader);
+        // StageManager also needs AssetLoader now
+        StageManager stageManager = new StageManager(equinox, frame, assetLoader);
+        equinox.initializeStageManager(frame); // Use the new initialization method
 
         // Add the game logic panel to the frame's content pane
         frame.add(equinox);

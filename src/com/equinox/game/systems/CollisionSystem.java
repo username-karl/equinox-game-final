@@ -1,5 +1,6 @@
 package com.equinox.game.systems;
 
+import com.equinox.game.data.GameState;
 import com.equinox.game.entities.Entity;
 import com.equinox.game.entities.Bullet;
 import com.equinox.game.entities.EnemyBullet;
@@ -9,13 +10,19 @@ import com.equinox.game.entities.ShipUser;
 import com.equinox.game.entities.enemies.Enemy;
 import com.equinox.game.ui.EquinoxGameLogic; 
 
-import java.util.ArrayList;
+import java.util.List;
 
 public class CollisionSystem {
 
-    private EquinoxGameLogic gameLogic; // Reference to main logic
+    // Dependencies
+    private GameState gameState; 
+    private GameUpdateSystem gameUpdateSystem; // Needed to call handleEnemyHit
+    private EquinoxGameLogic gameLogic; // Needed for signalGameOver (Temporary)
 
-    public CollisionSystem(EquinoxGameLogic gameLogic) {
+    // Updated Constructor
+    public CollisionSystem(GameState gameState, GameUpdateSystem gameUpdateSystem, EquinoxGameLogic gameLogic) {
+        this.gameState = gameState;
+        this.gameUpdateSystem = gameUpdateSystem;
         this.gameLogic = gameLogic;
     }
 
@@ -27,68 +34,81 @@ public class CollisionSystem {
                a.getY() + a.getHeight() > b.getY();    // A's bottom edge is below B's top edge
     }
 
-    // Check player bullets against enemies
-    public void checkPlayerBulletCollisions(ArrayList<Bullet> bulletArray, ArrayList<Enemy> enemyArray) {
+    // Check player bullets against enemies (Uses GameState)
+    public void checkPlayerBulletCollisions() { 
+        // Get lists from GameState
+        List<Bullet> bulletArray = gameState.bulletArray;
+        List<Enemy> enemyArray = gameState.enemyArray;
+        if (bulletArray == null || enemyArray == null || gameUpdateSystem == null) return;
+
         for (Bullet bullet : bulletArray) {
             if (!bullet.isUsed()) {
                 for (Enemy enemy : enemyArray) {
                     if (enemy.isAlive() && detectCollision(bullet, enemy)) {
                         bullet.setUsed(true);
-                        gameLogic.handleEnemyHit(enemy); // Call method on gameLogic
-                         break; // Bullet hits one enemy and is used
+                        gameUpdateSystem.handleEnemyHit(enemy); // Call on GameUpdateSystem
+                         break; 
                     }
                 }
             }
         }
     }
 
-    // Check player tactical abilities against enemies
-    public void checkTacticalCollisions(ArrayList<WaveBlast> waveBlastArray, ArrayList<LaserBeam> laserBeamArray, ArrayList<Enemy> enemyArray) {
-        // WaveBlast (Q)
-        for (WaveBlast waveBlast : waveBlastArray) {
-            if (!waveBlast.isUsed()) {
-                for (Enemy enemy : enemyArray) {
-                    if (enemy.isAlive() && detectCollision(waveBlast, enemy)) {
-                        gameLogic.handleEnemyHit(enemy); 
-                        // waveBlast.setUsed(true); // Uncomment if WaveBlast is single hit
+    // Check player tactical abilities against enemies (Uses GameState)
+    public void checkTacticalCollisions() {
+        // Get lists from GameState
+        List<WaveBlast> waveBlastArray = gameState.waveBlastArray;
+        List<LaserBeam> laserBeamArray = gameState.laserBeamArray;
+        List<Enemy> enemyArray = gameState.enemyArray;
+        if (gameUpdateSystem == null) return;
+
+        if (waveBlastArray != null && enemyArray != null) {
+            for (WaveBlast waveBlast : waveBlastArray) {
+                if (!waveBlast.isUsed()) {
+                    for (Enemy enemy : enemyArray) {
+                        if (enemy.isAlive() && detectCollision(waveBlast, enemy)) {
+                            gameUpdateSystem.handleEnemyHit(enemy); 
+                        }
                     }
                 }
             }
         }
-        // LaserBeam (E)
-        for (LaserBeam laserBeam : laserBeamArray) {
-            if (!laserBeam.isUsed()) {
-                for (Enemy enemy : enemyArray) {
-                    if (enemy.isAlive() && detectCollision(laserBeam, enemy)) {
-                        laserBeam.setUsed(true);
-                        gameLogic.handleEnemyHit(enemy);
-                        break; // LaserBeam hits one enemy and is used
+        
+        if (laserBeamArray != null && enemyArray != null) {
+            for (LaserBeam laserBeam : laserBeamArray) {
+                if (!laserBeam.isUsed()) {
+                    for (Enemy enemy : enemyArray) {
+                        if (enemy.isAlive() && detectCollision(laserBeam, enemy)) {
+                            laserBeam.setUsed(true);
+                            gameUpdateSystem.handleEnemyHit(enemy);
+                            break;
+                        }
                     }
                 }
             }
         }
     }
 
-    // Check enemy bullets against player ship
-    public void checkEnemyBulletCollisions(ArrayList<EnemyBullet> enemyBulletArray, ShipUser ship) {
-        // Skip collision check if ship is null, dead, phase shift is active, OR CHEATS ARE ENABLED
-        if (ship == null || !ship.isAlive() || gameLogic.isPhaseShiftActive() || gameLogic.areCheatsEnabled()) return; 
+    // Check enemy bullets against player ship (Uses GameState)
+    public void checkEnemyBulletCollisions() {
+        // Get state from GameState
+        List<EnemyBullet> enemyBulletArray = gameState.enemyBulletArray;
+        ShipUser ship = gameState.ship;
+        boolean isPhaseShiftActive = gameState.isPhaseShiftActive;
+        boolean cheatsEnabled = gameState.cheatsEnabled;
+
+        if (ship == null || !ship.isAlive() || isPhaseShiftActive || cheatsEnabled || enemyBulletArray == null || gameLogic == null) return; 
         
         for (EnemyBullet bullet : enemyBulletArray) {
              if (!bullet.isUsed()) { 
                 if(detectCollision(bullet, ship)){ 
                     bullet.setUsed(true); 
-                    ship.takeDamage(1); // Player takes 1 damage
+                    ship.takeDamage(1); 
                     
-                    // Check if player died from this hit
                     if (!ship.isAlive()) {
-                        // Call the method in GameLogic to handle player death
-                        gameLogic.playerDied();
-                        // Optionally break here if game over should happen immediately
-                        // break; 
+                        gameLogic.signalGameOver(); // Call on EquinoxGameLogic
+                        return; // Stop checking collisions if player is dead
                     }
-                    // Consider if bullet should disappear after hitting player, or if multiple bullets can hit
-                    // break; // Uncomment if one bullet hit is enough per frame
                 }
             }
         }

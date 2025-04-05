@@ -4,7 +4,9 @@ import com.equinox.game.ui.EquinoxGameLogic;
 import com.equinox.game.ui.CutscenePanel;
 import com.equinox.game.ui.ShopPanel;
 import com.equinox.game.data.GameState;
-import com.equinox.game.systems.CutsceneData;
+import com.equinox.game.data.CutsceneData;
+import com.equinox.game.utils.AssetLoader;
+import com.equinox.game.utils.Constants;
 
 import javax.swing.*;
 import java.awt.*;
@@ -19,49 +21,95 @@ public class StageManager {
     private CutscenePanel cutscenePanel;
     private ShopPanel shopPanel;
     private JFrame frame;
+    private AssetLoader assetLoader;
     private static Image shopBackground;
     private Map<Integer, CutsceneData> cutsceneDataMap;
 
-    public StageManager(EquinoxGameLogic gameLogic, JFrame frame) {
+    public StageManager(EquinoxGameLogic gameLogic, JFrame frame, AssetLoader assetLoader) {
         this.gameLogic = gameLogic;
         this.frame = frame;
+        this.assetLoader = assetLoader;
+
         if (shopBackground == null) {
-            shopBackground = new ImageIcon(getClass().getResource("/assets/bg_shop.png")).getImage();
+            try {
+                shopBackground = new ImageIcon(getClass().getResource("/assets/bg_shop.png")).getImage();
+            } catch (Exception e) { System.err.println("Failed to load shop background"); }
         }
-        cutscenePanel = new CutscenePanel(this, null);
-        shopPanel = new ShopPanel(this, shopBackground,gameLogic.getGameState());
+        cutscenePanel = new CutscenePanel(this, assetLoader);
+        shopPanel = new ShopPanel(this, shopBackground, gameLogic.getGameState(), assetLoader);
         loadCutsceneData();
     }
 
     private void loadCutsceneData() {
         cutsceneDataMap = new HashMap<>();
 
-        List<String> stage1Narrations = new ArrayList<>();
-        stage1Narrations.add("Narrator: You are Captain Nova");
-        stage1Narrations.add("Narrator: You have a mission...");
-        stage1Narrations.add("Narrator: You must begin your journey");
-        stage1Narrations.add("Narrator: Enemies approaching...");
-        stage1Narrations.add("Narrator: Get ready all hands on deck and prepare for battle");
-        Image stage1Portrait = new ImageIcon(getClass().getResource("/assets/captainnova.png")).getImage();
-        Image stage1Background = new ImageIcon(getClass().getResource("/assets/cg_stage1_scene1.png")).getImage();
-        CutsceneData stage1Data = new CutsceneData(stage1Portrait, stage1Narrations, stage1Background);
+        CutsceneData stage1Data = new CutsceneData();
+        stage1Data.addFrame(new CutsceneData.CutsceneFrame(
+            "Narrator: You are Captain Nova",
+            assetLoader.getImage(Constants.BG_CUTSCENE_1_KEY),
+            assetLoader.getImage(Constants.CAPTAIN_PORTRAIT_KEY)
+        ));
+        stage1Data.addFrame(new CutsceneData.CutsceneFrame(
+            "Narrator: Ancient records confirmed... a powerful artifact, shattered across the galaxy.",
+             assetLoader.getImage(Constants.BG_CUTSCENE_1_KEY),
+             assetLoader.getImage(Constants.CAPTAIN_PORTRAIT_KEY)
+        ));
+         stage1Data.addFrame(new CutsceneData.CutsceneFrame(
+            "Narrator: Four pieces. Scattered. Can't let them fall into the wrong hands.",
+             assetLoader.getImage(Constants.BG_CUTSCENE_1_KEY),
+             assetLoader.getImage(Constants.CAPTAIN_PORTRAIT_KEY)
+        ));
+         stage1Data.addFrame(new CutsceneData.CutsceneFrame(
+            "Narrator: Enemies approaching...",
+             assetLoader.getImage(Constants.BG_CUTSCENE_1_KEY),
+             null
+        ));
+         stage1Data.addFrame(new CutsceneData.CutsceneFrame(
+            "Narrator: Time to gear up. The hunt begins now.",
+             assetLoader.getImage(Constants.BG_CUTSCENE_1_KEY),
+             assetLoader.getImage(Constants.CAPTAIN_PORTRAIT_KEY)
+        ));
         cutsceneDataMap.put(1, stage1Data);
 
-        List<String> stage2Narrations = new ArrayList<>();
-        stage2Narrations.add("Narrator: You have bested The Collector");
-        stage2Narrations.add("Narrator: The enemies here are stronger.");
-        stage2Narrations.add("Narrator: Recruit new allies to help you.");
-        Image stage2Portrait = new ImageIcon(getClass().getResource("/assets/captainnova.png")).getImage();
-        Image stage2Background = new ImageIcon(getClass().getResource("/assets/cg_stage2_scene1.png")).getImage();
-        CutsceneData stage2Data = new CutsceneData(stage2Portrait, stage2Narrations, stage2Background);
+        CutsceneData stage2Data = new CutsceneData();
+        stage2Data.addFrame(new CutsceneData.CutsceneFrame(
+            "Narrator: Survived the anomaly and took down the Serpent",
+             assetLoader.getImage(Constants.BG_CUTSCENE_2_KEY),
+             assetLoader.getImage(Constants.CAPTAIN_PORTRAIT_KEY)
+        ));
+        stage2Data.addFrame(new CutsceneData.CutsceneFrame(
+            "Narrator: Approaching the Ancient Ruins. Readings show active defense systems.",
+             assetLoader.getImage(Constants.BG_CUTSCENE_2_KEY),
+             assetLoader.getImage(Constants.CAPTAIN_PORTRAIT_KEY)
+        ));
+        stage2Data.addFrame(new CutsceneData.CutsceneFrame(
+            "Narrator: This civilization vanished, but its guardians remain. The second piece is here.",
+             assetLoader.getImage(Constants.BG_CUTSCENE_2_KEY),
+             assetLoader.getImage(Constants.CAPTAIN_PORTRAIT_KEY)
+        ));
         cutsceneDataMap.put(2, stage2Data);
-        List<String> stage3Narrations = new ArrayList<>();
-        stage3Narrations.add("Narrator: You have bested this area");
-        stage3Narrations.add("Narrator: You grow ever stronger");
-        stage3Narrations.add("Narrator: Recruit more allies to help you.");
-        Image stage3Portrait = new ImageIcon(getClass().getResource("/assets/captainnova.png")).getImage();
-        Image stage3Background = new ImageIcon(getClass().getResource("/assets/cg_stage2_scene1.png")).getImage();
-        CutsceneData stage3Data = new CutsceneData(stage3Portrait, stage3Narrations, stage3Background);
+
+        CutsceneData stage3Data = new CutsceneData();
+        stage3Data.addFrame(new CutsceneData.CutsceneFrame(
+            "Narrator: Took down the old war machine and escaped the unstable core.",
+             assetLoader.getImage(Constants.BG_DEFAULT_KEY),
+             assetLoader.getImage(Constants.CAPTAIN_PORTRAIT_KEY)
+        ));
+         stage3Data.addFrame(new CutsceneData.CutsceneFrame(
+            "Narrator: Used the energy signature data to pinpoint the Singularity's location. Setting course.",
+             assetLoader.getImage(Constants.BG_DEFAULT_KEY),
+             assetLoader.getImage(Constants.CAPTAIN_PORTRAIT_KEY)
+        ));
+         stage3Data.addFrame(new CutsceneData.CutsceneFrame(
+            "Narrator: Entering the Quantum Singularity. Physics are breaking down.",
+             assetLoader.getImage(Constants.BG_DEFAULT_KEY),
+             assetLoader.getImage(Constants.CAPTAIN_PORTRAIT_KEY)
+        ));
+        stage3Data.addFrame(new CutsceneData.CutsceneFrame(
+            "Readings are chaotic. The third piece is lost somewhere in this maelstrom.",
+             assetLoader.getImage(Constants.BG_DEFAULT_KEY),
+             assetLoader.getImage(Constants.CAPTAIN_PORTRAIT_KEY)
+        ));
         cutsceneDataMap.put(3, stage3Data);
     }
 
@@ -75,7 +123,8 @@ public class StageManager {
             frame.pack();
             frame.revalidate();
             frame.repaint();
-            cutscenePanel.startCutscene();
+            cutscenePanel.startCutsceneDisplay();
+            cutscenePanel.requestFocusInWindow();
         } else {
             System.err.println("No cutscene data found for stage: " + currentStage);
             showShop();
@@ -84,19 +133,25 @@ public class StageManager {
 
     public void showShop() {
         frame.remove(cutscenePanel);
+        gameLogic.setCurrentState(EquinoxGameLogic.GameStateEnum.MENU);
         frame.add(shopPanel);
         frame.pack();
         frame.revalidate();
         frame.repaint();
-        shopPanel.showShop();
+        shopPanel.setupShopUI();
     }
 
     public void startGameLoop() {
         frame.remove(shopPanel);
+        gameLogic.setCurrentState(EquinoxGameLogic.GameStateEnum.PLAYING);
         frame.add(gameLogic);
         frame.pack();
         frame.revalidate();
         frame.repaint();
+        // Recalculate ship stats based on any upgrades purchased
+        if (gameLogic.gameState != null && gameLogic.gameState.ship != null) {
+            gameLogic.gameState.ship.recalculateStats(gameLogic.gameState);
+        }
         gameLogic.startGameLoop();
         gameLogic.requestFocus();
     }
