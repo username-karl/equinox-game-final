@@ -388,7 +388,7 @@ public class GameUpdateSystem {
                             enemy = new FastEnemy(spawnX, spawnY, Constants.ENEMY_WIDTH, Constants.ENEMY_HEIGHT, enemyImg, Constants.ENEMY_BASE_VELOCITY_X + 3);
                         }
                         break;
-                    case 2:
+                    case 2: 
                         int randomTypeW2 = random.nextInt(10); 
                         int worldExponentW2 = stageNum - 1; 
                         enemy = null; 
@@ -439,8 +439,8 @@ public class GameUpdateSystem {
                                 System.err.println("Warning: Missing placeholder assets (World " + stageNum + "). Spawning fallback.");
                             }
                         }
-                        break; 
-                    case 3:
+                        break;
+                    case 3: 
                         int randomTypeW3 = random.nextInt(10); 
                         int worldExponentW3 = stageNum - 1; 
                         enemy = null; 
@@ -552,9 +552,9 @@ public class GameUpdateSystem {
                             keys = new String[]{Constants.ENEMY_W4_TYPE2_IMG_KEY, Constants.ENEMY_W4_TYPE3_IMG_KEY, Constants.ENEMY_W4_TYPE5_IMG_KEY }; // Avoid W4_Type4 placeholder
                             baseHealth = 4; speedBonus = 3; 
                             enemyImg = assetLoader.getImage(keys[random.nextInt(keys.length)]);
-                            if (enemyImg != null) {
+                     if (enemyImg != null) {
                                 enemy = new Enemy(spawnX, spawnY, Constants.ENEMY_WIDTH, Constants.ENEMY_HEIGHT, enemyImg, Constants.ENEMY_BASE_VELOCITY_X + speedBonus, baseHealth); 
-                            } else {
+                     } else {
                                 System.err.println("Warning: Missing placeholder assets (World " + stageNum + "). Spawning fallback.");
                             }
                         }
@@ -572,7 +572,7 @@ public class GameUpdateSystem {
                      enemy = createFallbackEnemy(spawnX, spawnY);
                      if (enemy == null) { // If even fallback fails
                         System.err.println("CRITICAL: Fallback enemy creation failed. Skipping spawn.");
-                        continue;
+                         continue; 
                      }
                 }
 
@@ -605,7 +605,7 @@ public class GameUpdateSystem {
                 miniboss = new Miniboss( 
                     Constants.BOARD_WIDTH/2 - Constants.TILE_SIZE * 2, Constants.TILE_SIZE,
                     Constants.TILE_SIZE*4, Constants.TILE_SIZE*4, minibossImg1, Constants.ENEMY_BASE_VELOCITY_X,
-                    minibossImg1, 50, 100, 2, "Quantum Anomaly" ); 
+                    minibossImg1, 50, 100, 2, "Quantum Anomaly" );
                 break;
              case 2: // World 2 Miniboss (Guardian Spawn)
                  Image minibossImg2 = assetLoader.getImage(Constants.GUARDIAN_SPAWN_IMG_KEY);
@@ -632,7 +632,7 @@ public class GameUpdateSystem {
                 miniboss = new Miniboss(
                     Constants.BOARD_WIDTH/2 - Constants.TILE_SIZE * 2, Constants.TILE_SIZE,
                     Constants.TILE_SIZE*4, Constants.TILE_SIZE*4, fallbackImg, Constants.ENEMY_BASE_VELOCITY_X,
-                    fallbackImg, 50, 100, 2, "Quantum Anomaly (Fallback)" ); 
+                    fallbackImg, 50, 100, 2, "Quantum Anomaly (Fallback)" );
             }
         }
         // --------------------
@@ -660,7 +660,7 @@ public class GameUpdateSystem {
                 boss = new MainBoss( 
                         Constants.BOARD_WIDTH/2 - Constants.TILE_SIZE * 4, Constants.TILE_SIZE,
                         Constants.TILE_SIZE*8, Constants.TILE_SIZE*8, bossImg, Constants.ENEMY_BASE_VELOCITY_X,
-                        bossImg, 100, 75, 2, "The Collector" ); 
+                        bossImg, 100, 75, 2, "The Collector" );
                 break;
              case 2: // World 2 Boss (Guardian Construct)
                 bossImg = assetLoader.getImage(Constants.GUARDIAN_CONSTRUCT_IMG_KEY);
@@ -706,7 +706,7 @@ public class GameUpdateSystem {
                 boss = new MainBoss( 
                     Constants.BOARD_WIDTH/2 - Constants.TILE_SIZE * 4, Constants.TILE_SIZE,
                     Constants.TILE_SIZE*8, Constants.TILE_SIZE*8, fallbackImg, Constants.ENEMY_BASE_VELOCITY_X,
-                    fallbackImg, 100, 75, 2, "The Collector (Fallback)" ); 
+                    fallbackImg, 100, 75, 2, "The Collector (Fallback)" );
             }
         }
         // --------------------

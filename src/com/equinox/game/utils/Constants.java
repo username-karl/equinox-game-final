@@ -108,14 +108,14 @@ public class Constants {
     // Using existing colors for fill: COOLDOWN_READY_COLOR, COOLDOWN_Q_COLOR, COOLDOWN_E_COLOR, COOLDOWN_R_COLOR
 
     // Asset Keys (Use these strings to retrieve assets from AssetLoader)
-    public static final String PLAYER_SHIP_IMG_KEY = "player_ship";
+    public static final String PLAYER_SHIP_IMG_KEY = "playerShip";
     public static final String ENEMY_DRONE_IMG_KEY = "enemy_drone";
     public static final String ENEMY_ALIEN2_IMG_KEY = "enemy_alien2";
     public static final String ENEMY_ALIEN3_IMG_KEY = "enemy_alien3";
     public static final String MINIBOSS_IMG_KEY = "miniboss";
     public static final String MAINBOSS_IMG_KEY = "mainboss";
     public static final String PLAYER_LASER_IMG_KEY = "laser_blue";
-    public static final String ENEMY_LASER_IMG_KEY = "laser_red";
+    public static final String ENEMY_LASER_IMG_KEY = "enemyLaser";
     public static final String BG_STAGE_1_KEY = "bg_stage1";
     public static final String BG_STAGE_2_KEY = "bg_stage2";
     public static final String BG_STAGE_3_KEY = "bg_stage3";
@@ -125,6 +125,7 @@ public class Constants {
     public static final String BG_CUTSCENE_1_KEY = "bg_cutscene1";
     public static final String BG_CUTSCENE_2_KEY = "bg_cutscene2";
     public static final String BG_MAIN_MENU_KEY = "bg_main_menu";
+    public static final String MAIN_MENU_BG_KEY = "mainMenuBackground"; // Key for the new main menu background
     // --- World 2 Enemy/Boss Keys (Placeholders) ---
     public static final String ENEMY_W2_TYPE1_IMG_KEY = "enemy_w2_type1";
     public static final String ENEMY_W2_TYPE2_IMG_KEY = "enemy_w2_type2";

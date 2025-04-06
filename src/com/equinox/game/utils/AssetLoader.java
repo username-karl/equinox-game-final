@@ -45,11 +45,11 @@ public class AssetLoader {
             loadImage(Constants.ENEMY_LASER_IMG_KEY, "/assets/weapon_laser_red.png");
 
             // Load Backgrounds (Store them in the map)
-            loadAndStoreBackground(Constants.BG_STAGE_1_KEY, "/assets/bg_space_nebula.png");
-            loadAndStoreBackground(Constants.BG_STAGE_2_KEY, "/assets/bg_ancient_ruins.png"); // World 2 Background
-            loadAndStoreBackground(Constants.BG_STAGE_3_KEY, "/assets/bg_quantum_singularity.png"); // World 3 Background
-            loadAndStoreBackground(Constants.BG_STAGE_4_KEY, "/assets/bg_sacred_temple.png"); // World 4 Background
-            loadAndStoreBackground(Constants.BG_DEFAULT_KEY, "/assets/bg_space_nebula.png"); // Default fallback
+            loadAndStoreBackground(Constants.BG_STAGE_1_KEY, "/assets/bg_space_nebula.png"); // Keep World 1 as nebula for now
+            loadAndStoreBackground(Constants.BG_STAGE_2_KEY, "/assets/bg_ancient_ruins.png"); // UPDATE World 2 Background
+            loadAndStoreBackground(Constants.BG_STAGE_3_KEY, "/assets/bg_quantum_singularity.png"); // UPDATE World 3 Background
+            loadAndStoreBackground(Constants.BG_STAGE_4_KEY, "/assets/bg_sacred_temple.png"); // UPDATE World 4 Background
+            loadAndStoreBackground(Constants.BG_DEFAULT_KEY, "/assets/bg_space_nebula.png"); // Default fallback remains nebula
 
              // Load Cutscene Backgrounds (Assuming these paths are correct or placeholders)
             loadAndStoreBackground(Constants.BG_CUTSCENE_1_KEY, "/assets/bg_cutscene_bridge.png"); 
@@ -88,12 +88,17 @@ public class AssetLoader {
             loadImage(Constants.BG_MAIN_MENU_KEY, "/assets/bg_main_menu.png");
             // loadAndStoreBackground(0, Constants.BG_DEFAULT_KEY, "/assets/bg_nebula.png"); // Default gameplay BG
             // Load specific Cutscene Backgrounds
-            loadImage(Constants.BG_CUTSCENE_1_KEY, "/assets/cg_stage1_scene1.png"); // Load Cutscene 1 BG
-            loadImage(Constants.BG_CUTSCENE_2_KEY, "/assets/cg_stage2_scene1.png"); // Load Cutscene 2 BG
-            // Map gameplay backgrounds for stages 1, 2, 3 to the default nebula
+            // loadImage(Constants.BG_CUTSCENE_1_KEY, "/assets/cg_stage1_scene1.png"); // Load Cutscene 1 BG
+            // loadImage(Constants.BG_CUTSCENE_2_KEY, "/assets/cg_stage2_scene1.png"); // Load Cutscene 2 BG
+            // Map gameplay backgrounds for stages 1, 2, 3 to the default nebula <-- REMOVE THIS BLOCK
+            /* DELETE START
             backgroundImages.put(1, getImage(Constants.BG_DEFAULT_KEY));
             backgroundImages.put(2, getImage(Constants.BG_DEFAULT_KEY)); 
             backgroundImages.put(3, getImage(Constants.BG_DEFAULT_KEY));
+            DELETE END */
+
+            // Load Main Menu Background
+            loadImage(Constants.MAIN_MENU_BG_KEY, "/assets/bg_main_menu.png");
 
             System.out.println("Assets loaded successfully.");
 

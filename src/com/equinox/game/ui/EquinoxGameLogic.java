@@ -38,6 +38,7 @@ import java.util.ArrayList;
 import java.util.Random;
 import javax.swing.*;
 import javax.swing.JOptionPane; // For score submission input
+import javax.swing.Box; // For spacing
 
 public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListener {
 
@@ -53,10 +54,6 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
         CREDITS
     }
     private GameStateEnum currentGameState;
-
-    // Menu State Variables
-    private int selectedMenuItem = 0;
-    private String[] menuItems = {"Start Game", "Settings", "Leaderboard", "Credits", "Cheats", "Exit"};
 
     // Cheats State
     private boolean cheatsEnabled = false;
@@ -188,7 +185,14 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
     private UpgradeManager upgradeManager;
     private LeaderboardManager leaderboardManager;
 
-    
+    // Add Buttons for Main Menu
+    private JButton startButton;
+    private JButton settingsButton;
+    private JButton leaderboardButton;
+    private JButton creditsButton;
+    private JButton exitButton;
+    private JPanel menuButtonPanel; // Panel to hold the buttons
+
     //MAIN EQUINOX GAME CONSTRUCTOR
     //ALL THE LOGIC HERE IS CONTAINED
     public EquinoxGameLogic(AssetLoader assetLoader) { // Accept AssetLoader
@@ -235,12 +239,15 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
         Image shopBg = null; // Placeholder, StageManager or AssetLoader should provide this
         shopPanel = new ShopPanel(stageManager, shopBg, gameState, assetLoader); 
         cutscenePanel = new CutscenePanel(stageManager, assetLoader); 
-        settingsPanel = new SettingsPanel(this); // Pass 'this' for back button
+        settingsPanel = new SettingsPanel(this, gameState); // Pass gameState
         creditsPanel = new CreditsPanel(this);   // Pass 'this' for back button
+
+        // Initialize Main Menu Buttons
+        setupMenuButtons();
 
         setPreferredSize(new Dimension(Constants.BOARD_WIDTH, Constants.BOARD_HEIGHT));
         setBackground(Color.DARK_GRAY);
-        addKeyListener(inputHandler);
+        addKeyListener(this);
         setFocusable(true);
         currentGameState = GameStateEnum.MAIN_MENU;
         gameLoop = new Timer(Constants.TIMER_DELAY_MS, this);
@@ -299,14 +306,21 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
         // Draw based on state
         switch (currentGameState) {
             case MAIN_MENU:
-                if (renderingSystem != null) {
-                    // Pass GameState to drawBackground
-                    renderingSystem.drawBackground(g, gameState); 
+                // Explicitly draw a background for the main menu
+                Image bgImage = null;
+                if (assetLoader != null) {
+                    bgImage = assetLoader.getImage(Constants.MAIN_MENU_BG_KEY); // NEW: Use the dedicated main menu background key
+                }
+
+                if (bgImage != null) {
+                    g.drawImage(bgImage, 0, 0, Constants.BOARD_WIDTH, Constants.BOARD_HEIGHT, this);
                 } else {
+                    // Fallback if image loading fails or assetLoader is null
                     g.setColor(Color.BLACK);
                     g.fillRect(0, 0, getWidth(), getHeight());
+                    System.err.println("Warning: Main menu background image not found or AssetLoader not ready. Using fallback black.");
                 }
-                drawMainMenu(g); // Call the drawing method
+                 // Buttons are painted by Swing automatically
                 break;
             case SETTINGS:
             case CREDITS:
@@ -449,34 +463,45 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
     @Override
     public void actionPerformed(ActionEvent e) {
         String command = e.getActionCommand();
-        System.out.println("Action Performed: " + command + " in state: " + currentGameState); // Debug
-
+        System.out.println("Action Performed: " + command + " in state: " + currentGameState); 
+        
+        // Handle Main Menu button clicks
         if (currentGameState == GameStateEnum.MAIN_MENU) {
-            handleMenuSelection(command);
-        } else if (currentGameState == GameStateEnum.SHOP) {
-             // ShopPanel handles its own purchase logic internally via button listeners
-             // The action listener here might only be for a potential "Back" button if added to ShopPanel
-             if ("Back".equals(command) || "Continue".equals(command)) { // Check for Continue button action? 
+             switch (command) {
+                case "Start Game":
+                    startGame();
+                    break;
+                case "Settings":
+                    currentGameState = GameStateEnum.SETTINGS;
+                    setupSettingsPanel();
+                    break;
+                case "Leaderboard":
+                    currentGameState = GameStateEnum.LEADERBOARD;
+                    setupLeaderboardPanel();
+                    break;
+                case "Credits":
+                    currentGameState = GameStateEnum.CREDITS;
+                    setupCreditsPanel();
+                    break;
+                case "Exit":
+                    exitGame(); 
+                    break;
+            }
+        } 
+        // Handle Back buttons from sub-panels
+        else if (currentGameState == GameStateEnum.LEADERBOARD ||
+                   currentGameState == GameStateEnum.SETTINGS || 
+                   currentGameState == GameStateEnum.CREDITS) {
+             if ("Back".equals(command)) { 
+                currentGameState = GameStateEnum.MAIN_MENU;
+                setupMainMenu();
+            }
+        } 
+        // Handle Shop interaction (assuming shop still uses internal listeners primarily)
+        else if (currentGameState == GameStateEnum.SHOP) {
+             if ("Back".equals(command) || "Continue".equals(command)) { // Example check
                  exitShop(); 
              }
-        } else if (currentGameState == GameStateEnum.CUTSCENE) {
-            if (cutscenePanel != null) cutscenePanel.advanceFrame(); 
-        } else if (currentGameState == GameStateEnum.LEADERBOARD) {
-             if ("Back".equals(command)) { // Back from Leaderboard
-                currentGameState = GameStateEnum.MAIN_MENU;
-                setupMainMenu();
-            }
-        } else if (currentGameState == GameStateEnum.SETTINGS) {
-             if ("Back".equals(command)) { // Back from Settings
-                // TODO: Add logic to save settings if needed
-                currentGameState = GameStateEnum.MAIN_MENU;
-                setupMainMenu();
-            }
-        } else if (currentGameState == GameStateEnum.CREDITS) {
-             if ("Back".equals(command)) { // Back from Credits
-                currentGameState = GameStateEnum.MAIN_MENU;
-                setupMainMenu();
-            }
         }
         // Handle game timer event
         else if (e.getSource() == gameLoop && currentGameState == GameStateEnum.PLAYING) {
@@ -527,26 +552,27 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
     }
     */
 
-    // Methods for menu navigation (called by InputHandler)
+    // Methods for menu navigation (called by InputHandler) - DELETE THESE
+    /* DELETE START
     public void menuUp() {
-        if (currentGameState == GameStateEnum.MAIN_MENU) {
-            selectedMenuItem = (selectedMenuItem - 1 + menuItems.length) % menuItems.length;
-            repaint();
-        }
+        System.out.println("Menu Up: Before = " + selectedMenuItem);
+        selectedMenuItem = (selectedMenuItem - 1 + menuItems.length) % menuItems.length;
+        System.out.println("Menu Up: After = " + selectedMenuItem);
+        repaint();
     }
 
     public void menuDown() {
-        if (currentGameState == GameStateEnum.MAIN_MENU) {
-            selectedMenuItem = (selectedMenuItem + 1) % menuItems.length;
-            repaint();
-        }
+        System.out.println("Menu Down: Before = " + selectedMenuItem);
+        selectedMenuItem = (selectedMenuItem + 1) % menuItems.length;
+        System.out.println("Menu Down: After = " + selectedMenuItem);
+        repaint();
     }
 
     public void menuSelect() {
-        if (currentGameState == GameStateEnum.MAIN_MENU) {
-            handleMenuSelection(menuItems[selectedMenuItem]);
-        }
+        System.out.println("Menu Select: Index = " + selectedMenuItem + ", Item = " + menuItems[selectedMenuItem]);
+        handleMenuSelection(menuItems[selectedMenuItem]);
     }
+    DELETE END */
 
     // --- Display Control ---
     public void showLeaderboard() {
@@ -564,13 +590,17 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
 
     public void showMainMenu() {
         if (mainFrame != null) { // Check frame exists
-            // Assume current panel is LeaderboardPanel (or ShopPanel, CutscenePanel etc.)
-            // A more robust way would track the current non-game panel
-            mainFrame.remove(leaderboardPanel); // Remove leaderboard
-            // Potentially remove other panels if logic gets complex
+            // Remove the CURRENTLY displayed panel, whatever it is.
+            // This assumes only one of these panels (Leaderboard, Shop, Settings, Credits)
+            // or the main game logic panel (`this`) is displayed at a time.
+            Component currentComponent = mainFrame.getContentPane().getComponent(0);
+            if (currentComponent != null) {
+                mainFrame.remove(currentComponent);
+            }
             
             mainFrame.add(this); // Add the main logic panel back
             setCurrentState(GameStateEnum.MAIN_MENU); // Set state to MAIN_MENU
+            setupMainMenu(); // <--- Add this line to re-add the buttons
             mainFrame.pack();
             mainFrame.revalidate();
             mainFrame.repaint();
@@ -597,38 +627,6 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
 
     public boolean areCheatsEnabled() {
         return gameState.cheatsEnabled;
-    }
-
-    // --- Draw Main Menu ---
-    private void drawMainMenu(Graphics g) {
-        if (assetLoader.getImage(Constants.BG_MAIN_MENU_KEY) != null) {
-            g.drawImage(assetLoader.getImage(Constants.BG_MAIN_MENU_KEY), 0, 0, boardWidth, boardHeight, null);
-        } else {
-            // Fallback to black background if image is not loaded
-            g.setColor(Color.BLACK);
-            g.fillRect(0, 0, boardWidth, boardHeight);
-        }
-
-        g.setFont(new Font("Arial", Font.BOLD, 72));
-        g.setColor(Constants.MENU_TITLE_COLOR);
-        String title = "EQUINOX";
-        FontMetrics fmTitle = g.getFontMetrics();
-        int titleWidth = fmTitle.stringWidth(title);
-        g.drawString(title, (boardWidth - titleWidth) / 2, boardHeight / 3);
-
-        g.setFont(new Font("Arial", Font.PLAIN, 36));
-        FontMetrics fmItems = g.getFontMetrics();
-        int itemY = boardHeight / 2 + 50;
-        for (int i = 0; i < menuItems.length; i++) {
-            Color itemColor = (i == selectedMenuItem) ? Constants.MENU_ITEM_SELECTED_COLOR : Constants.MENU_ITEM_DEFAULT_COLOR;
-            if (i == 3) {
-                itemColor = gameState.cheatsEnabled ? Constants.MENU_ITEM_CHEAT_ACTIVE_COLOR : itemColor;
-            }
-            g.setColor(itemColor);
-            String itemText = menuItems[i];
-            int itemWidth = fmItems.stringWidth(itemText);
-            g.drawString(itemText, (boardWidth - itemWidth) / 2, itemY + i * 50);
-        }
     }
 
     // Called by GameUpdateSystem when win condition is met
@@ -737,7 +735,9 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
 
     private void setupMainMenu() {
         removeAll(); 
-        addKeyListener(this); // Ensure key listener is active for menu input
+        setLayout(new BorderLayout()); // Ensure parent has a layout
+        add(menuButtonPanel, BorderLayout.CENTER); // Add the button panel
+        // No need to add key listener here specifically for menu nav
         setFocusable(true);
         requestFocusInWindow(); 
         revalidate();
@@ -746,32 +746,35 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
     
     private void setupSettingsPanel() {
         removeAll();
-        add(settingsPanel);
-        settingsPanel.requestFocusInWindow(); // Maybe not needed if only button interaction
+        if (settingsPanel != null) {
+            settingsPanel.updateSettingsState(); 
+            setLayout(new BorderLayout()); // Ensure layout
+            add(settingsPanel, BorderLayout.CENTER);
+        } else { /* Error handling */ }
         revalidate();
         repaint();
+        settingsPanel.requestFocusInWindow(); 
     }
-
+    
     private void setupCreditsPanel() {
         removeAll();
-        add(creditsPanel);
-        creditsPanel.requestFocusInWindow(); // Maybe not needed if only button interaction
+        if (creditsPanel != null) {
+             setLayout(new BorderLayout()); // Ensure layout
+             add(creditsPanel, BorderLayout.CENTER);
+        } else { /* Error handling */ }
         revalidate();
         repaint();
+         // creditsPanel.requestFocusInWindow(); // Probably not needed
     }
-
+    
     private void setupLeaderboardPanel() {
         removeAll();
         if (leaderboardPanel != null) {
-            leaderboardPanel.loadAndDisplayScores(); // Use correct method name
-            add(leaderboardPanel);
-            leaderboardPanel.requestFocusInWindow(); // If it needs focus
-        } else {
-             System.err.println("ERROR: leaderboardPanel is null during setup!");
-             currentGameState = GameStateEnum.MAIN_MENU;
-             setupMainMenu();
-             return;
-        }
+            leaderboardPanel.loadAndDisplayScores(); 
+            setLayout(new BorderLayout()); // Ensure layout
+            add(leaderboardPanel, BorderLayout.CENTER);
+             // leaderboardPanel.requestFocusInWindow(); // Probably not needed
+        } else { /* Error handling */ }
         revalidate();
         repaint();
     }
@@ -785,49 +788,36 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
     @Override
     public void keyPressed(KeyEvent e) {
         int key = e.getKeyCode();
-        System.out.println("Key Pressed: " + KeyEvent.getKeyText(key) + " in state: " + currentGameState); // Debug
-        if (currentGameState == GameStateEnum.MAIN_MENU) {
-            if (key == KeyEvent.VK_UP || key == KeyEvent.VK_W) {
-                menuUp();
-            } else if (key == KeyEvent.VK_DOWN || key == KeyEvent.VK_S) {
-                menuDown();
-            } else if (key == KeyEvent.VK_ENTER || key == KeyEvent.VK_SPACE) {
-                menuSelect();
-            } else if (key == KeyEvent.VK_C) { // Toggle cheats from main menu
-                 handleMenuSelection("Cheats"); 
-            }
-            repaint(); // Repaint to show selection change
-        } else if (currentGameState == GameStateEnum.GAME_OVER) {
+        System.out.println("Key Pressed: " + KeyEvent.getKeyText(key) + " in state: " + currentGameState); 
+        
+        if (currentGameState == GameStateEnum.GAME_OVER) {
             if (key == KeyEvent.VK_R) {
                 startGame();
             } else if (key == KeyEvent.VK_ESCAPE) {
-                 handleScoreSubmission(); // Correct method call
+                 handleScoreSubmission(); 
             }
         } else if (currentGameState == GameStateEnum.PLAYING) {
-            if (key == KeyEvent.VK_B) { // Enter Shop
+            if (key == KeyEvent.VK_B) { 
                 enterShop();
-            } else if (inputHandler != null) { // Pass to InputHandler if playing
+            } else if (inputHandler != null) { 
                  inputHandler.keyPressed(e);
-            } else {
-                System.err.println("KeyPressed in PLAYING state but inputHandler is null!");
-            }
+            } else { /* Error */ }
         } else if (currentGameState == GameStateEnum.SHOP) {
-             if (key == KeyEvent.VK_B || key == KeyEvent.VK_ESCAPE) { // Exit Shop
+             if (key == KeyEvent.VK_B || key == KeyEvent.VK_ESCAPE) { 
                  exitShop();
              }
         } else if (currentGameState == GameStateEnum.CUTSCENE) {
              if (key == KeyEvent.VK_ENTER || key == KeyEvent.VK_SPACE || key == KeyEvent.VK_ESCAPE) {
-                 // Call the panel's method to advance, which handles end-of-cutscene logic
                  if (cutscenePanel != null) cutscenePanel.advanceFrame(); 
              }
         } else if (currentGameState == GameStateEnum.LEADERBOARD || 
                    currentGameState == GameStateEnum.SETTINGS || 
                    currentGameState == GameStateEnum.CREDITS) {
-            if (key == KeyEvent.VK_ESCAPE) { // Allow Esc to go back to Main Menu
+            if (key == KeyEvent.VK_ESCAPE) { 
                  currentGameState = GameStateEnum.MAIN_MENU;
                  setupMainMenu();
             }
-        }
+       }
     }
 
     @Override
@@ -840,31 +830,25 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
 
     // Helper method from Main Menu Logic (ensure drawMainMenu exists)
     public void handleMenuSelection(String selection) {
-        System.out.println("Menu Selection: " + selection); // Debug
+        System.out.println("Menu Selection: " + selection); 
         switch (selection) {
             case "Start Game":
                 startGame();
                 break;
-            case "Leaderboard":
-                currentGameState = GameStateEnum.LEADERBOARD;
-                setupLeaderboardPanel();
-                break;
-            case "Cheats":
-                gameState.cheatsEnabled = !gameState.cheatsEnabled;
-                // Need to update visual indicator if drawing manually
-                System.out.println("Cheats Toggled: " + gameState.cheatsEnabled);
-                repaint(); // Repaint to show change
-                break;
             case "Settings": 
                  currentGameState = GameStateEnum.SETTINGS;
                  setupSettingsPanel();
+                break;
+            case "Leaderboard":
+                currentGameState = GameStateEnum.LEADERBOARD;
+                setupLeaderboardPanel();
                 break;
             case "Credits": 
                  currentGameState = GameStateEnum.CREDITS;
                  setupCreditsPanel();
                 break;
             case "Exit":
-                System.exit(0);
+                exitGame(); 
                 break;
         }
     }
@@ -941,5 +925,59 @@ public class EquinoxGameLogic extends JPanel implements ActionListener, KeyListe
         } else {
              System.err.println("handleScoreSubmission called when game not over?");
         }
+    }
+
+    // Helper to create and layout menu buttons
+    private void setupMenuButtons() {
+        menuButtonPanel = new JPanel();
+        menuButtonPanel.setLayout(new BoxLayout(menuButtonPanel, BoxLayout.Y_AXIS));
+        menuButtonPanel.setOpaque(false); // Make transparent
+
+        // Add some space at the top
+        menuButtonPanel.add(Box.createVerticalGlue());
+
+        startButton = createMenuButton("Start Game");
+        settingsButton = createMenuButton("Settings");
+        leaderboardButton = createMenuButton("Leaderboard");
+        creditsButton = createMenuButton("Credits");
+        exitButton = createMenuButton("Exit");
+
+        menuButtonPanel.add(startButton);
+        menuButtonPanel.add(Box.createRigidArea(new Dimension(0, 15))); // Spacing
+        menuButtonPanel.add(settingsButton);
+        menuButtonPanel.add(Box.createRigidArea(new Dimension(0, 15)));
+        menuButtonPanel.add(leaderboardButton);
+        menuButtonPanel.add(Box.createRigidArea(new Dimension(0, 15)));
+        menuButtonPanel.add(creditsButton);
+        menuButtonPanel.add(Box.createRigidArea(new Dimension(0, 15)));
+        menuButtonPanel.add(exitButton);
+
+        // Add space at the bottom
+        menuButtonPanel.add(Box.createVerticalGlue());
+    }
+
+    // Helper to create styled menu buttons
+    private JButton createMenuButton(String text) {
+        JButton button = new JButton(text);
+        button.setFont(new Font("Arial", Font.BOLD, 28));
+        button.setForeground(Constants.MENU_ITEM_DEFAULT_COLOR);
+        button.setBackground(new Color(0,0,0,0)); // Transparent background
+        button.setOpaque(false);
+        button.setFocusPainted(false);
+        button.setBorderPainted(false);
+        button.setContentAreaFilled(false);
+        button.setAlignmentX(Component.CENTER_ALIGNMENT); // Center align in BoxLayout
+        button.setActionCommand(text); // Set action command to button text
+        button.addActionListener(this); // Add listener
+        // Add mouse hover effect (optional)
+        button.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                button.setForeground(Constants.MENU_ITEM_SELECTED_COLOR);
+            }
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                button.setForeground(Constants.MENU_ITEM_DEFAULT_COLOR);
+            }
+        });
+        return button;
     }
 } 

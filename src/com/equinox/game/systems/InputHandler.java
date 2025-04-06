@@ -39,7 +39,6 @@ public class InputHandler implements KeyListener {
     public void keyPressed(KeyEvent e) {
         int keyCode = e.getKeyCode();
         EquinoxGameLogic.GameStateEnum currentState = gameLogic.getCurrentState();
-        boolean cheats = gameLogic.areCheatsEnabled();
 
         // Gameplay Controls (Only active during PLAYING state)
         if (currentState == EquinoxGameLogic.GameStateEnum.PLAYING) {
@@ -57,54 +56,7 @@ public class InputHandler implements KeyListener {
                         gameState.isFiring = true; // Set firing flag on press
                     }
                     break;
-                 case KeyEvent.VK_Q:
-                     gameLogic.fireWaveBlast();
-                    break;
-                case KeyEvent.VK_E:
-                    gameLogic.fireLaserBeam();
-                    break;
-                case KeyEvent.VK_R:
-                    gameLogic.firePhaseShift();
-                    break;
             }
-        }
-
-        // Menu Controls (Only active during MENU state)
-        if (currentState == EquinoxGameLogic.GameStateEnum.MENU) {
-            switch (keyCode) {
-                case KeyEvent.VK_UP:
-                case KeyEvent.VK_W:
-                    gameLogic.menuUp();
-                    break;
-                case KeyEvent.VK_DOWN:
-                case KeyEvent.VK_S:
-                    gameLogic.menuDown();
-                    break;
-                case KeyEvent.VK_ENTER:
-                    gameLogic.menuSelect();
-                    break;
-                 case KeyEvent.VK_ESCAPE: // Allow Esc to exit from main menu
-                     gameLogic.exitGame();
-                     break;
-            }
-        }
-        
-        // Game Over Controls (Only active during GAME_OVER state)
-        if (currentState == EquinoxGameLogic.GameStateEnum.GAME_OVER) {
-            switch (keyCode) {
-                 case KeyEvent.VK_R:
-                     gameLogic.restartLevel();
-                     break;
-                 case KeyEvent.VK_ESCAPE: // Changed: Esc now handles giving up / submitting score
-                     gameLogic.handleGiveUp();
-                     break;
-            }
-        }
-
-         // Cheat Toggle (Can be toggled anytime for testing? Or only in Menu?)
-        // Example: Allow toggling with F1 anytime
-        if (keyCode == KeyEvent.VK_F1) {
-            gameLogic.toggleCheats();
         }
     }
 
@@ -114,7 +66,7 @@ public class InputHandler implements KeyListener {
         EquinoxGameLogic.GameStateEnum currentState = gameLogic.getCurrentState(); // Get current state
 
         switch (currentState) {
-            case MENU:
+            case MAIN_MENU:
                 // No specific release actions needed for menu
                 break;
             case PLAYING:
@@ -128,16 +80,6 @@ public class InputHandler implements KeyListener {
     }
 
     // Helper methods for state-specific input
-    private void handleMenuInputPressed(int keyCode) {
-        if (keyCode == KeyEvent.VK_UP || keyCode == KeyEvent.VK_W) {
-            gameLogic.menuUp();
-        } else if (keyCode == KeyEvent.VK_DOWN || keyCode == KeyEvent.VK_S) {
-            gameLogic.menuDown();
-        } else if (keyCode == KeyEvent.VK_ENTER) {
-            gameLogic.menuSelect();
-        }
-    }
-
     private void handlePlayingInputPressed(int keyCode) {
         // Ship movement flags
         if (keyCode == KeyEvent.VK_A || keyCode == KeyEvent.VK_LEFT) {
@@ -165,15 +107,6 @@ public class InputHandler implements KeyListener {
             if (gameState != null) {
                 gameState.isFiring = false; // Clear firing flag on release
             }
-        } 
-        else if (keyCode == KeyEvent.VK_Q) {
-            gameLogic.fireWaveBlast();
-        } 
-        else if (keyCode == KeyEvent.VK_E) {
-            gameLogic.fireLaserBeam();
-        } 
-        else if (keyCode == KeyEvent.VK_R) { // R is now Phase Shift in PLAYING state
-            gameLogic.firePhaseShift();
         }
     }
 

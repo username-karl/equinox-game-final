@@ -1,6 +1,7 @@
 package com.equinox.game.ui;
 
 import com.equinox.game.utils.Constants;
+import com.equinox.game.data.GameState;
 
 import javax.swing.*;
 import java.awt.*;
@@ -9,13 +10,15 @@ import java.awt.event.ActionListener;
 public class SettingsPanel extends JPanel {
 
     private JButton backButton;
+    private GameState gameState;
     // Add placeholders for settings components later
     private JLabel volumeLabel;
     // private JSlider volumeSlider; 
     private JLabel graphicsLabel;
-    // private JCheckBox fullscreenCheckbox;
+    private JCheckBox cheatsCheckbox;
 
-    public SettingsPanel(ActionListener backAction) {
+    public SettingsPanel(ActionListener backAction, GameState gameState) {
+        this.gameState = gameState;
         setLayout(new BorderLayout());
         setBackground(Color.BLACK); // Or load a background image later
 
@@ -55,10 +58,32 @@ public class SettingsPanel extends JPanel {
 
         // Placeholder for checkbox
         gbc.gridx = 1;
-        JLabel checkboxPlaceholder = new JLabel("[ Checkbox Placeholder ]");
+        JLabel checkboxPlaceholder = new JLabel("[ Fullscreen Placeholder ]");
         checkboxPlaceholder.setFont(new Font("Arial", Font.ITALIC, 20));
         checkboxPlaceholder.setForeground(Color.GRAY);
         settingsArea.add(checkboxPlaceholder, gbc);
+
+        // Cheats (Row 2)
+        gbc.gridx = 0;
+        gbc.gridy++;
+        JLabel cheatsLabel = new JLabel("Cheats:");
+        cheatsLabel.setFont(new Font("Arial", Font.PLAIN, 24));
+        cheatsLabel.setForeground(Color.WHITE);
+        settingsArea.add(cheatsLabel, gbc);
+        
+        gbc.gridx = 1;
+        cheatsCheckbox = new JCheckBox("Enable Cheats");
+        cheatsCheckbox.setFont(new Font("Arial", Font.PLAIN, 20));
+        cheatsCheckbox.setForeground(Color.WHITE);
+        cheatsCheckbox.setOpaque(false);
+        cheatsCheckbox.setFocusPainted(false);
+        cheatsCheckbox.addActionListener(e -> {
+            if (gameState != null) {
+                gameState.cheatsEnabled = cheatsCheckbox.isSelected();
+                System.out.println("Cheats Toggled via Settings: " + gameState.cheatsEnabled);
+            }
+        });
+        settingsArea.add(cheatsCheckbox, gbc);
 
         add(settingsArea, BorderLayout.CENTER);
 
@@ -74,6 +99,14 @@ public class SettingsPanel extends JPanel {
         backButton.addActionListener(backAction);
         bottomPanel.add(backButton);
         add(bottomPanel, BorderLayout.SOUTH);
+    }
+
+    // Method to update UI state based on GameState
+    public void updateSettingsState() {
+        if (gameState != null && cheatsCheckbox != null) {
+            cheatsCheckbox.setSelected(gameState.cheatsEnabled);
+        }
+        // Update other settings components (volume slider, etc.) here later
     }
 
     // Add methods later to get/set actual settings values

@@ -156,7 +156,7 @@ public class StageManager {
 
     public void showShop() {
         frame.remove(cutscenePanel);
-        gameLogic.setCurrentState(EquinoxGameLogic.GameStateEnum.MENU);
+        gameLogic.setCurrentState(EquinoxGameLogic.GameStateEnum.SHOP);
         frame.add(shopPanel);
         frame.pack();
         frame.revalidate();
