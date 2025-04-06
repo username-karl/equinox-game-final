@@ -73,7 +73,7 @@ public class StageManager {
 
         CutsceneData stage2Data = new CutsceneData();
         stage2Data.addFrame(new CutsceneData.CutsceneFrame(
-            "Narrator: Survived the anomaly and took down the Serpent",
+            "Narrator: Survived the anomaly and took down the Collector",
              assetLoader.getImage(Constants.BG_CUTSCENE_2_KEY),
              assetLoader.getImage(Constants.CAPTAIN_PORTRAIT_KEY)
         ));
@@ -111,6 +111,29 @@ public class StageManager {
              assetLoader.getImage(Constants.CAPTAIN_PORTRAIT_KEY)
         ));
         cutsceneDataMap.put(3, stage3Data);
+        
+        CutsceneData stage4Data = new CutsceneData();
+        stage4Data.addFrame(new CutsceneData.CutsceneFrame(
+            "Narrator: Took down the old war machine and escaped the unstable core.",
+             assetLoader.getImage(Constants.BG_DEFAULT_KEY),
+             assetLoader.getImage(Constants.CAPTAIN_PORTRAIT_KEY)
+        ));
+         stage4Data.addFrame(new CutsceneData.CutsceneFrame(
+            "Narrator: Used the energy signature data to pinpoint the Singularity's location. Setting course.",
+             assetLoader.getImage(Constants.BG_DEFAULT_KEY),
+             assetLoader.getImage(Constants.CAPTAIN_PORTRAIT_KEY)
+        ));
+         stage4Data.addFrame(new CutsceneData.CutsceneFrame(
+            "Narrator: Entering the Quantum Singularity. Physics are breaking down.",
+             assetLoader.getImage(Constants.BG_DEFAULT_KEY),
+             assetLoader.getImage(Constants.CAPTAIN_PORTRAIT_KEY)
+        ));
+        stage4Data.addFrame(new CutsceneData.CutsceneFrame(
+            "Readings are chaotic. The third piece is lost somewhere in this maelstrom.",
+             assetLoader.getImage(Constants.BG_DEFAULT_KEY),
+             assetLoader.getImage(Constants.CAPTAIN_PORTRAIT_KEY)
+        ));
+        cutsceneDataMap.put(4, stage4Data);
     }
 
     public void startCutscene() {
