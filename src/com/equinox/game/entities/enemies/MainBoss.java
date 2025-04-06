@@ -15,12 +15,12 @@ public class MainBoss extends SpecialEnemy{
     private int patternDuration = 120; // Reduced from 150
     private int patternTimer = patternDuration;
     private int currentPattern = 0; // 0: Rapid, 1: Spread, 2: Targeted
-    private Random random = new Random();
+    protected Random random = new Random();
 
     // Attack Cooldowns (adjust these values for difficulty)
-    private int rapidShotCooldown = 6; // Reduced from 8
-    private int spreadShotCooldown = 50; // Reduced from 60
-    private int targetedBurstCooldown = 65; // Reduced from 80
+    private int rapidShotCooldown = 10; // Increased from 6
+    private int spreadShotCooldown = 70; // Increased from 50
+    private int targetedBurstCooldown = 90; // Increased from 65
     private int currentRapidShotCooldown = 0;
     private int currentSpreadShotCooldown = 0;
     private int currentTargetedBurstCooldown = 0;

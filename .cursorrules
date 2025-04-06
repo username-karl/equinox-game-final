@@ -1,0 +1,55 @@
+# Equinox Game Project Rules
+
+## Code Structure
+- The game follows a basic Entity-Component-System (ECS-like) pattern with a centralized GameState
+- Each system (GameUpdateSystem, CollisionSystem, RenderingSystem) has a single responsibility
+- Updates should maintain the separation of concerns between systems
+- EquinoxGameLogic acts as the central controller for game state and system orchestration
+
+## Naming Conventions
+- Classes use PascalCase (EquinoxGameLogic, GameState, WeaverEnemy)
+- Methods use camelCase (createPlayerBullet, handleEnemyHit, executeAttackPattern)
+- Constants use UPPER_SNAKE_CASE (DAMAGE_LEVEL_FOR_MULTI_SHOT, WEAVER_HP_SCALE_FACTOR)
+- Fields use camelCase (fireRateUpgradeLevel, isFiring, shieldHitpoints)
+- UI components should be named with their purpose (e.g., upgradeLabels, costLabels)
+
+## Design Patterns
+- Prefer composition over inheritance where possible
+- Use setter injection for circular dependencies (GameUpdateSystem <-> CollisionSystem)
+- Maintain centralizing game state in the GameState class
+- Update system documentation in memory-bank files when making architectural changes
+- Enemy behavior via subclassing (Enemy -> WeaverEnemy, ShieldedEnemy, etc.) overriding move or takeDamage
+- Boss behavior via subclassing (Miniboss/MainBoss -> GuardianSpawn, etc.) overriding executeAttackPattern
+
+## HUD Design
+- HUD elements are positioned at the bottom of the screen for better visibility
+- Use color changes to indicate status (yellow/red for low health)
+- Display numerical values alongside visual indicators when helpful
+- Follow the established layout patterns when adding new HUD elements
+
+## Gameplay Balancing
+- Max cooldown reduction for abilities (Q, E, R) is capped at 60% to prevent spamming
+- Damage upgrade at level 4+ grants multi-shot ability (parallel bullets)
+- Shop costs follow an exponential scaling formula
+- Enemies move down when hitting either screen border
+- World difficulty scales via enemy stats (HP, Speed, ShieldHP) using base values and scaling factors from Constants
+- Enemy shooting frequency adjusted via base cooldowns/chance and randomization
+
+## Critical Implementation Paths
+- Shooting mechanics follow the pattern in systemPatterns.md (InputHandler -> GameState -> GameUpdateSystem -> CollisionSystem)
+- Upgrade effects should be consistent across related systems (ShopPanel, UpgradeManager, GameState)
+- Cooldown systems for weapons and abilities follow a similar pattern
+- Enemy spawning uses world number and randomness to select enemy type and calculate scaled stats based on Constants
+- Boss attacks are specific boss subclasses overriding executeAttackPattern using pattern timers/cooldowns
+
+## Project Evolution
+- The shop system is fully implemented with upgrade purchase functionality
+- The HUD has been relocated to the bottom of the screen and improved
+- Enemy AI has been enhanced to move down when hitting either screen border
+- The cutscene system has been enhanced with better timing and transitions
+- Implemented EnemyWType1, WeaverEnemy, ShieldedEnemy for Worlds 2-4
+- Implemented unique boss patterns for GuardianSpawn (W2 Mini), ParadoxEntity (W3 Main), TempleGuardian (W4 Main)
+- Removed problematic LungerEnemy
+- Tuned enemy difficulty (HP/Speed scaling, firing rates)
+- Fixed game over bug related to off-screen enemies
+- **Next:** Implement Settings/Credits screens, refine wave compositions, implement W2 Main Boss pattern 

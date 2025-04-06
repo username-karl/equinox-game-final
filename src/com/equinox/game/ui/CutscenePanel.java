@@ -166,8 +166,8 @@ public class CutscenePanel extends JPanel implements KeyListener {
         }
     }
 
-    // Updated logic to advance frame
-    private void advanceFrame() {
+    // Updated logic to advance frame - Make public
+    public void advanceFrame() {
          if (currentCutsceneData == null || !currentCutsceneData.isActive()) return;
 
          currentCutsceneData.nextFrame(); // Tell data object to advance

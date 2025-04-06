@@ -41,7 +41,7 @@ public class Constants {
     public static final int BULLET_VELOCITY_Y = -20;
     public static final long BULLET_COOLDOWN_MS = 250; // Base cooldown for standard bullet
     public static final double FIRE_RATE_REDUCTION_PER_LEVEL = 0.10; // 10% reduction per upgrade
-    public static final double FIRE_RATE_MAX_REDUCTION = 0.75; // Max 75% reduction
+    public static final double FIRE_RATE_MAX_REDUCTION = 0.60; // Max 60% reduction (Aligned with abilities, was 0.75)
     public static final int BULLET_BASE_DAMAGE = 1; // Base damage per bullet
     public static final int BULLET_DAMAGE_INCREASE_PER_LEVEL = 1; // Damage +1 per upgrade level
     public static final int BASE_SHOTS_PER_FIRE = 1; // Base number of bullets per shot
@@ -52,6 +52,7 @@ public class Constants {
     // Enemy Bullet Properties
     public static final int ENEMY_BULLET_WIDTH = TILE_SIZE / 8;
     public static final int ENEMY_BULLET_HEIGHT = TILE_SIZE / 2;
+    public static final double ENEMY_BULLET_SPEED = 4.0; // Default speed for enemy bullets
     // Enemy bullet velocity might vary per enemy type
 
     // Abilities
@@ -152,5 +153,41 @@ public class Constants {
     // --- UI & Misc Keys ---
     public static final String PLACEHOLDER_ICON_KEY = "placeholder_icon";
     public static final String BG_SHOP_KEY = "bg_shop";
+
+    // New Enemy Type 1 Constants
+    public static final int ENEMY_W_TYPE1_BASE_HP = 25;
+    public static final double ENEMY_W_TYPE1_BASE_SPEED = 1.5;
+    public static final long ENEMY_W_TYPE1_BASE_FIRE_DELAY = 3500;
+    public static final double ENEMY_W_TYPE1_HP_SCALE_FACTOR = 1.12;
+    public static final double ENEMY_W_TYPE1_SPEED_SCALE_FACTOR = 1.1;
+    public static final double ENEMY_W_TYPE1_FIRE_RATE_SCALE_FACTOR = 0.85;
+    public static final String ENEMY_W_TYPE1_ASSET_PREFIX = "enemy_w";
+    public static final String ENEMY_W_TYPE1_ASSET_SUFFIX = "_type1";
+
+    // New Enemy Type Weaver Constants
+    public static final int WEAVER_BASE_HP = 20;
+    public static final double WEAVER_BASE_VERTICAL_SPEED = 0.8;
+    public static final double WEAVER_HORIZONTAL_AMPLITUDE = 40.0;
+    public static final double WEAVER_HORIZONTAL_FREQUENCY = 0.03;
+    public static final double WEAVER_HP_SCALE_FACTOR = 1.12;
+    public static final double WEAVER_SPEED_SCALE_FACTOR = 1.1;
+    public static final String WEAVER_ASSET_KEY_PLACEHOLDER = ENEMY_W2_TYPE4_IMG_KEY;
+
+    // New Enemy Type 3 (Shielded - World 3+) Constants
+    public static final int SHIELDED_BASE_HP = 15;
+    public static final int SHIELDED_BASE_SHIELD_HP = 30;
+    public static final double SHIELDED_BASE_SPEED = 1.2;
+    public static final double SHIELDED_HP_SCALE_FACTOR = 1.08;
+    public static final double SHIELDED_SHIELD_HP_SCALE_FACTOR = 1.15;
+    public static final double SHIELDED_SPEED_SCALE_FACTOR = 1.05;
+    public static final String SHIELDED_ASSET_KEY_PLACEHOLDER = ENEMY_W3_TYPE3_IMG_KEY;
+
+    // Shop Costs
+    public static final int BASE_COST = 100;
+    public static final double COST_MULTIPLIER = 1.55;
+
+    public static final double WAVE_BLAST_COOLDOWN_REDUCTION_PER_LEVEL = 0.15;
+    public static final double PHASE_SHIFT_COOLDOWN_REDUCTION_PER_LEVEL = 0.10;
+    public static final double MAX_COOLDOWN_REDUCTION = 0.60;
 
 } 

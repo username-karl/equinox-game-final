@@ -11,8 +11,10 @@ import com.equinox.game.utils.Constants;
 
 // Extracted into its own file
 public class Miniboss extends SpecialEnemy{
-    private int patternCooldown = 100;
-    private int currentPatternCooldown = 0;
+    private int patternCooldown = 150;
+    protected int currentPatternCooldown = 0;
+
+    protected static final Random random = new Random();
 
     // Constructor chain inheriting from SpecialEnemy
     public Miniboss(int x, int y, int width, int height, Image img, int enemyVelocityX, Image specialEnemyImg) {

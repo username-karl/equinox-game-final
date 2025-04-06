@@ -95,7 +95,7 @@ public class GameUpdateSystem {
                 }
 
                 // Enemy shooting logic - Add random chance for regular enemies
-                int shootChance = 2; // e.g., 2% chance per frame if cooldown is ready
+                int shootChance = 1; // Reduced from 2 (e.g., 1% chance per frame if cooldown is ready)
                 
                 if (enemy instanceof com.equinox.game.entities.enemies.ShootingEnemy) {
                     if (random.nextInt(100) < shootChance) { 
@@ -106,14 +106,15 @@ public class GameUpdateSystem {
                      // Bosses handle their own attack patterns/timing
                      ((com.equinox.game.entities.enemies.Miniboss) enemy).executeAttackPattern(gameState.enemyBulletArray, assetLoader);
                  } else if (enemy instanceof com.equinox.game.entities.enemies.MainBoss) {
-                     // Bosses handle their own attack patterns/timing
-                     ((com.equinox.game.entities.enemies.MainBoss) enemy).executeAttackPattern(gameState, assetLoader); // Needs GameState for player position
+                     ((com.equinox.game.entities.enemies.MainBoss) enemy).executeAttackPattern(gameState, assetLoader);
                  }
                 
-                if (enemy.getY() >= gameState.ship.getY()) {
-                    // Call the renamed method
+                // Check if enemy reached the player's Y position (Game Over condition)
+                // Only trigger if the bottom of the enemy reaches the top of the ship's Y coordinate
+                if (enemy.getY() + enemy.getHeight() > gameState.ship.getY()) {
+                    System.out.println("Game Over triggered by enemy at Y: " + enemy.getY() + " vs Ship Y: " + gameState.ship.getY()); // Debug log
                     gameLogic.signalGameOver(); 
-                    return; 
+                    return; // Exit loop immediately on game over
                 }
             }
         }
@@ -347,7 +348,7 @@ public class GameUpdateSystem {
          // This method needs to be implemented
          // Currently GameState calls gameState.dropLoot() which doesn't exist
          // Example: Add a small chance to drop money
-         if (random.nextInt(100) < 10) { // 10% chance
+         if (random.nextInt(100) < 15) { // Increased chance from 10% to 15%
             int lootAmount = 10 + random.nextInt(16); // e.g., 10-25 money
             gameState.addMoney(lootAmount);
             System.out.println("Enemy dropped " + lootAmount + " money!");
@@ -359,7 +360,6 @@ public class GameUpdateSystem {
         if (gameState == null || gameState.currentStage == null || gameState.enemyArray == null || assetLoader == null) return;
         
         int stageNum = gameState.currentStage.getStageNumber();
-        Random random = new Random();
         int currentWave = gameState.currentStage.getCurrentWave();
         int maxEnemyRows = Constants.ENEMY_INITIAL_ROWS + (currentWave / 2);
         int maxEnemyColumns = Constants.ENEMY_INITIAL_COLUMNS + (currentWave);
@@ -367,6 +367,7 @@ public class GameUpdateSystem {
         maxEnemyColumns = Math.min(maxEnemyColumns, Constants.ENEMY_MAX_COLS);
 
         gameState.enemyArray.clear(); 
+        Image bulletImg = assetLoader.getImage(Constants.ENEMY_LASER_IMG_KEY); // Load bullet image once
 
         for (int r = 0; r < maxEnemyRows; r++) {
             for (int c = 0; c < maxEnemyColumns; c++) {
@@ -374,56 +375,204 @@ public class GameUpdateSystem {
                 Enemy enemy;
                 int spawnX = Constants.ENEMY_START_X + c * Constants.ENEMY_WIDTH;
                 int spawnY = Constants.ENEMY_START_Y + r * Constants.ENEMY_HEIGHT;
-                int baseHealth = 1; // Base health for world 1
+                int baseHealth = 1; // Default base health
 
                 // Determine enemy type, image, and health based on stage
                 switch (stageNum) {
                     case 1: 
                         enemyImg = assetLoader.getRandomEnemyImage(); 
-                        baseHealth = 1; // Explicitly W1 health
+                        // baseHealth remains 1
                         if (random.nextInt(6) == 3) { 
-                             enemy = new ShootingEnemy(spawnX, spawnY, Constants.ENEMY_WIDTH, Constants.ENEMY_HEIGHT, enemyImg, Constants.ENEMY_BASE_VELOCITY_X); // Uses its own constructor default health (2)
+                             enemy = new ShootingEnemy(spawnX, spawnY, Constants.ENEMY_WIDTH, Constants.ENEMY_HEIGHT, enemyImg, Constants.ENEMY_BASE_VELOCITY_X);
                         } else {
-                            enemy = new FastEnemy(spawnX, spawnY, Constants.ENEMY_WIDTH, Constants.ENEMY_HEIGHT, enemyImg, Constants.ENEMY_BASE_VELOCITY_X + 3); // Uses its own constructor default health (1)
+                            enemy = new FastEnemy(spawnX, spawnY, Constants.ENEMY_WIDTH, Constants.ENEMY_HEIGHT, enemyImg, Constants.ENEMY_BASE_VELOCITY_X + 3);
                         }
                         break;
-                    case 2: 
-                        String[] w2Keys = {Constants.ENEMY_W2_TYPE1_IMG_KEY, Constants.ENEMY_W2_TYPE2_IMG_KEY, Constants.ENEMY_W2_TYPE3_IMG_KEY, Constants.ENEMY_W2_TYPE4_IMG_KEY, Constants.ENEMY_W2_TYPE5_IMG_KEY };
-                        enemyImg = assetLoader.getImage(w2Keys[random.nextInt(w2Keys.length)]);
-                        baseHealth = 2; // Example: W2 enemies have 2 base HP
-                        // TODO: Create specific W2 Enemy subclasses
-                        enemy = new Enemy(spawnX, spawnY, Constants.ENEMY_WIDTH, Constants.ENEMY_HEIGHT, enemyImg, Constants.ENEMY_BASE_VELOCITY_X + 1, baseHealth); 
-                        break;
-                    case 3: 
-                        String[] w3Keys = {Constants.ENEMY_W3_TYPE1_IMG_KEY, Constants.ENEMY_W3_TYPE2_IMG_KEY, Constants.ENEMY_W3_TYPE3_IMG_KEY, Constants.ENEMY_W3_TYPE4_IMG_KEY, Constants.ENEMY_W3_TYPE5_IMG_KEY };
-                        enemyImg = assetLoader.getImage(w3Keys[random.nextInt(w3Keys.length)]);
-                        baseHealth = 3; // Example: W3 enemies have 3 base HP
-                         // TODO: Create specific W3 Enemy subclasses
-                        enemy = new Enemy(spawnX, spawnY, Constants.ENEMY_WIDTH, Constants.ENEMY_HEIGHT, enemyImg, Constants.ENEMY_BASE_VELOCITY_X + 2, baseHealth); 
+                    case 2:
+                        int randomTypeW2 = random.nextInt(10); 
+                        int worldExponentW2 = stageNum - 1; 
+                        enemy = null; 
+
+                        // Spawn Weaver (30% chance: 0, 1, 2)
+                        if (randomTypeW2 < 3) { 
+                            int scaledHp = (int) (Constants.WEAVER_BASE_HP * Math.pow(Constants.WEAVER_HP_SCALE_FACTOR, worldExponentW2));
+                            double scaledVSpeed = Constants.WEAVER_BASE_VERTICAL_SPEED * Math.pow(Constants.WEAVER_SPEED_SCALE_FACTOR, worldExponentW2);
+                            double amplitude = Constants.WEAVER_HORIZONTAL_AMPLITUDE;
+                            double frequency = Constants.WEAVER_HORIZONTAL_FREQUENCY;
+
+                            enemyImg = assetLoader.getImage(Constants.WEAVER_ASSET_KEY_PLACEHOLDER); 
+
+                            if (enemyImg != null) {
+                                enemy = new WeaverEnemy(spawnX, spawnY, Constants.ENEMY_WIDTH, Constants.ENEMY_HEIGHT, 
+                                                        enemyImg, scaledHp, scaledVSpeed, amplitude, frequency);
+                            } else {
+                                System.err.println("Warning: Missing assets for WeaverEnemy (World " + stageNum + "). Spawning fallback.");
+                            }
+                        } 
+                        // Spawn EnemyWType1 (40% chance: 3, 4, 5, 6)
+                        else if (randomTypeW2 < 7) { 
+                            int scaledHp = (int) (Constants.ENEMY_W_TYPE1_BASE_HP * Math.pow(Constants.ENEMY_W_TYPE1_HP_SCALE_FACTOR, worldExponentW2));
+                            double scaledSpeed = Constants.ENEMY_W_TYPE1_BASE_SPEED * Math.pow(Constants.ENEMY_W_TYPE1_SPEED_SCALE_FACTOR, worldExponentW2);
+                            long baseFireDelay = Constants.ENEMY_W_TYPE1_BASE_FIRE_DELAY;
+                            int shotsToFire = 1; // World 2 fires 1 shot
+
+                            String actualAssetKey = Constants.ENEMY_W2_TYPE1_IMG_KEY; // W2 key
+                            enemyImg = assetLoader.getImage(actualAssetKey);
+                            
+                            if (enemyImg != null && bulletImg != null) {
+                                enemy = new EnemyWType1(spawnX, spawnY, Constants.ENEMY_WIDTH, Constants.ENEMY_HEIGHT, 
+                                                        enemyImg, scaledHp, scaledSpeed, baseFireDelay, gameState, bulletImg, shotsToFire); // Pass shotsToFire
+                            } else {
+                                System.err.println("Warning: Missing assets for EnemyWType1 (World " + stageNum + "). Spawning fallback.");
+                            }
+                        } 
+                        // Spawn Placeholders (30% chance: 7, 8, 9)
+                        else { 
+                            String[] keys;
+                            int speedBonus;
+                            keys = new String[]{Constants.ENEMY_W2_TYPE2_IMG_KEY, Constants.ENEMY_W2_TYPE3_IMG_KEY, Constants.ENEMY_W2_TYPE5_IMG_KEY }; // Avoid W2_Type4 placeholder
+                            baseHealth = 2; speedBonus = 1; 
+                            enemyImg = assetLoader.getImage(keys[random.nextInt(keys.length)]);
+                            if (enemyImg != null) {
+                                enemy = new Enemy(spawnX, spawnY, Constants.ENEMY_WIDTH, Constants.ENEMY_HEIGHT, enemyImg, Constants.ENEMY_BASE_VELOCITY_X + speedBonus, baseHealth); 
+                            } else {
+                                System.err.println("Warning: Missing placeholder assets (World " + stageNum + "). Spawning fallback.");
+                            }
+                        }
+                        break; 
+                    case 3:
+                        int randomTypeW3 = random.nextInt(10); 
+                        int worldExponentW3 = stageNum - 1; 
+                        enemy = null; 
+
+                        // Spawn Shielded (30% chance: 0, 1, 2)
+                        if (randomTypeW3 < 3) {
+                            int scaledHp = (int) (Constants.SHIELDED_BASE_HP * Math.pow(Constants.SHIELDED_HP_SCALE_FACTOR, worldExponentW3));
+                            int scaledShieldHp = (int) (Constants.SHIELDED_BASE_SHIELD_HP * Math.pow(Constants.SHIELDED_SHIELD_HP_SCALE_FACTOR, worldExponentW3));
+                            double scaledSpeed = Constants.SHIELDED_BASE_SPEED * Math.pow(Constants.SHIELDED_SPEED_SCALE_FACTOR, worldExponentW3);
+                            
+                            enemyImg = assetLoader.getImage(Constants.SHIELDED_ASSET_KEY_PLACEHOLDER);
+
+                            if (enemyImg != null) {
+                                enemy = new ShieldedEnemy(spawnX, spawnY, Constants.ENEMY_WIDTH, Constants.ENEMY_HEIGHT,
+                                                          enemyImg, scaledHp, scaledShieldHp, scaledSpeed);
+                            } else {
+                                System.err.println("Warning: Missing assets for ShieldedEnemy (World " + stageNum + "). Spawning fallback.");
+                            }
+                        } 
+                        // Spawn Weaver (30% chance: 3, 4, 5) - Replace Lunger
+                        else if (randomTypeW3 < 6) { 
+                             int scaledHp = (int) (Constants.WEAVER_BASE_HP * Math.pow(Constants.WEAVER_HP_SCALE_FACTOR, worldExponentW3));
+                            double scaledVSpeed = Constants.WEAVER_BASE_VERTICAL_SPEED * Math.pow(Constants.WEAVER_SPEED_SCALE_FACTOR, worldExponentW3);
+                            double amplitude = Constants.WEAVER_HORIZONTAL_AMPLITUDE;
+                            double frequency = Constants.WEAVER_HORIZONTAL_FREQUENCY;
+
+                            enemyImg = assetLoader.getImage(Constants.WEAVER_ASSET_KEY_PLACEHOLDER); 
+
+                            if (enemyImg != null) {
+                                enemy = new WeaverEnemy(spawnX, spawnY, Constants.ENEMY_WIDTH, Constants.ENEMY_HEIGHT, 
+                                                        enemyImg, scaledHp, scaledVSpeed, amplitude, frequency);
+                            } else {
+                                System.err.println("Warning: Missing assets for WeaverEnemy (World " + stageNum + "). Spawning fallback.");
+                            }
+                        }
+                        // Spawn EnemyWType1 (30% chance: 6, 7, 8)
+                        else if (randomTypeW3 < 9) { 
+                            int scaledHp = (int) (Constants.ENEMY_W_TYPE1_BASE_HP * Math.pow(Constants.ENEMY_W_TYPE1_HP_SCALE_FACTOR, worldExponentW3));
+                            double scaledSpeed = Constants.ENEMY_W_TYPE1_BASE_SPEED * Math.pow(Constants.ENEMY_W_TYPE1_SPEED_SCALE_FACTOR, worldExponentW3);
+                            long baseFireDelay = Constants.ENEMY_W_TYPE1_BASE_FIRE_DELAY;
+                            int shotsToFire = 1; // World 3 fires 1 shot
+
+                            String actualAssetKey = Constants.ENEMY_W3_TYPE1_IMG_KEY; // W3 key
+                            enemyImg = assetLoader.getImage(actualAssetKey);
+
+                            if (enemyImg != null && bulletImg != null) {
+                                enemy = new EnemyWType1(spawnX, spawnY, Constants.ENEMY_WIDTH, Constants.ENEMY_HEIGHT,
+                                                        enemyImg, scaledHp, scaledSpeed, baseFireDelay, gameState, bulletImg, shotsToFire); // Pass shotsToFire
+                            } else {
+                                System.err.println("Warning: Missing assets for EnemyWType1 (World " + stageNum + "). Spawning fallback.");
+                            }
+                        }
+                        // Spawn Placeholders (10% chance: 9)
+                        else { 
+                            String[] keys = {Constants.ENEMY_W3_TYPE2_IMG_KEY, Constants.ENEMY_W3_TYPE4_IMG_KEY, Constants.ENEMY_W3_TYPE5_IMG_KEY }; // Use non-shielded W3 placeholders
+                            baseHealth = 3; int speedBonus = 2;
+                            enemyImg = assetLoader.getImage(keys[random.nextInt(keys.length)]);
+                            if (enemyImg != null) {
+                                enemy = new Enemy(spawnX, spawnY, Constants.ENEMY_WIDTH, Constants.ENEMY_HEIGHT, enemyImg, Constants.ENEMY_BASE_VELOCITY_X + speedBonus, baseHealth);
+                            } else {
+                                System.err.println("Warning: Missing placeholder assets (World " + stageNum + "). Spawning fallback.");
+                            }
+                        }
+                        // Fallback if any enemy creation above failed
+                        if (enemy == null) { enemy = createFallbackEnemy(spawnX, spawnY); }
                         break;
                     case 4: 
-                        String[] w4Keys = {Constants.ENEMY_W4_TYPE1_IMG_KEY, Constants.ENEMY_W4_TYPE2_IMG_KEY, Constants.ENEMY_W4_TYPE3_IMG_KEY, Constants.ENEMY_W4_TYPE4_IMG_KEY, Constants.ENEMY_W4_TYPE5_IMG_KEY };
-                        enemyImg = assetLoader.getImage(w4Keys[random.nextInt(w4Keys.length)]);
-                        baseHealth = 4; // Example: W4 enemies have 4 base HP
-                         // TODO: Create specific W4 Enemy subclasses
-                        enemy = new Enemy(spawnX, spawnY, Constants.ENEMY_WIDTH, Constants.ENEMY_HEIGHT, enemyImg, Constants.ENEMY_BASE_VELOCITY_X + 3, baseHealth); 
-                        break;
-                    default: 
-                         enemyImg = assetLoader.getRandomEnemyImage();
-                         baseHealth = 1;
-                         enemy = new Enemy(spawnX, spawnY, Constants.ENEMY_WIDTH, Constants.ENEMY_HEIGHT, enemyImg, Constants.ENEMY_BASE_VELOCITY_X, baseHealth); 
+                        int randomTypeW4 = random.nextInt(10); 
+                        int worldExponentW4 = stageNum - 1; 
+                        enemy = null; 
+
+                        // Spawn Weaver (30% chance: 0, 1, 2) - Replace Lunger
+                        if (randomTypeW4 < 3) { 
+                             int scaledHp = (int) (Constants.WEAVER_BASE_HP * Math.pow(Constants.WEAVER_HP_SCALE_FACTOR, worldExponentW4));
+                            double scaledVSpeed = Constants.WEAVER_BASE_VERTICAL_SPEED * Math.pow(Constants.WEAVER_SPEED_SCALE_FACTOR, worldExponentW4);
+                            double amplitude = Constants.WEAVER_HORIZONTAL_AMPLITUDE;
+                            double frequency = Constants.WEAVER_HORIZONTAL_FREQUENCY;
+
+                            enemyImg = assetLoader.getImage(Constants.WEAVER_ASSET_KEY_PLACEHOLDER); 
+
+                            if (enemyImg != null) {
+                                enemy = new WeaverEnemy(spawnX, spawnY, Constants.ENEMY_WIDTH, Constants.ENEMY_HEIGHT, 
+                                                        enemyImg, scaledHp, scaledVSpeed, amplitude, frequency);
+                            } else {
+                                System.err.println("Warning: Missing assets for WeaverEnemy (World " + stageNum + "). Spawning fallback.");
+                            }
+                        } 
+                        // Spawn EnemyWType1 (40% chance: 3, 4, 5, 6)
+                        else if (randomTypeW4 < 7) { 
+                            int scaledHp = (int) (Constants.ENEMY_W_TYPE1_BASE_HP * Math.pow(Constants.ENEMY_W_TYPE1_HP_SCALE_FACTOR, worldExponentW4));
+                            double scaledSpeed = Constants.ENEMY_W_TYPE1_BASE_SPEED * Math.pow(Constants.ENEMY_W_TYPE1_SPEED_SCALE_FACTOR, worldExponentW4);
+                            long baseFireDelay = Constants.ENEMY_W_TYPE1_BASE_FIRE_DELAY;
+                            int shotsToFire = 3; // World 4 fires 3 shots
+
+                            String actualAssetKey = Constants.ENEMY_W4_TYPE1_IMG_KEY; // W4 key
+                            enemyImg = assetLoader.getImage(actualAssetKey);
+                            
+                            if (enemyImg != null && bulletImg != null) {
+                                enemy = new EnemyWType1(spawnX, spawnY, Constants.ENEMY_WIDTH, Constants.ENEMY_HEIGHT, 
+                                                        enemyImg, scaledHp, scaledSpeed, baseFireDelay, gameState, bulletImg, shotsToFire); // Pass shotsToFire
+                            } else {
+                                System.err.println("Warning: Missing assets for EnemyWType1 (World " + stageNum + "). Spawning fallback.");
+                            }
+                        } 
+                        // Spawn Placeholders (30% chance: 7, 8, 9)
+                        else { 
+                            String[] keys;
+                            int speedBonus;
+                            keys = new String[]{Constants.ENEMY_W4_TYPE2_IMG_KEY, Constants.ENEMY_W4_TYPE3_IMG_KEY, Constants.ENEMY_W4_TYPE5_IMG_KEY }; // Avoid W4_Type4 placeholder
+                            baseHealth = 4; speedBonus = 3; 
+                            enemyImg = assetLoader.getImage(keys[random.nextInt(keys.length)]);
+                            if (enemyImg != null) {
+                                enemy = new Enemy(spawnX, spawnY, Constants.ENEMY_WIDTH, Constants.ENEMY_HEIGHT, enemyImg, Constants.ENEMY_BASE_VELOCITY_X + speedBonus, baseHealth); 
+                            } else {
+                                System.err.println("Warning: Missing placeholder assets (World " + stageNum + "). Spawning fallback.");
+                            }
+                        }
+                        // Fallback if any enemy creation above failed
+                        if (enemy == null) { enemy = createFallbackEnemy(spawnX, spawnY); }
+                        break; 
+                    default: // Fallback for any unexpected stage number
+                         enemy = createFallbackEnemy(spawnX, spawnY); 
                         break;
                 }
                 
-                if (enemyImg == null) { // Fallback logic
-                    System.err.println("Warning: Failed to load intended enemy image for stage " + stageNum + ". Spawning fallback Stage 1 enemy.");
-                     enemyImg = assetLoader.getRandomEnemyImage(); 
-                     if (enemyImg != null) {
-                        // Spawn fallback with base health 1
-                         enemy = new Enemy(spawnX, spawnY, Constants.ENEMY_WIDTH, Constants.ENEMY_HEIGHT, enemyImg, Constants.ENEMY_BASE_VELOCITY_X, 1); 
-                     } else {
-                         System.err.println("CRITICAL: Failed to load even fallback Stage 1 enemy image. Skipping enemy spawn.");
-                         continue; 
+                // The original fallback logic is mostly covered now, but keep a final check
+                if (enemy == null) { 
+                     System.err.println("CRITICAL: Enemy object is null after switch. Spawning fallback.");
+                     enemy = createFallbackEnemy(spawnX, spawnY);
+                     if (enemy == null) { // If even fallback fails
+                        System.err.println("CRITICAL: Fallback enemy creation failed. Skipping spawn.");
+                        continue;
                      }
                 }
 
@@ -431,7 +580,17 @@ public class GameUpdateSystem {
             }
         }
         gameState.enemyCount = gameState.enemyArray.size();
-        System.out.println("Created " + gameState.enemyCount + " enemies for wave " + currentWave);
+        System.out.println("Created " + gameState.enemyCount + " enemies for wave " + currentWave + " of Stage " + stageNum);
+    }
+
+    // Helper method for creating fallback enemy to reduce code duplication
+    private Enemy createFallbackEnemy(int spawnX, int spawnY) {
+        Image fallbackImg = assetLoader.getRandomEnemyImage(); // Use W1 random image as fallback
+        if (fallbackImg != null) {
+            return new Enemy(spawnX, spawnY, Constants.ENEMY_WIDTH, Constants.ENEMY_HEIGHT, fallbackImg, Constants.ENEMY_BASE_VELOCITY_X, 1);
+        } else {
+            return null; // Indicate failure to create even fallback
+        }
     }
 
     public void createMiniboss(){
@@ -443,27 +602,25 @@ public class GameUpdateSystem {
         switch (stageNum) {
              case 1: // World 1 Miniboss (Original)
                 Image minibossImg1 = assetLoader.getImage(Constants.MINIBOSS_IMG_KEY);
-                miniboss = new com.equinox.game.entities.enemies.Miniboss(
+                miniboss = new Miniboss( 
                     Constants.BOARD_WIDTH/2 - Constants.TILE_SIZE * 2, Constants.TILE_SIZE,
                     Constants.TILE_SIZE*4, Constants.TILE_SIZE*4, minibossImg1, Constants.ENEMY_BASE_VELOCITY_X,
-                    minibossImg1, 50, 100, 2, "Quantum Anomaly" );
+                    minibossImg1, 50, 100, 2, "Quantum Anomaly" ); 
                 break;
              case 2: // World 2 Miniboss (Guardian Spawn)
-                // TODO: Create GuardianSpawn class extending Miniboss or SpecialEnemy
                  Image minibossImg2 = assetLoader.getImage(Constants.GUARDIAN_SPAWN_IMG_KEY);
                  if (minibossImg2 != null) {
-                     // Use Miniboss for now, replace with GuardianSpawn when created
-                     miniboss = new com.equinox.game.entities.enemies.Miniboss(
+                     // Use new GuardianSpawn class
+                     miniboss = new GuardianSpawn( 
                          Constants.BOARD_WIDTH/2 - Constants.TILE_SIZE * 2, Constants.TILE_SIZE,
                          Constants.TILE_SIZE*4, Constants.TILE_SIZE*4, minibossImg2, Constants.ENEMY_BASE_VELOCITY_X,
-                         minibossImg2, 75, 90, 3, "Guardian Spawn" ); // Example stats
+                         minibossImg2, 75, 90, 3, "Guardian Spawn" ); // Pass stats to new constructor
                  }
                 break;
-            // Case 3 & 4: No miniboss specified in the requirements?
+            // Case 3 & 4: No miniboss specified, fallback handled later
             default:
                 System.out.println("No specific miniboss defined for stage " + stageNum + ". Attempting fallback.");
-                // REMOVED return; - Allow fallback logic to execute
-                break; // Added break to prevent unintended fallthrough if more cases added later
+                break; 
         }
 
         // --- Fallback Logic --- 
@@ -471,10 +628,11 @@ public class GameUpdateSystem {
              System.err.println("Warning: Failed to create intended miniboss for stage " + stageNum + ". Falling back to Stage 1 Miniboss.");
             Image fallbackImg = assetLoader.getImage(Constants.MINIBOSS_IMG_KEY);
             if (fallbackImg != null) {
-                miniboss = new com.equinox.game.entities.enemies.Miniboss(
+                // Ensure fallback call matches Miniboss constructor
+                miniboss = new Miniboss(
                     Constants.BOARD_WIDTH/2 - Constants.TILE_SIZE * 2, Constants.TILE_SIZE,
                     Constants.TILE_SIZE*4, Constants.TILE_SIZE*4, fallbackImg, Constants.ENEMY_BASE_VELOCITY_X,
-                    fallbackImg, 50, 100, 2, "Quantum Anomaly (Fallback)" );
+                    fallbackImg, 50, 100, 2, "Quantum Anomaly (Fallback)" ); 
             }
         }
         // --------------------
@@ -499,45 +657,44 @@ public class GameUpdateSystem {
         switch (stageNum) {
             case 1: // World 1 Main Boss (Original)
                  bossImg = assetLoader.getImage(Constants.MAINBOSS_IMG_KEY);
-                boss = new com.equinox.game.entities.enemies.MainBoss(
+                boss = new MainBoss( 
                         Constants.BOARD_WIDTH/2 - Constants.TILE_SIZE * 4, Constants.TILE_SIZE,
                         Constants.TILE_SIZE*8, Constants.TILE_SIZE*8, bossImg, Constants.ENEMY_BASE_VELOCITY_X,
-                        bossImg, 100, 75, 2, "The Collector" );
+                        bossImg, 100, 75, 2, "The Collector" ); 
                 break;
              case 2: // World 2 Boss (Guardian Construct)
-                // TODO: Create GuardianConstruct class extending MainBoss or SpecialEnemy
                 bossImg = assetLoader.getImage(Constants.GUARDIAN_CONSTRUCT_IMG_KEY);
                  if (bossImg != null) {
-                     // Use MainBoss for now, replace with GuardianConstruct when created
-                    boss = new com.equinox.game.entities.enemies.MainBoss(
+                     // TODO: Create GuardianConstruct class extending MainBoss if specific behavior needed, otherwise use MainBoss
+                    boss = new MainBoss( 
                             Constants.BOARD_WIDTH/2 - Constants.TILE_SIZE * 4, Constants.TILE_SIZE,
                             Constants.TILE_SIZE*8, Constants.TILE_SIZE*8, bossImg, Constants.ENEMY_BASE_VELOCITY_X,
-                            bossImg, 150, 60, 3, "Guardian Construct" ); // Example stats
+                            bossImg, 150, 60, 3, "Guardian Construct" ); // Ensure constructor match
                  }
                  break;
              case 3: // World 3 Boss (Paradox Entity)
-                 // TODO: Create ParadoxEntity class
                  bossImg = assetLoader.getImage(Constants.PARADOX_ENTITY_IMG_KEY);
                  if (bossImg != null) {
-                    boss = new com.equinox.game.entities.enemies.MainBoss(
-                            Constants.BOARD_WIDTH/2 - Constants.TILE_SIZE * 5, Constants.TILE_SIZE, // Slightly different size?
-                            Constants.TILE_SIZE*10, Constants.TILE_SIZE*10, bossImg, Constants.ENEMY_BASE_VELOCITY_X -1, // Slower base speed?
-                            bossImg, 200, 50, 3, "Paradox Entity" ); // Example stats
+                    // Use new ParadoxEntity class
+                    boss = new ParadoxEntity( 
+                            Constants.BOARD_WIDTH/2 - Constants.TILE_SIZE * 5, Constants.TILE_SIZE, 
+                            Constants.TILE_SIZE*10, Constants.TILE_SIZE*10, bossImg, Constants.ENEMY_BASE_VELOCITY_X -1, 
+                            bossImg, 200, 50, 3, "Paradox Entity" ); // Pass stats to new constructor
                  }
                  break;
              case 4: // World 4 Boss (Temple Guardian - FINAL)
-                 // TODO: Create TempleGuardian class
                  bossImg = assetLoader.getImage(Constants.TEMPLE_GUARDIAN_IMG_KEY);
                   if (bossImg != null) {
-                    boss = new com.equinox.game.entities.enemies.MainBoss(
-                            Constants.BOARD_WIDTH/2 - Constants.TILE_SIZE * 6, Constants.TILE_SIZE, // Larger?
+                    // Use new TempleGuardian class
+                    boss = new TempleGuardian( 
+                            Constants.BOARD_WIDTH/2 - Constants.TILE_SIZE * 6, Constants.TILE_SIZE, 
                             Constants.TILE_SIZE*12, Constants.TILE_SIZE*12, bossImg, Constants.ENEMY_BASE_VELOCITY_X, 
-                            bossImg, 250, 40, 4, "Temple Guardian" ); // Example stats
+                            bossImg, 250, 40, 4, "Temple Guardian" ); // Pass stats to new constructor
                  }
                  break;
              default:
                 System.err.println("Warning: Tried to create main boss for invalid stage " + stageNum);
-                return; // Don't add anything
+                return; 
         }
 
         // --- Fallback Logic --- 
@@ -545,10 +702,11 @@ public class GameUpdateSystem {
             System.err.println("Warning: Failed to create intended main boss for stage " + stageNum + ". Falling back to Stage 1 MainBoss.");
             Image fallbackImg = assetLoader.getImage(Constants.MAINBOSS_IMG_KEY);
             if (fallbackImg != null) {
-                boss = new com.equinox.game.entities.enemies.MainBoss(
+                // Ensure fallback call matches MainBoss constructor
+                boss = new MainBoss( 
                     Constants.BOARD_WIDTH/2 - Constants.TILE_SIZE * 4, Constants.TILE_SIZE,
                     Constants.TILE_SIZE*8, Constants.TILE_SIZE*8, fallbackImg, Constants.ENEMY_BASE_VELOCITY_X,
-                    fallbackImg, 100, 75, 2, "The Collector (Fallback)" );
+                    fallbackImg, 100, 75, 2, "The Collector (Fallback)" ); 
             }
         }
         // --------------------

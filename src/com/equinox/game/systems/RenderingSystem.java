@@ -11,7 +11,8 @@ import com.equinox.game.entities.enemies.MainBoss;
 import com.equinox.game.entities.enemies.Miniboss;
 import com.equinox.game.utils.AssetLoader;
 import com.equinox.game.utils.Constants;
-import com.equinox.game.ui.EquinoxGameLogic; // Import needed for GameStateEnum
+import com.equinox.game.ui.EquinoxGameLogic;
+import com.equinox.game.ui.EquinoxGameLogic.GameStateEnum;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -25,29 +26,35 @@ public class RenderingSystem {
     }
 
     // Updated render method - takes GameState and UI state
-    public void render(Graphics g, GameState gameState, EquinoxGameLogic.GameStateEnum currentState) {
+    public void render(Graphics g, GameState gameState, GameStateEnum currentState) {
         
         drawBackground(g, gameState);
 
         switch (currentState) {
-            case MENU:
+            case MAIN_MENU:
                 // Menu drawing remains in EquinoxGameLogic for now
                 break;
             case PLAYING:
             case GAME_OVER:
                 // Pass GameState to drawGame
                 drawGame(g, gameState);
-                if (currentState == EquinoxGameLogic.GameStateEnum.GAME_OVER) {
+                if (currentState == GameStateEnum.GAME_OVER) {
                     drawGameOverMessage(g);
                 }
                 break;
             case CUTSCENE:
                  break; // Handled by CutscenePanel
+            case SHOP:
+            case LEADERBOARD:
+            case SETTINGS:
+            case CREDITS:
+                // No specific rendering here, panels handle themselves
+                break;
         }
     }
 
-    // Draw Background based on current stage
-    private void drawBackground(Graphics g, GameState gameState) {
+    // Draw Background based on current stage - Make public
+    public void drawBackground(Graphics g, GameState gameState) {
         if (gameState == null || gameState.currentStage == null || assetLoader == null) return;
         
         int stageNumber = gameState.currentStage.getStageNumber();
