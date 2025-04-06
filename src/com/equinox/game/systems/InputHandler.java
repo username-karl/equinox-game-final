@@ -2,6 +2,7 @@ package com.equinox.game.systems;
 
 import com.equinox.game.ui.EquinoxGameLogic; // Need reference to trigger actions
 import com.equinox.game.ui.EquinoxGameLogic.GameStateEnum; // Import the enum
+import com.equinox.game.data.GameState; // Added: Direct reference to GameState
 
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
@@ -9,14 +10,15 @@ import java.awt.event.KeyListener;
 public class InputHandler implements KeyListener {
 
     private EquinoxGameLogic gameLogic; // Reference to the game logic
+    private GameState gameState; // Added: Direct reference to GameState
 
     // Input state flags (moved from EquinoxGameLogic)
     private boolean moveLeft = false;
     private boolean moveRight = false;
-    private boolean spacePressed = false;
 
     public InputHandler(EquinoxGameLogic gameLogic) {
         this.gameLogic = gameLogic;
+        this.gameState = gameLogic.getGameState(); // Get GameState reference
     }
 
     // Getters for movement state
@@ -51,9 +53,8 @@ public class InputHandler implements KeyListener {
                     moveRight = true;
                     break;
                 case KeyEvent.VK_SPACE:
-                    if (!spacePressed) { // Prevent continuous fire from holding key
-                        gameLogic.fireBullet();
-                        spacePressed = true;
+                    if (gameState != null) {
+                        gameState.isFiring = true; // Set firing flag on press
                     }
                     break;
                  case KeyEvent.VK_Q:
@@ -161,7 +162,9 @@ public class InputHandler implements KeyListener {
         } 
         // Ship action triggers
         else if (keyCode == KeyEvent.VK_SPACE) {
-            gameLogic.fireBullet(); 
+            if (gameState != null) {
+                gameState.isFiring = false; // Clear firing flag on release
+            }
         } 
         else if (keyCode == KeyEvent.VK_Q) {
             gameLogic.fireWaveBlast();

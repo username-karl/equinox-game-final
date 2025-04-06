@@ -78,16 +78,20 @@ public class Enemy extends Entity{
         // Check boundaries and reverse direction
         if (getX() <= 0 || getX() + enemyWidth >= boardWidth) {
             // Only trigger moveDown when hitting the right edge (i.e., when velocity was positive before reversal)
-            boolean movingRightBeforeHit = enemyVelocityX > 0;
+            // boolean movingRightBeforeHit = enemyVelocityX > 0; // No longer needed
             
             enemyVelocityX *= -1; // Reverse horizontal direction
             setX(currentX + enemyVelocityX); // Adjust position slightly based on original X and new velocity
             
+            // Move down whenever a horizontal boundary is hit
+            setMoveDown(true);
+            /*
             if (movingRightBeforeHit && getX() + enemyWidth >= boardWidth) { // Check we actually hit the right edge
                  setMoveDown(true); // Signal to move down only after hitting the right boundary
             } else {
                  setMoveDown(false); // Ensure flag is false if hitting left edge
             }
+            */
         }
     }
 

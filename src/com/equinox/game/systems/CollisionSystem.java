@@ -44,10 +44,18 @@ public class CollisionSystem {
         for (Bullet bullet : bulletArray) {
             if (!bullet.isUsed()) {
                 for (Enemy enemy : enemyArray) {
-                    if (enemy.isAlive() && detectCollision(bullet, enemy)) {
-                        bullet.setUsed(true);
-                        gameUpdateSystem.handleEnemyHit(enemy); // Call on GameUpdateSystem
-                         break; 
+                    // Check collision only if enemy is alive AND bullet hasn't been used up by pierce
+                    if (enemy.isAlive() && !bullet.isUsed() && detectCollision(bullet, enemy)) {
+                        // --- DEBUG --- 
+                        // System.out.println("  Collision Detected! Bullet Pierce Before Hit: " + bullet.getRemainingPierce() + " | Bullet Used Before Hit: " + bullet.isUsed()); // REMOVED
+                        // ------------- 
+                        gameUpdateSystem.handleEnemyHit(enemy); // Apply damage (damage calc is in handleEnemyHit)
+                        // bullet.consumePierce(); // REMOVED - Bullets are used after one hit now
+                         // --- DEBUG --- 
+                        // System.out.println("  Collision Handled! Bullet Pierce After Hit:  " + bullet.getRemainingPierce() + " | Bullet Used After Hit:  " + bullet.isUsed()); // REMOVED
+                        // ------------- 
+                        bullet.setUsed(true); // Mark bullet as used after hitting one enemy
+                        break; // Exit inner loop once bullet hits an enemy
                     }
                 }
             }

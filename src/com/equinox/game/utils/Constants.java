@@ -39,6 +39,15 @@ public class Constants {
     public static final int BULLET_WIDTH = TILE_SIZE / 8;
     public static final int BULLET_HEIGHT = TILE_SIZE / 2;
     public static final int BULLET_VELOCITY_Y = -20;
+    public static final long BULLET_COOLDOWN_MS = 250; // Base cooldown for standard bullet
+    public static final double FIRE_RATE_REDUCTION_PER_LEVEL = 0.10; // 10% reduction per upgrade
+    public static final double FIRE_RATE_MAX_REDUCTION = 0.75; // Max 75% reduction
+    public static final int BULLET_BASE_DAMAGE = 1; // Base damage per bullet
+    public static final int BULLET_DAMAGE_INCREASE_PER_LEVEL = 1; // Damage +1 per upgrade level
+    public static final int BASE_SHOTS_PER_FIRE = 1; // Base number of bullets per shot
+    public static final int DAMAGE_LEVEL_FOR_MULTI_SHOT = 4; // Damage level required to activate multi-shot
+    public static final int MULTI_SHOT_ACTIVE_COUNT = 2; // Number of bullets fired when multi-shot is active
+    public static final int MULTI_SHOT_PARALLEL_OFFSET = 8; // Pixels offset from center for each parallel bullet
 
     // Enemy Bullet Properties
     public static final int ENEMY_BULLET_WIDTH = TILE_SIZE / 8;
@@ -49,15 +58,15 @@ public class Constants {
     public static final int WAVE_BLAST_WIDTH = TILE_SIZE / 4;
     public static final int WAVE_BLAST_HEIGHT = TILE_SIZE * 10;
     public static final int WAVE_BLAST_VELOCITY_Y = -100;
-    public static final long WAVE_BLAST_COOLDOWN_MS = 2500;
+    public static final long WAVE_BLAST_COOLDOWN_MS = 5000;
 
     public static final int LASER_BEAM_WIDTH = TILE_SIZE;
     public static final int LASER_BEAM_HEIGHT = TILE_SIZE / 8;
     public static final int LASER_BEAM_VELOCITY_Y = -15;
-    public static final long LASER_BEAM_COOLDOWN_MS = 1000;
+    public static final long LASER_BEAM_COOLDOWN_MS = 2500;
 
     public static final long PHASE_SHIFT_DURATION_MS = 1500;
-    public static final long PHASE_SHIFT_COOLDOWN_MS = 10000;
+    public static final long PHASE_SHIFT_COOLDOWN_MS = 15000;
 
     // Scoring & Economy
     public static final int SCORE_PER_ENEMY = 100;
@@ -90,6 +99,12 @@ public class Constants {
     public static final Color MENU_ITEM_DEFAULT_COLOR = Color.WHITE;
     public static final Color MENU_ITEM_SELECTED_COLOR = Color.YELLOW;
     public static final Color MENU_ITEM_CHEAT_ACTIVE_COLOR = Color.MAGENTA;
+
+    // HUD Cooldown Bars
+    public static final int COOLDOWN_BAR_WIDTH = 60;
+    public static final int COOLDOWN_BAR_HEIGHT = 8;
+    public static final Color COOLDOWN_BAR_BG_COLOR = Color.DARK_GRAY;
+    // Using existing colors for fill: COOLDOWN_READY_COLOR, COOLDOWN_Q_COLOR, COOLDOWN_E_COLOR, COOLDOWN_R_COLOR
 
     // Asset Keys (Use these strings to retrieve assets from AssetLoader)
     public static final String PLAYER_SHIP_IMG_KEY = "player_ship";

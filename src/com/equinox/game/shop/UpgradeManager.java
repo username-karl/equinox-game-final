@@ -25,7 +25,6 @@ public class UpgradeManager {
         // World 3 Crew Line: Tactical Systems (Specialist Officer)
         addUpgrade(new Upgrade("COOLDOWN_QE", "System Optimization", "Reduces cooldown for Wave Blast (Q) and Laser Beam (E).", 3, 500, 1.9, 5, "Tactical Systems", "-10% Cooldown"));
         // Maybe add a second W3 upgrade?
-        addUpgrade(new Upgrade("BULLET_PIERCE", "Piercing Rounds", "Allows bullets to pierce 1 enemy.", 3, 800, 2.0, 1, "Tactical Systems", "Enable Pierce")); // Example: single level
 
         // World 4 Crew Line: Command Deck (Veteran Commander)
         addUpgrade(new Upgrade("COOLDOWN_R", "Phase Shift Modulator", "Reduces cooldown for Phase Shift (R).", 4, 1000, 2.0, 5, "Command Deck", "-15% Cooldown"));

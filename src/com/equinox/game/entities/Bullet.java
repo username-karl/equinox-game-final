@@ -8,7 +8,7 @@ public class Bullet extends Entity{
     protected int velocityX = 0; // Add velocityX
     protected int velocityY = 0; // Add velocityY
 
-    // Updated constructor to accept initial velocities
+    // Updated constructor - removed initialPierce
     public Bullet(int x, int y, int width, int height, Image img, int velocityX, int velocityY) {
         super(x, y, width, height, img);
         this.velocityX = velocityX;

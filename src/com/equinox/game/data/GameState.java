@@ -31,6 +31,9 @@ public class GameState {
     public List<LaserBeam> laserBeamArray = new ArrayList<>();
     
     // Player State / Cooldowns (TODO: Maybe move to PlayerState class?)
+    public boolean isFiring = false; // Added: Is the player holding the fire button?
+    public long remainingBulletCooldown = 0; // Added: Cooldown for basic bullet
+    public long lastBulletFireTime = 0; // Added: Timestamp of last bullet fire
     public long remainingWaveBlastCooldown = 0;
     public long remainingLaserBeamCooldown = 0;
     public long remainingPhaseShiftCooldown = 0;
@@ -56,7 +59,6 @@ public class GameState {
     public int damageUpgradeLevel;
     public int fireRateUpgradeLevel;
     public int cooldownQEUpgradeLevel;
-    public int bulletPierceLevel;
     public int cooldownRUpgradeLevel;
     public int moneyMultUpgradeLevel;
 
@@ -108,6 +110,11 @@ public class GameState {
         remainingPhaseShiftCooldown = 0;
         isPhaseShiftActive = false;
         phaseShiftEndTime = 0;
+        
+        // Reset bullet firing state
+        isFiring = false;
+        remainingBulletCooldown = 0;
+        lastBulletFireTime = 0;
     }
     
     // Method to reset core game state for start/restart
@@ -149,6 +156,11 @@ public class GameState {
         isPhaseShiftActive = false;
         phaseShiftEndTime = 0;
         
+        // Reset bullet firing state
+        isFiring = false;
+        remainingBulletCooldown = 0;
+        lastBulletFireTime = 0;
+        
         // Initialize leaderboard tracking fields
         startTimeMillis = 0; // Will be set properly when game starts
         maxMoneyAchieved = money; // Initial max money is starting money
@@ -160,7 +172,6 @@ public class GameState {
         damageUpgradeLevel = 0;
         fireRateUpgradeLevel = 0;
         cooldownQEUpgradeLevel = 0;
-        bulletPierceLevel = 0;
         cooldownRUpgradeLevel = 0;
         moneyMultUpgradeLevel = 0;
 

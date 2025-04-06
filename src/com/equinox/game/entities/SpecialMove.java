@@ -9,7 +9,7 @@ public class SpecialMove extends Bullet{
      // Update constructor to match new Bullet constructor
     public SpecialMove(int x, int y, int width, int height, Image img) {
         // Call super with velocities (Using 0, 0 as placeholder)
-        super(x, y, width, height, img, 0, 0); // Provide velocities
+        super(x, y, width, height, img, 0, 0); // Removed pierce argument
     }
      // Add specific behavior for SpecialMove if needed
 } 

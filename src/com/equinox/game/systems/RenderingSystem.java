@@ -152,109 +152,188 @@ public class RenderingSystem {
         }
     }
 
-    // DRAW GAME STATS (HUD) - Simplified, takes GameState
+    // DRAW GAME STATS (HUD) - Reworked Layout
     private void drawGameStats(Graphics g, GameState gameState) {
         int padding = Constants.HUD_PADDING;
-        int topY = Constants.HUD_TOP_Y;
-        int bottomY = Constants.BOARD_HEIGHT - padding - 20;
+        // int topY = Constants.HUD_TOP_Y; // No longer using top alignment
+        int bottomLineY = Constants.BOARD_HEIGHT - padding; // Reference line for bottom elements
+        int elementSpacing = 20; // Vertical spacing between HUD lines
         Font baseFont = new Font("Arial", Font.PLAIN, 16);
         Font boldFont = new Font("Arial", Font.BOLD, 16);
         Font cooldownFont = new Font("Arial", Font.PLAIN, 14);
-        Font stageFont = new Font("Arial", Font.BOLD, 18);
+        // Font stageFont = new Font("Arial", Font.BOLD, 18); // Use smaller font for stage info
 
-        // --- Top Left: Score, Money, Killed ---
-        g.setFont(baseFont);
-        g.setColor(Constants.SCORE_COLOR);
-        g.drawString("Score: " + gameState.score, padding, topY);
-        g.setColor(Constants.MONEY_COLOR);
-        g.drawString("Money: " + gameState.money, padding, topY + 20);
-        g.setColor(Constants.KILLED_COLOR);
-        g.drawString("Killed: " + gameState.enemySlain, padding, topY + 40);
+        // --- Optional: Semi-Transparent Background Panel ---
+        g.setColor(new Color(0, 0, 0, 100)); // Black with alpha
+        g.fillRect(0, bottomLineY - 65, Constants.BOARD_WIDTH, 70); // Adjust height as needed
 
-        // --- Top Center: World / Wave ---
-        if (gameState.currentStage != null) {
-            g.setFont(stageFont);
-            g.setColor(Constants.STAGE_INFO_COLOR);
-            String stageText = "World: " + gameState.currentStage.getStageNumber() + " | Wave: " + gameState.currentStage.getCurrentWave();
-            FontMetrics fmStage = g.getFontMetrics();
-            int stageWidth = fmStage.stringWidth(stageText);
-            g.drawString(stageText, (Constants.BOARD_WIDTH - stageWidth) / 2, topY + 10);
-        }
+        // --- Bottom Left: HP and Cooldowns ---
+        int currentY = bottomLineY;
+        int currentX = padding;
 
-        // --- Top Right: Player Health Bar ---
+        // HP Bar (Moved to Bottom Left)
         if (gameState.ship != null) {
             int healthBarWidth = 150;
-            int healthBarHeight = 20;
-            int healthBarX = Constants.BOARD_WIDTH - healthBarWidth - padding;
-            int healthBarY = topY - 5;
+            int healthBarHeight = 15; // Slightly smaller bar
+            int healthBarX = padding;
+            int healthBarY = currentY - elementSpacing - healthBarHeight; // Position above cooldown text
             double healthPercent = (double) gameState.ship.getHealth() / gameState.ship.getMaxHealth();
             int filledWidth = (int) (healthBarWidth * healthPercent);
 
+            // Determine HP Bar color
+            Color hpFillColor = Constants.HEALTH_BAR_FILL_COLOR; 
+            if (healthPercent <= 0.25) hpFillColor = Color.RED;
+            else if (healthPercent <= 0.50) hpFillColor = Color.YELLOW;
+            
+            // Draw HP Text (Above Bar)
             g.setFont(boldFont);
             g.setColor(Constants.HEALTH_TEXT_COLOR);
-            String healthText = "HP: " + gameState.ship.getHealth() + "/" + gameState.ship.getMaxHealth();
-            g.drawString(healthText, healthBarX, healthBarY + healthBarHeight + 15);
+            String healthText = String.format("HP (Lvl %d): %d/%d", 
+                                             gameState.healthUpgradeLevel, 
+                                             gameState.ship.getHealth(), 
+                                             gameState.ship.getMaxHealth());
+            g.drawString(healthText, healthBarX, healthBarY - 5); // Text above bar
 
+            // Draw HP Bar
             g.setColor(Constants.HEALTH_BAR_BG_COLOR);
             g.fillRect(healthBarX, healthBarY, healthBarWidth, healthBarHeight);
-            g.setColor(Constants.HEALTH_BAR_FILL_COLOR);
+            g.setColor(hpFillColor);
             g.fillRect(healthBarX, healthBarY, filledWidth, healthBarHeight);
             g.setColor(Constants.HEALTH_BAR_BORDER_COLOR);
             g.drawRect(healthBarX, healthBarY, healthBarWidth, healthBarHeight);
+            
+            // Update Y reference: Y position of the bottom of the HP bar
+            currentY = healthBarY + healthBarHeight; // New: Bottom edge of HP bar
+        } else {
+             currentY = bottomLineY; // Fallback if ship is null
         }
-
-        // --- Bottom Left: Ability Cooldowns (Get from GameState) ---
-        int cooldownX = padding;
-        int cooldownY = bottomY;
+        
+        // Cooldown Bars (Below HP)
+        int cooldownBarY = currentY + elementSpacing / 2; // Start cooldown bars lower, increase vertical distance
+        int cooldownTextY = cooldownBarY + Constants.COOLDOWN_BAR_HEIGHT + 14;
+        int barX = padding;
+        int barSpacing = Constants.COOLDOWN_BAR_WIDTH + 25; 
         g.setFont(cooldownFont);
 
-        // Wave Blast (Q)
-        String qText;
-        if (gameState.remainingWaveBlastCooldown > 0) {
-            g.setColor(Constants.COOLDOWN_Q_COLOR);
-            qText = String.format("Q: %.1fs", (double) gameState.remainingWaveBlastCooldown / 1000);
-        } else {
-            g.setColor(Constants.COOLDOWN_READY_COLOR);
-            qText = "Q: Ready";
-        }
-        g.drawString(qText, cooldownX, cooldownY);
+        drawCooldownBar(g, "Q", gameState.remainingWaveBlastCooldown, Constants.WAVE_BLAST_COOLDOWN_MS, Constants.COOLDOWN_Q_COLOR, barX, cooldownBarY, cooldownTextY);
+        barX += barSpacing;
+        drawCooldownBar(g, "E", gameState.remainingLaserBeamCooldown, Constants.LASER_BEAM_COOLDOWN_MS, Constants.COOLDOWN_E_COLOR, barX, cooldownBarY, cooldownTextY);
+        barX += barSpacing;
+        drawCooldownBar(g, "R", gameState.remainingPhaseShiftCooldown, Constants.PHASE_SHIFT_COOLDOWN_MS, Constants.COOLDOWN_R_COLOR, barX, cooldownBarY, cooldownTextY, gameState.isPhaseShiftActive);
 
-        // Laser Beam (E)
-        String eText;
-        int eOffset = g.getFontMetrics().stringWidth(qText) + 15;
-        if (gameState.remainingLaserBeamCooldown > 0) {
-             g.setColor(Constants.COOLDOWN_E_COLOR);
-            eText = String.format("E: %.1fs", (double) gameState.remainingLaserBeamCooldown / 1000);
-        } else {
-            g.setColor(Constants.COOLDOWN_READY_COLOR);
-            eText = "E: Ready";
+        // --- Bottom Center: Upgrades & World/Wave ---
+        currentY = bottomLineY; // Reset Y for center column
+        
+        // Upgrade Levels
+        g.setFont(baseFont);
+        g.setColor(Color.LIGHT_GRAY);
+        String upgradesText = String.format("DMG: %d | SPD: %d | RATE: %d", 
+                                          gameState.damageUpgradeLevel,
+                                          gameState.speedUpgradeLevel,
+                                          gameState.fireRateUpgradeLevel);
+        FontMetrics fmUpgrades = g.getFontMetrics();
+        int upgradesWidth = fmUpgrades.stringWidth(upgradesText);
+        int upgradesX = (Constants.BOARD_WIDTH - upgradesWidth) / 2;
+        g.drawString(upgradesText, upgradesX, currentY);
+        
+        // World/Wave (Above Upgrades, Smaller Font)
+        if (gameState.currentStage != null) {
+            // g.setFont(stageFont); // Use smaller font
+            g.setColor(Constants.STAGE_INFO_COLOR);
+            String stageText = "World: " + gameState.currentStage.getStageNumber() + " | Wave: " + gameState.currentStage.getCurrentWave();
+            FontMetrics fmStage = g.getFontMetrics(); // Use metrics from baseFont
+            int stageWidth = fmStage.stringWidth(stageText);
+            g.drawString(stageText, (Constants.BOARD_WIDTH - stageWidth) / 2, currentY - elementSpacing); // Position above upgrades
         }
-        g.drawString(eText, cooldownX + eOffset, cooldownY);
+        
+        // --- Bottom Right: Score, Money, Killed ---
+        currentY = bottomLineY;
+        g.setFont(baseFont);
 
-        // Phase Shift (R)
-        String rText;
-        int rOffset = eOffset + g.getFontMetrics().stringWidth(eText) + 15;
-        if (gameState.isPhaseShiftActive) {
-            g.setColor(Constants.COOLDOWN_R_ACTIVE_COLOR);
-            rText = "R: ACTIVE";
-        } else if (gameState.remainingPhaseShiftCooldown > 0) {
-            g.setColor(Constants.COOLDOWN_R_COLOR);
-            rText = String.format("R: %.1fs", (double) gameState.remainingPhaseShiftCooldown / 1000);
-        } else {
-            g.setColor(Constants.COOLDOWN_READY_COLOR);
-            rText = "R: Ready";
-        }
-        g.drawString(rText, cooldownX + rOffset, cooldownY);
+        String killedText = "Killed: " + gameState.enemySlain;
+        FontMetrics fmKilled = g.getFontMetrics();
+        int killedWidth = fmKilled.stringWidth(killedText);
+        g.setColor(Constants.KILLED_COLOR);
+        g.drawString(killedText, Constants.BOARD_WIDTH - padding - killedWidth, currentY);
+        currentY -= elementSpacing; // Move up for next line
 
-        // --- Cheat Indicator (Get from GameState) ---
+        String moneyText = "Money: " + gameState.money;
+        FontMetrics fmMoney = g.getFontMetrics();
+        int moneyWidth = fmMoney.stringWidth(moneyText);
+        g.setColor(Constants.MONEY_COLOR);
+        g.drawString(moneyText, Constants.BOARD_WIDTH - padding - moneyWidth, currentY);
+        currentY -= elementSpacing; // Move up for next line
+        
+        String scoreText = "Score: " + gameState.score;
+        FontMetrics fmScore = g.getFontMetrics();
+        int scoreWidth = fmScore.stringWidth(scoreText);
+        g.setColor(Constants.SCORE_COLOR);
+        g.drawString(scoreText, Constants.BOARD_WIDTH - padding - scoreWidth, currentY);
+
+        // --- Cheat Indicator (Position relative to other elements) ---
         if (gameState.cheatsEnabled) {
             g.setFont(boldFont);
             g.setColor(Constants.CHEAT_INDICATOR_COLOR);
             String cheatText = "CHEATS ACTIVE";
             FontMetrics fmCheat = g.getFontMetrics();
             int cheatWidth = fmCheat.stringWidth(cheatText);
-            g.drawString(cheatText, (Constants.BOARD_WIDTH - cheatWidth) / 2, bottomY);
+            // Place it above the World/Wave info in the center
+            g.drawString(cheatText, (Constants.BOARD_WIDTH - cheatWidth) / 2, bottomLineY - (2 * elementSpacing) - 5);
+            // g.drawString(cheatText, (Constants.BOARD_WIDTH - cheatWidth) / 2, bottomY + 14); // Old position near upgrade levels
         }
+    }
+
+    // --- HELPER METHOD FOR DRAWING COOLDOWN BARS ---
+    private void drawCooldownBar(Graphics g, String key, long remainingCooldown, long baseCooldown, 
+                                 Color cooldownColor, int barX, int barY, int textY) {
+        drawCooldownBar(g, key, remainingCooldown, baseCooldown, cooldownColor, barX, barY, textY, false); // Overload for non-active state
+    }
+
+    private void drawCooldownBar(Graphics g, String key, long remainingCooldown, long baseCooldown, 
+                                 Color cooldownColor, int barX, int barY, int textY, boolean isActive) {
+        
+        int barWidth = Constants.COOLDOWN_BAR_WIDTH;
+        int barHeight = Constants.COOLDOWN_BAR_HEIGHT;
+        String text = key + ":";
+        int textWidth = g.getFontMetrics().stringWidth(text);
+        int textX = barX + (barWidth / 2) - (textWidth / 2); // Center text below bar
+        
+        double filledPercent = 0.0;
+        Color fillColor = Constants.COOLDOWN_READY_COLOR;
+
+        if (isActive) {
+            fillColor = Constants.COOLDOWN_R_ACTIVE_COLOR; // Use specific active color (only for R currently)
+            filledPercent = 1.0; // Show as full when active
+            text = key + ": ACTIVE";
+        } else if (remainingCooldown > 0) {
+            fillColor = cooldownColor;
+            filledPercent = 1.0 - ((double) remainingCooldown / baseCooldown); // Bar fills *up* as cooldown expires
+            text = String.format("%s: %.1fs", key, (double) remainingCooldown / 1000);
+        } else {
+            // Ready state handled by default fillColor and filledPercent = 0 (or 1 if preferred)
+             filledPercent = 1.0; // Show as full when ready
+             text = key + ": Ready";
+        }
+        
+        int filledWidth = (int) (barWidth * filledPercent);
+        
+        // Draw Text
+        g.setColor(fillColor); // Use the fill color for text for consistency
+        textWidth = g.getFontMetrics().stringWidth(text);
+        textX = barX + (barWidth / 2) - (textWidth / 2); // Recalculate X based on potentially longer text
+        g.drawString(text, textX, textY);
+        
+        // Draw Background Bar
+        g.setColor(Constants.COOLDOWN_BAR_BG_COLOR);
+        g.fillRect(barX, barY, barWidth, barHeight);
+        
+        // Draw Filled Bar
+        g.setColor(fillColor);
+        g.fillRect(barX, barY, filledWidth, barHeight);
+        
+        // Draw Border
+        g.setColor(Color.GRAY); // Use a neutral border color
+        g.drawRect(barX, barY, barWidth, barHeight);
     }
 
     // DRAW BOSS HEALTH BARS

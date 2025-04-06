@@ -391,7 +391,7 @@ public class EquinoxGameLogic extends JPanel implements ActionListener {
     }
 
     // --- Action Methods Called by InputHandler ---
-    public void fireBullet() { if (gameUpdateSystem != null) gameUpdateSystem.fireBullet(); }
+    // public void fireBullet() { if (gameUpdateSystem != null) gameUpdateSystem.fireBullet(); } // REMOVED
     public void fireWaveBlast() { if (gameUpdateSystem != null) gameUpdateSystem.fireWaveBlast(); }
     public void fireLaserBeam() { if (gameUpdateSystem != null) gameUpdateSystem.fireLaserBeam(); }
     public void firePhaseShift() { if (gameUpdateSystem != null) gameUpdateSystem.firePhaseShift(); }

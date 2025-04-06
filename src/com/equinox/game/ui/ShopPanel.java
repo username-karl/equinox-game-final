@@ -32,15 +32,12 @@ public class ShopPanel extends JPanel {
     private JButton continueButton;
     private AssetLoader assetLoader;
 
-    // References to UI components for updates
-    private JLabel healthLevelLabel, healthCostLabel;
-    private JButton healthBuyButton;
-    private JLabel damageLevelLabel, damageCostLabel;
-    private JButton damageBuyButton;
-    private JLabel speedLevelLabel, speedCostLabel;
-    private JButton speedBuyButton;
+    // References to UI components for updates - Reworked to use a Map
+    private Map<String, JLabel> levelLabels = new HashMap<>();
+    private Map<String, JLabel> costLabels = new HashMap<>();
+    private Map<String, JButton> buyButtons = new HashMap<>();
     
-    // Panel that holds the three upgrade options
+    // Panel that holds the upgrade options
     private JPanel upgradeOptionsPanel;
 
     public ShopPanel(StageManager stageManager, Image background, GameState gameState, AssetLoader assetLoader) {
@@ -59,15 +56,34 @@ public class ShopPanel extends JPanel {
         lblTitle.setHorizontalAlignment(JLabel.CENTER);
         add(lblTitle, BorderLayout.NORTH);
 
-        // Central panel for the three upgrade options
-        upgradeOptionsPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 40, 20)); // Centered flow with gaps
+        // Central panel for the upgrade options - Changed to GridLayout
+        // upgradeOptionsPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 40, 20));
+        // Determine rows/cols based on number of upgrades (e.g., 2 columns)
+        // This needs to fetch upgrades available at max world level (e.g., 4) for initial setup
+        int maxWorldLevel = 4; // Assuming world 4 is the max
+        List<Upgrade> allPossibleUpgrades = UpgradeManager.getAvailableUpgrades(maxWorldLevel);
+        int numUpgrades = allPossibleUpgrades.size();
+        int gridCols = 3; // Let's try 3 columns
+        int gridRows = (int) Math.ceil((double) numUpgrades / gridCols);
+        upgradeOptionsPanel = new JPanel(new GridLayout(gridRows, gridCols, 15, 15)); // Rows, Cols, Hgap, Vgap
+        
         upgradeOptionsPanel.setOpaque(false); // Make transparent to see background
-        add(upgradeOptionsPanel, BorderLayout.CENTER);
+        // Add a scroll pane in case content overflows
+        JScrollPane scrollPane = new JScrollPane(upgradeOptionsPanel);
+        scrollPane.setOpaque(false);
+        scrollPane.getViewport().setOpaque(false);
+        scrollPane.setBorder(BorderFactory.createEmptyBorder()); // No border for scrollpane itself
+        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+        scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        add(scrollPane, BorderLayout.CENTER); // Add scrollpane instead of panel directly
 
-        // Create the three specific upgrade panels in the desired order
-        upgradeOptionsPanel.add(createSpecificUpgradePanel("HEALTH")); // Hull Engineering
-        upgradeOptionsPanel.add(createSpecificUpgradePanel("DAMAGE")); // Weapons Bay
-        upgradeOptionsPanel.add(createSpecificUpgradePanel("SPEED"));  // Engine Mechanic
+        // Create the specific upgrade panels dynamically
+        // upgradeOptionsPanel.add(createSpecificUpgradePanel("HEALTH")); // REMOVED
+        // upgradeOptionsPanel.add(createSpecificUpgradePanel("DAMAGE")); // REMOVED
+        // upgradeOptionsPanel.add(createSpecificUpgradePanel("SPEED"));  // REMOVED
+        for (Upgrade upgrade : allPossibleUpgrades) {
+            upgradeOptionsPanel.add(createUpgradePanel(upgrade)); // Call new method
+        }
 
         // Bottom Panel for Money and Continue Button
         JPanel bottomPanel = new JPanel(new BorderLayout(10, 5));
@@ -97,23 +113,26 @@ public class ShopPanel extends JPanel {
     // Call this when the shop needs to be shown/refreshed
     public void setupShopUI() {
         lblMoney.setText("Money: $" + gameState.getMoney());
-        // Update the display for each of the three fixed panels
-        updateSpecificUpgradeDisplay("HEALTH");
-        updateSpecificUpgradeDisplay("DAMAGE");
-        updateSpecificUpgradeDisplay("SPEED");
+        // Update the display for all panels stored in the map
+        // updateSpecificUpgradeDisplay("HEALTH"); // REMOVED
+        // updateSpecificUpgradeDisplay("DAMAGE"); // REMOVED
+        // updateSpecificUpgradeDisplay("SPEED"); // REMOVED
+        for (String upgradeId : levelLabels.keySet()) { // Iterate through the upgrades we have UI for
+            updateUpgradeDisplay(upgradeId); // Call generalized update method
+        }
         revalidate();
         repaint();
         requestFocusInWindow();
     }
 
-    // Creates a specific upgrade panel (Hull, Gun, Engine)
-    private JPanel createSpecificUpgradePanel(String upgradeId) {
-        Upgrade upgrade = UpgradeManager.getUpgrade(upgradeId);
-        if (upgrade == null) return new JPanel(); // Should not happen if IDs are correct
+    // Renamed from createSpecificUpgradePanel, takes Upgrade object
+    private JPanel createUpgradePanel(Upgrade upgrade) {
+        // Upgrade upgrade = UpgradeManager.getUpgrade(upgradeId); // No longer needed
+        if (upgrade == null) return new JPanel(); 
 
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-        panel.setPreferredSize(new Dimension(200, 300)); // Fixed size for panels
+        // panel.setPreferredSize(new Dimension(200, 300)); // REMOVED - Let layout manager handle size
         panel.setBackground(new Color(30, 30, 60, 200)); // Semi-transparent dark blueish
         // Retro border
         Border outerBorder = BorderFactory.createLineBorder(new Color(0, 100, 255), 3); // Dark blue, 3px thick
@@ -152,7 +171,7 @@ public class ShopPanel extends JPanel {
         descArea.setBorder(null);
         descArea.setAlignmentX(Component.CENTER_ALIGNMENT);
         // Set preferred size to constrain width and allow wrapping
-        descArea.setMaximumSize(new Dimension(180, 40)); // Adjust height as needed
+        // descArea.setMaximumSize(new Dimension(180, 40)); // REMOVED - Allow natural wrapping
         panel.add(descArea);
         panel.add(Box.createRigidArea(new Dimension(0, 10))); // Spacer
 
@@ -186,31 +205,36 @@ public class ShopPanel extends JPanel {
         buyButton.addActionListener(e -> purchaseUpgrade(upgrade));
         panel.add(buyButton);
 
-        // Store references to components that need updating
+        // Store references to components that need updating using the Upgrade ID
+        levelLabels.put(upgrade.id(), levelLabel);
+        costLabels.put(upgrade.id(), costLabel);
+        buyButtons.put(upgrade.id(), buyButton);
+        /*
         switch(upgradeId) {
             case "HEALTH":
-                healthLevelLabel = levelLabel;
-                healthCostLabel = costLabel;
-                healthBuyButton = buyButton;
+                levelLabels.put("HEALTH", levelLabel);
+                costLabels.put("HEALTH", costLabel);
+                buyButtons.put("HEALTH", buyButton);
                 break;
             case "DAMAGE":
-                damageLevelLabel = levelLabel;
-                damageCostLabel = costLabel;
-                damageBuyButton = buyButton;
+                levelLabels.put("DAMAGE", levelLabel);
+                costLabels.put("DAMAGE", costLabel);
+                buyButtons.put("DAMAGE", buyButton);
                 break;
             case "SPEED":
-                speedLevelLabel = levelLabel;
-                speedCostLabel = costLabel;
-                speedBuyButton = buyButton;
+                levelLabels.put("SPEED", levelLabel);
+                costLabels.put("SPEED", costLabel);
+                buyButtons.put("SPEED", buyButton);
                 break;
         }
+        */
 
-        // Initial update is handled by setupShopUI calling updateSpecificUpgradeDisplay
+        // Initial update is handled by setupShopUI calling updateUpgradeDisplay
         return panel;
     }
     
-    // Updates the display for one of the three specific upgrade panels
-    private void updateSpecificUpgradeDisplay(String upgradeId) {
+    // Renamed from updateSpecificUpgradeDisplay, uses Maps
+    private void updateUpgradeDisplay(String upgradeId) {
         Upgrade upgrade = UpgradeManager.getUpgrade(upgradeId);
         if (upgrade == null) return;
 
@@ -218,16 +242,22 @@ public class ShopPanel extends JPanel {
         int nextCost = UpgradeManager.calculateCost(upgrade, currentLevel);
         boolean maxLevelReached = currentLevel >= upgrade.maxLevel();
 
-        JLabel levelLabel = null, costLabel = null;
-        JButton buyButton = null;
-
+        // Retrieve components from Maps
+        JLabel levelLabel = levelLabels.get(upgradeId);
+        JLabel costLabel = costLabels.get(upgradeId);
+        JButton buyButton = buyButtons.get(upgradeId);
+        /*
         switch(upgradeId) {
-            case "HEALTH": levelLabel = healthLevelLabel; costLabel = healthCostLabel; buyButton = healthBuyButton; break;
-            case "DAMAGE": levelLabel = damageLevelLabel; costLabel = damageCostLabel; buyButton = damageBuyButton; break;
-            case "SPEED":  levelLabel = speedLevelLabel;  costLabel = speedCostLabel;  buyButton = speedBuyButton; break;
+            case "HEALTH": levelLabel = levelLabels.get("HEALTH"); costLabel = costLabels.get("HEALTH"); buyButton = buyButtons.get("HEALTH"); break;
+            case "DAMAGE": levelLabel = levelLabels.get("DAMAGE"); costLabel = costLabels.get("DAMAGE"); buyButton = buyButtons.get("DAMAGE"); break;
+            case "SPEED":  levelLabel = levelLabels.get("SPEED");  costLabel = costLabels.get("SPEED");  buyButton = buyButtons.get("SPEED"); break;
         }
+        */
 
-        if (levelLabel == null || costLabel == null || buyButton == null) return; // Safety check
+        if (levelLabel == null || costLabel == null || buyButton == null) { 
+             System.err.println("Warning: UI components not found for upgrade ID: " + upgradeId); // Added warning
+             return; 
+        }
 
         levelLabel.setText(String.format("Level: %d / %d", currentLevel, upgrade.maxLevel()));
         
@@ -244,64 +274,63 @@ public class ShopPanel extends JPanel {
 
     // Helper to get current level from GameState based on ID
     private int getCurrentUpgradeLevel(String upgradeId) {
-        // Only return levels for the 3 displayed upgrades
+        // Updated to include all relevant upgrades
         switch (upgradeId) {
             case "HEALTH": return gameState.healthUpgradeLevel;
             case "SPEED": return gameState.speedUpgradeLevel;
             case "DAMAGE": return gameState.damageUpgradeLevel;
+            case "FIRE_RATE": return gameState.fireRateUpgradeLevel;
+            case "COOLDOWN_QE": return gameState.cooldownQEUpgradeLevel;
+            case "COOLDOWN_R": return gameState.cooldownRUpgradeLevel;
+            case "MONEY_MULT": return gameState.moneyMultUpgradeLevel;
             // Return 0 for others, though they shouldn't be requested here
-            default: return 0; 
+            default: 
+                System.err.println("Warning: Unknown upgrade ID in getCurrentUpgradeLevel: " + upgradeId);
+                return 0; 
         }
     }
 
-    // Logic to handle purchasing an upgrade
     private void purchaseUpgrade(Upgrade upgrade) {
-        if (upgrade == null) return;
-        String upgradeId = upgrade.id();
-        int currentLevel = getCurrentUpgradeLevel(upgradeId);
-        int cost = UpgradeManager.calculateCost(upgrade, currentLevel);
-
-        if (cost <= 0 || currentLevel >= upgrade.maxLevel()) {
-            System.out.println("Upgrade already maxed: " + upgradeId);
+        int currentLevel = getCurrentUpgradeLevel(upgrade.id());
+        if (currentLevel >= upgrade.maxLevel()) {
+            System.out.println(upgrade.id() + " is already at max level!");
             return;
         }
 
+        int cost = UpgradeManager.calculateCost(upgrade, currentLevel);
         if (gameState.getMoney() >= cost) {
-            gameState.addMoney(-cost); 
-            incrementUpgradeLevel(upgradeId); 
-
-            System.out.println("Purchased " + upgrade.name() + " Level " + getCurrentUpgradeLevel(upgradeId));
-            
-            // Update the UI
+            gameState.addMoney(-cost); // Use addMoney to handle potential multipliers correctly if costs were positive
+            incrementUpgradeLevel(upgrade.id());
+            // Update UI immediately after purchase
             lblMoney.setText("Money: $" + gameState.getMoney());
-            // Update the specific panel that was clicked
-            updateSpecificUpgradeDisplay(upgradeId); 
-            // Update affordability of all buttons
-            updateAllUpgradeButtonsAffordability(); 
-
+            updateUpgradeDisplay(upgrade.id()); // Update the specific upgrade bought
+            // Update button states for potentially newly affordable upgrades
+            for (String otherId : levelLabels.keySet()) {
+                 if (!otherId.equals(upgrade.id())) { // Don't re-update the one just bought
+                    updateUpgradeDisplay(otherId);
+                 }
+            }
         } else {
-            JOptionPane.showMessageDialog(this, 
-                "Not enough money to purchase " + upgrade.name() + "!", 
-                "Insufficient Funds", 
-                JOptionPane.WARNING_MESSAGE);
+            System.out.println("Not enough money for " + upgrade.id());
+            // Maybe add a visual/audio cue for failed purchase
         }
     }
-    
-    // Helper to increment the correct level in GameState
+
+    // Updated to include all relevant upgrades
     private void incrementUpgradeLevel(String upgradeId) {
-         switch (upgradeId) {
+        switch (upgradeId) {
             case "HEALTH": gameState.healthUpgradeLevel++; break;
             case "SPEED": gameState.speedUpgradeLevel++; break;
             case "DAMAGE": gameState.damageUpgradeLevel++; break;
-            // Other upgrades not handled by this specific shop screen
+            case "FIRE_RATE": gameState.fireRateUpgradeLevel++; break;
+            case "COOLDOWN_QE": gameState.cooldownQEUpgradeLevel++; break;
+            case "COOLDOWN_R": gameState.cooldownRUpgradeLevel++; break;
+            case "MONEY_MULT": gameState.moneyMultUpgradeLevel++; break;
+             default:
+                 System.err.println("Warning: Unknown upgrade ID in incrementUpgradeLevel: " + upgradeId);
+                 break;
         }
-    }
-    
-    // Helper to refresh the enabled state of all buy buttons based on current money
-    private void updateAllUpgradeButtonsAffordability(){
-         updateSpecificUpgradeDisplay("HEALTH");
-         updateSpecificUpgradeDisplay("DAMAGE");
-         updateSpecificUpgradeDisplay("SPEED");
+        System.out.println(upgradeId + " level incremented to: " + getCurrentUpgradeLevel(upgradeId)); // Debug
     }
 
     @Override

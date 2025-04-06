@@ -11,35 +11,32 @@ public class SpecialEnemy extends Enemy{
     Image specialEnemyImg; // Often the same as img, maybe remove?
     // Default specialEnemy values
     private String enemyBossName="";
-    private int hitpoints = 20;
-    private int maxHitpoints = 20;
+    private int maxHitpoints = 20; // Keep max separately
     protected int shootCooldown = 100; // Ticks between shots - PROTECTED
     protected int currentCooldown = 0; // PROTECTED
     private int specialEnemyVelocityY = 1; // Vertical movement speed
 
     // Constructor chain for flexibility
     public SpecialEnemy(int x, int y, int width, int height, Image img, int enemyVelocityX, Image specialEnemyImg) {
-        super(x, y, width, height, img, enemyVelocityX);
+        super(x, y, width, height, img, enemyVelocityX, 20); // Pass default HP to parent
         this.specialEnemyImg=specialEnemyImg; // Consider if needed
-        this.maxHitpoints = this.hitpoints; // Default max HP
+        this.maxHitpoints = this.hitpoints; // Assign from inherited hitpoints
     }
 
     public SpecialEnemy(int x, int y, int width, int height, Image img, int enemyVelocityX, Image specialEnemyImg,int hitpoints,int shootCooldown, int specialEnemyVelocityY) {
-        super(x, y, width, height, img, enemyVelocityX);
+        super(x, y, width, height, img, enemyVelocityX, hitpoints); // Pass HP to parent
         this.specialEnemyImg=specialEnemyImg;
-        this.hitpoints=hitpoints;
         this.shootCooldown=shootCooldown;
-        this.maxHitpoints=hitpoints;
+        this.maxHitpoints=hitpoints; // Assign max from initial
         this.specialEnemyVelocityY=specialEnemyVelocityY;
     }
 
     public SpecialEnemy(int x, int y, int width, int height, Image img, int enemyVelocityX, Image specialEnemyImg,int hitpoints,int shootCooldown, int specialEnemyVelocityY, String enemyBossName) {
-        super(x, y, width, height, img, enemyVelocityX);
+        super(x, y, width, height, img, enemyVelocityX, hitpoints); // Pass HP to parent
         this.enemyBossName=enemyBossName;
         this.specialEnemyImg=specialEnemyImg;
-        this.hitpoints=hitpoints;
         this.shootCooldown=shootCooldown;
-        this.maxHitpoints=hitpoints;
+        this.maxHitpoints=hitpoints; // Assign max from initial
         this.specialEnemyVelocityY=specialEnemyVelocityY;
     }
 
@@ -51,14 +48,15 @@ public class SpecialEnemy extends Enemy{
         this.enemyBossName = enemyBossName;
     }
     public int getHitpoints() {
-        return hitpoints;
+        return super.getHitpoints(); // Access inherited hitpoints
     }
     public int getMaxHitpoints() {
         return maxHitpoints;
     }
     public void setHitpoints(int hitpoints) {
         // Prevent HP from going below 0
-        this.hitpoints = Math.max(0, hitpoints);
+        super.hitpoints = Math.max(0, hitpoints); // Set inherited protected field directly 
+                                                  // (Alternatively, add a proper setter in Enemy)
     }
 
     // Vertical movement logic (oscillates between top and Y=300)

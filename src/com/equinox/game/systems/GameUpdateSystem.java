@@ -67,8 +67,9 @@ public class GameUpdateSystem {
         collisionSystem.checkEnemyBulletCollisions();
         
         clearOffScreenBullets();
+        updateCooldowns(); // Update cooldowns first
+        handlePlayerShooting(); // Then check if player can shoot
         handleStageAndWaveLogic();
-        updateCooldowns();
         moveShip();
     }
 
@@ -189,9 +190,15 @@ public class GameUpdateSystem {
         long currentTime = System.currentTimeMillis();
 
         // --- Calculate effective cooldowns based on upgrades --- 
+        // Bullet Cooldown Calculation
+        double currentFireRateReduction = Math.min(Constants.FIRE_RATE_MAX_REDUCTION, 
+                                                  gameState.fireRateUpgradeLevel * Constants.FIRE_RATE_REDUCTION_PER_LEVEL);
+        long effectiveBulletCooldown = (long) (Constants.BULLET_COOLDOWN_MS * (1.0 - currentFireRateReduction));
+
+        // Other Ability Cooldowns (QE & R)
         double reductionPerLevelQE = 0.10; // 10% reduction per level
         double reductionPerLevelR = 0.15;  // 15% reduction per level
-        double maxReduction = 0.75; // Cap reduction at 75%
+        double maxReduction = 0.60; // Cap reduction at 60% (was 0.75)
 
         double currentReductionQE = Math.min(maxReduction, gameState.cooldownQEUpgradeLevel * reductionPerLevelQE);
         double currentReductionR = Math.min(maxReduction, gameState.cooldownRUpgradeLevel * reductionPerLevelR);
@@ -201,13 +208,16 @@ public class GameUpdateSystem {
         long effectiveCooldownR = (long) (Constants.PHASE_SHIFT_COOLDOWN_MS * (1.0 - currentReductionR));
         // ------------------------------------------------------
 
-        // Use effective cooldowns for calculation
+        // Update remaining cooldowns based on time since last use and effective values
+        gameState.remainingBulletCooldown = Math.max(0, effectiveBulletCooldown - (currentTime - gameState.lastBulletFireTime));
         gameState.remainingWaveBlastCooldown = Math.max(0, effectiveCooldownQ - (currentTime - gameState.lastWaveBlastUseTime));
         gameState.remainingLaserBeamCooldown = Math.max(0, effectiveCooldownE - (currentTime - gameState.lastLaserBeamUseTime));
         gameState.remainingPhaseShiftCooldown = Math.max(0, effectiveCooldownR - (currentTime - gameState.lastPhaseShiftUseTime));
 
+        // Handle Phase Shift duration
         if (gameState.isPhaseShiftActive && currentTime >= gameState.phaseShiftEndTime) {
             gameState.isPhaseShiftActive = false;
+            System.out.println("Phase Shift Deactivated."); // Added feedback
         }
     }
 
@@ -299,9 +309,14 @@ public class GameUpdateSystem {
     public void handleEnemyHit(Enemy enemy) {
          if (enemy == null || gameState == null) return;
          
+         // Calculate current bullet damage based on upgrades
+         int currentDamage = Constants.BULLET_BASE_DAMAGE + 
+                             (gameState.damageUpgradeLevel * Constants.BULLET_DAMAGE_INCREASE_PER_LEVEL);
+
         if (enemy instanceof SpecialEnemy) {
             SpecialEnemy specialEnemy = (SpecialEnemy) enemy;
-            specialEnemy.setHitpoints(specialEnemy.getHitpoints() - 1);
+            // Apply damage to boss
+            specialEnemy.takeDamage(currentDamage);
             if (specialEnemy.getHitpoints() <= 0) {
                 if(enemy instanceof Miniboss){
                     gameState.score += Constants.SCORE_PER_MINIBOSS;
@@ -316,7 +331,7 @@ public class GameUpdateSystem {
             }
         } else { // Regular Enemy
             // Apply damage and check if dead
-            enemy.takeDamage(1); // Assuming player bullet damage is 1 for now
+            enemy.takeDamage(currentDamage);
             if (enemy.getHitpoints() <= 0) {
                 enemy.setAlive(false);
                 dropLoot(enemy); 
@@ -368,7 +383,7 @@ public class GameUpdateSystem {
                         baseHealth = 1; // Explicitly W1 health
                         if (random.nextInt(6) == 3) { 
                              enemy = new ShootingEnemy(spawnX, spawnY, Constants.ENEMY_WIDTH, Constants.ENEMY_HEIGHT, enemyImg, Constants.ENEMY_BASE_VELOCITY_X); // Uses its own constructor default health (2)
-                        } else { 
+                        } else {
                             enemy = new FastEnemy(spawnX, spawnY, Constants.ENEMY_WIDTH, Constants.ENEMY_HEIGHT, enemyImg, Constants.ENEMY_BASE_VELOCITY_X + 3); // Uses its own constructor default health (1)
                         }
                         break;
@@ -549,18 +564,86 @@ public class GameUpdateSystem {
     }
     
     // --- Player Actions (Called by EquinoxGameLogic via InputHandler) ---
-    public void fireBullet() {
+    // New method to handle player shooting based on input state and cooldown
+    private void handlePlayerShooting() {
+        if (gameState == null || gameState.ship == null || !gameState.ship.isAlive()) return;
+
+        if (gameState.isFiring && gameState.remainingBulletCooldown <= 0) {
+            createPlayerBullet(); // Fire the bullet
+            gameState.lastBulletFireTime = System.currentTimeMillis(); // Record the time
+            // The actual remaining cooldown is updated in updateCooldowns() based on this time
+        }
+    }
+
+    // Renamed from fireBullet and made private - Now handles multi-shot
+    private void createPlayerBullet() {
         if (gameState == null || gameState.ship == null || gameState.bulletArray == null || assetLoader == null) return;
-         com.equinox.game.entities.Bullet bullet = new com.equinox.game.entities.Bullet(
-            gameState.ship.getX() + gameState.ship.getWidth() / 2 - Constants.BULLET_WIDTH / 2,
-            gameState.ship.getY(),
-            Constants.BULLET_WIDTH,
-            Constants.BULLET_HEIGHT,
-            assetLoader.getImage(Constants.PLAYER_LASER_IMG_KEY),
-            0, // velocityX
-            Constants.BULLET_VELOCITY_Y // velocityY
+        
+        // --- DEBUG --- 
+        System.out.println("[DEBUG] createPlayerBullet called. damageLevel = " + gameState.damageUpgradeLevel);
+        // ------------- 
+        
+        // Determine number of shots based on damage level
+        int numberOfShots = Constants.BASE_SHOTS_PER_FIRE;
+        if (gameState.damageUpgradeLevel >= Constants.DAMAGE_LEVEL_FOR_MULTI_SHOT) {
+            numberOfShots = Constants.MULTI_SHOT_ACTIVE_COUNT;
+        }
+                            
+        // --- DEBUG --- 
+        System.out.println("[DEBUG] Calculated numberOfShots = " + numberOfShots);
+        // ------------- 
+        
+        Image bulletImage = assetLoader.getImage(Constants.PLAYER_LASER_IMG_KEY);
+        if (bulletImage == null) { 
+            System.err.println("Warning: Player bullet image not loaded!");
+            return; 
+        }
+
+        // Ship center X for reference
+        int shipCenterX = gameState.ship.getX() + gameState.ship.getWidth() / 2;
+        int baseY = gameState.ship.getY();
+        int velocityX = 0; // Parallel shots have no X velocity
+        int velocityY = Constants.BULLET_VELOCITY_Y;
+        
+        // Remove angle calculation logic
+        // double totalSpreadAngle = (numberOfShots - 1) * Constants.MULTI_SHOT_SPREAD_ANGLE_DEGREES; 
+        // double startAngleRad = Math.toRadians(-90 - totalSpreadAngle / 2.0); 
+        // double angleStepRad = Math.toRadians(Constants.MULTI_SHOT_SPREAD_ANGLE_DEGREES);
+        // double baseSpeed = Math.abs(baseVelocityY);
+
+        for (int i = 0; i < numberOfShots; i++) {
+            int spawnX; 
+            if (numberOfShots == 1) {
+                // Single shot: spawn at center
+                spawnX = shipCenterX - Constants.BULLET_WIDTH / 2;
+            } else { // numberOfShots == 2 (or more, though currently capped at 2)
+                // Multi-shot: Offset from center
+                // Shot 0 (left): Center - Offset
+                // Shot 1 (right): Center + Offset - BulletWidth (to align right edge with offset point)
+                // Simpler: Spawn relative to center, adjusted by half the offset
+                int offset = Constants.MULTI_SHOT_PARALLEL_OFFSET;
+                spawnX = shipCenterX + (i == 0 ? -offset : offset) - Constants.BULLET_WIDTH / 2 ;
+                // --- DEBUG --- 
+                System.out.println("[DEBUG]   Multi-shot Iteration: " + i + " | SpawnX: " + spawnX);
+                // ------------- 
+            }
+            
+            // Remove velocity calculations based on angle
+            // int bulletVelocityX = 0;
+            // int bulletVelocityY = baseVelocityY;
+            // if (numberOfShots > 1) { ... }
+
+            Bullet bullet = new Bullet(
+                spawnX, // Use calculated spawnX
+                baseY,
+                Constants.BULLET_WIDTH,
+                Constants.BULLET_HEIGHT,
+                bulletImage,
+                velocityX, // Always 0 for parallel
+                velocityY  // Always base Y velocity
             );
-        gameState.bulletArray.add(bullet);
+            gameState.bulletArray.add(bullet);
+        }
     }
 
     public void fireWaveBlast() {
@@ -569,7 +652,7 @@ public class GameUpdateSystem {
         
         // Recalculate effective cooldown here too, in case upgrades change mid-game (unlikely but safer)
         double reductionPerLevelQE = 0.10; 
-        double maxReduction = 0.75; 
+        double maxReduction = 0.60; 
         double currentReductionQE = Math.min(maxReduction, gameState.cooldownQEUpgradeLevel * reductionPerLevelQE);
         long effectiveCooldownQ = (long) (Constants.WAVE_BLAST_COOLDOWN_MS * (1.0 - currentReductionQE));
         
@@ -597,7 +680,7 @@ public class GameUpdateSystem {
 
          // Recalculate effective cooldown E
          double reductionPerLevelQE = 0.10; 
-         double maxReduction = 0.75; 
+         double maxReduction = 0.60; 
          double currentReductionQE = Math.min(maxReduction, gameState.cooldownQEUpgradeLevel * reductionPerLevelQE);
          long effectiveCooldownE = (long) (Constants.LASER_BEAM_COOLDOWN_MS * (1.0 - currentReductionQE));
 
@@ -629,7 +712,7 @@ public class GameUpdateSystem {
 
         // Recalculate effective cooldown R
         double reductionPerLevelR = 0.15;  
-        double maxReduction = 0.75; 
+        double maxReduction = 0.60; 
         double currentReductionR = Math.min(maxReduction, gameState.cooldownRUpgradeLevel * reductionPerLevelR);
         long effectiveCooldownR = (long) (Constants.PHASE_SHIFT_COOLDOWN_MS * (1.0 - currentReductionR));
 
